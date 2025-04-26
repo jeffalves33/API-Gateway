@@ -6,5 +6,6 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 
 router.post('/reach', authenticateToken, metricsController.getReachMetrics);
 router.post('/impressions', authenticateToken, metricsController.getImpressionMetrics);
+router.post('/followers', authenticateToken, metricsController.getfollowersMetrics);
 
 module.exports = router;

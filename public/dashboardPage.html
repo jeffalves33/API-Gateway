@@ -276,8 +276,9 @@
                         <span id="btn-buscar-texto">
                           <i class="bi bi-search me-2"></i>Buscar
                         </span>
-                        <span id="btn-buscar-loading" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                      </button>                      
+                        <span id="btn-buscar-loading" class="spinner-border spinner-border-sm d-none" role="status"
+                          aria-hidden="true"></span>
+                      </button>
                     </div>
                   </div>
                 </form>
@@ -363,6 +364,7 @@
               </div>
             </div>
             <!-- / Alcance -->
+
             <!-- Impressão -->
             <div class="row">
               <div class="col-lg-10 mb-4 order-0">
@@ -434,6 +436,90 @@
               </div>
             </div>
             <!-- / Impressão -->
+
+            <!-- Seguidores -->
+            <div class="row">
+              <div class="col-lg-8 mb-4 order-0">
+                <div class="card">
+                  <div class="d-flex align-items-end row">
+                    <h5 class="card-header m-0 me-2 pb-3">Seguidores</h5>
+                    <div class="col-sm-12">
+                      <div class="card-body">
+                        <div id="followersChart"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 order-1 mb-4">
+                <div class="card h-100">
+                  <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="card-title m-0 me-2">Seguidores gerais</h5>
+                    <div class="dropdown">
+                      <button class="btn p-0" type="button" id="transactionID" data-bs-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+                        <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <ul class="p-0 m-0">
+                      <li class="d-flex mb-4 pb-1">
+                        <div class="avatar flex-shrink-0 me-3">
+                          <img src="../assets/img/icons/unicons/instagram.png" alt="User" class="rounded" />
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                          <div class="me-2">
+                            <small class="text-muted d-block mb-1">Instagram</small>
+                            <h6 class="mb-0">+20,03%</h6>
+                          </div>
+                          <div class="user-progress d-flex align-items-center gap-1">
+                            <h6 id="instagram-followers-count" class="mb-0">6.103</h6>
+                            <span class="text-muted">total</span>
+                          </div>
+                        </div>
+                      </li>
+                      <li class="d-flex mb-4 pb-1">
+                        <div class="avatar flex-shrink-0 me-3">
+                          <img src="../assets/img/icons/unicons/linkedin.png" alt="User" class="rounded" />
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                          <div class="me-2">
+                            <small class="text-muted d-block mb-1">Linkedin</small>
+                            <h6 class="mb-0">-</h6>
+                          </div>
+                          <div class="user-progress d-flex align-items-center gap-1">
+                            <h6 id="linkedin-followers-count" class="mb-0">-</h6>
+                            <span class="text-muted">total</span>
+                          </div>
+                        </div>
+                      </li>
+                      <li class="d-flex mb-4 pb-1">
+                        <div class="avatar flex-shrink-0 me-3">
+                          <img src="../assets/img/icons/unicons/youtube.png" alt="User" class="rounded" />
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                          <div class="me-2">
+                            <small class="text-muted d-block mb-1">Youtube</small>
+                            <h6 class="mb-0">-</h6>
+                          </div>
+                          <div class="user-progress d-flex align-items-center gap-1">
+                            <h6 id="youtube-followers-count" class="mb-0">-</h6>
+                            <span class="text-muted">total</span>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- / Seguidores -->
           </div>
           <!-- / Content -->
 

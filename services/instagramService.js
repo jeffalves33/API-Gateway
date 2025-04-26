@@ -61,7 +61,7 @@ exports.getImpressions = async (pageId, accessToken, startDate, endDate) => {
       }
 
       allValues.push(dailyValue);
-      
+
     } catch (error) {
       allValues.push(0);
     }
@@ -69,4 +69,19 @@ exports.getImpressions = async (pageId, accessToken, startDate, endDate) => {
     current.setDate(current.getDate() + 1);
   }
   return allValues;
+};
+
+exports.getFollowers = async (pageId, accessToken, startDate, endDate, period = 'day') => {
+  const response = await axios.get(`${BASE_URL}/${pageId}`, {
+    params: {
+      fields: 'followers_count',
+      access_token: accessToken
+    }
+  });
+
+  if (response.status === 200) {
+    return response.data.followers_count;
+  } else {
+    throw new Error(`Erro Instagram API: ${response.status} - ${response.statusText}`);
+  }
 };

@@ -4,25 +4,13 @@ const { GoogleAuth } = require('google-auth-library');
 const { getCustomerKeys } = require('../repositories/customerRepository');
 const { splitDateRange, formatDate } = require('../utils/dateUtils');
 
-exports.getImpressions = async (id_customer, startDate, endDate) => {
-  const keys = await getCustomerKeys(id_customer);
-  const credentials = {
-    type: keys.google_credentials_type,
-    project_id: keys.google_credentials_project_id,
-    private_key_id: keys.google_credentials_private_key_id,
-    private_key: keys.google_credentials_private_key.replace(/\\n/g, '\n'),
-    client_email: keys.google_credentials_client_email,
-    client_id: keys.google_credentials_client_id,
-    auth_uri: keys.google_credentials_auth_uri,
-    token_uri: keys.google_credentials_token_uri,
-    auth_provider_x509_cert_url: keys.google_credentials_auth_provider_x509_cert_url,
-    client_x509_cert_url: keys.google_credentials_client_x509_cert_url,
-  };
+exports.getImpressions = async (keys, startDate, endDate) => {
+  const credentials = keys.credentials;
+  const propertyId = keys.property_id;
 
   const auth = new GoogleAuth({ credentials, scopes: 'https://www.googleapis.com/auth/analytics.readonly' });
   const client = new BetaAnalyticsDataClient({ auth });
 
-  const propertyId = keys.google_property_id;
   const allDates = getAllDaysBetween(startDate, endDate);
   const dateRange = {
     startDate: formatDate(startDate),
