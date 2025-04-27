@@ -520,6 +520,56 @@
               </div>
             </div>
             <!-- / Seguidores -->
+
+            <!-- Tráfego de site -->
+            <div class="row">
+              <div class="col-lg-8 mb-4 order-0">
+                <div class="card">
+                  <div class="d-flex align-items-end row">
+                    <h5 class="card-header m-0 me-2 pb-3">Tráfego de site</h5>
+                    <div class="col-sm-12">
+                      <div class="card-body">
+                        <div id="trafficChart"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-xl-4 order-1 mb-4">
+                <div class="card h-100">
+                  <div class="card-header d-flex align-items-center justify-content-between pb-0">
+                    <div class="card-title mb-0">
+                      <h5 class="m-0 me-2">Fonde do Tráfego</h5>
+                      <small class="text-muted">Todas as fontes</small>
+                    </div>
+                    <div class="dropdown">
+                      <button class="btn p-0" type="button" id="orederStatistics" data-bs-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
+                        <a class="dropdown-item" href="javascript:void(0);">Select All</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Share</a>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <div class="d-flex flex-column align-items-center gap-1">
+                        <h2 id="total-traffic-period" class="mb-2"></h2>
+                        <span>Fontes</span>
+                      </div>
+                      <div id="orderTrafficPizzaChart"></div>
+                    </div>
+                    <ul id="traffic-sources-list" class="p-0 m-0">
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- / Tráfego de site -->
+
           </div>
           <!-- / Content -->
 

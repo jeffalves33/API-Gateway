@@ -99,6 +99,26 @@ exports.getfollowersMetrics = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erro ao buscar dados de alcance' });
+    res.status(500).json({ message: 'Erro ao buscar dados de seguidores' });
+  }
+};
+
+exports.getTrafficMetrics = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+    const { id_customer, startDate, endDate } = req.body;
+
+    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+
+    const googleData = await googleAnalyticsService.getTrafficData(google, startDate, endDate);
+
+    res.json({
+      labels: googleData.labels,
+      sessions: googleData.sessions,
+      sources: googleData.sources
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erro ao buscar dados de tráfego' });
   }
 };

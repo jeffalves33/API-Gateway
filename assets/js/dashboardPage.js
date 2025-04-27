@@ -8,8 +8,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     const followersChartContainer = document.getElementById('followersChart');
 
     let reachChartInstance = null;
-    let impressionsChartInstance = null;
+    let trafficChartInstance = null;
     let followersChartInstance = null;
+    let impressionsChartInstance = null;
+    let trafficSourcesChartInstance = null;
     let userId = null;
 
     function updateSelectedCustomerDisplay(name) {
@@ -193,7 +195,26 @@ document.addEventListener('DOMContentLoaded', async function () {
             renderfollowersChart(data);
             followersChartContainer.style.display = 'block';
         } catch (error) {
-            console.error('Erro ao buscar dados de impressões:', error);
+            console.error('Erro ao buscar dados de seguidores:', error);
+        }
+    }
+
+    async function fetchAndRenderTrafficChart(startDate, endDate) {
+        const id_customer = localStorage.getItem('selectedCustomerId');
+        if (!id_customer) return;
+
+        try {
+            const res = await fetch('/api/metrics/traffic', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_customer, startDate, endDate })
+            });
+
+            const data = await res.json();
+            renderTrafficLineChart(data);    // Gráfico de linha principal
+            renderTrafficSourcesChart(data); // Pizza + lista de fontes
+        } catch (error) {
+            console.error('Erro ao buscar dados de tráfego:', error);
         }
     }
 
@@ -394,6 +415,148 @@ document.addEventListener('DOMContentLoaded', async function () {
         document.getElementById('youtube-followers-count').textContent = data.youtube;
     }
 
+    function renderTrafficLineChart(data) {
+        const trafficChartContainer = document.querySelector('#trafficChart');
+
+        if (trafficChartInstance) trafficChartInstance.destroy();
+
+        const formattedDates = data.labels.map(dateStr => {
+            if (!dateStr) return '';
+            return new Date(
+                dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
+            ).toLocaleDateString('pt-BR');
+        });
+
+        trafficChartInstance = new ApexCharts(trafficChartContainer, {
+            chart: {
+                height: 400,
+                type: 'line',
+                toolbar: { show: true }
+            },
+            series: [
+                {
+                    name: 'Sessões',
+                    data: data.sessions
+                }
+            ],
+            xaxis: {
+                categories: formattedDates // Já mandar as datas formatadas
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            colors: ['#0d6efd'],
+            dataLabels: { enabled: false },
+            markers: {
+                size: 5
+            },
+            tooltip: {
+                theme: 'light',
+                shared: true,
+                intersect: false,
+                style: { fontSize: '13px' },
+                y: {
+                    formatter: val => new Intl.NumberFormat('pt-BR').format(val)
+                }
+            }
+        });
+
+        trafficChartInstance.render();
+    }
+
+
+    function renderTrafficSourcesChart(data) {
+        const pizzaChartContainer = document.querySelector('#orderTrafficPizzaChart');
+        const trafficSourcesList = document.querySelector('#traffic-sources-list');
+        const totalTrafficElement = document.getElementById('total-traffic-period');
+
+        if (trafficSourcesChartInstance) trafficSourcesChartInstance.destroy();
+
+        const sources = data.sources || {};
+        const labels = Object.keys(sources);
+        const series = Object.values(sources);
+
+        const total = series.reduce((acc, val) => acc + val, 0);
+        totalTrafficElement.textContent = total.toLocaleString('pt-BR');
+
+        trafficSourcesChartInstance = new ApexCharts(pizzaChartContainer, {
+            chart: {
+                height: 165,
+                width: 130,
+                type: 'donut'
+            },
+            labels: labels,
+            series: series,
+            colors: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6610f2'], // Azul, Verde, Amarelo, Vermelho, Ciano, Roxo
+            stroke: {
+                width: 5,
+                colors: ['#fff']
+            },
+            dataLabels: {
+                enabled: false
+            },
+            legend: { show: false },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '75%',
+                        labels: {
+                            show: true,
+                            value: {
+                                fontSize: '1.5rem',
+                                offsetY: -15,
+                                formatter: val => parseInt(val) + '%'
+                            },
+                            name: {
+                                offsetY: 20
+                            },
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                formatter: function (w) {
+                                    return total;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        trafficSourcesChartInstance.render();
+
+        // Gerar lista dinâmica UL
+        if (trafficSourcesList) {
+            trafficSourcesList.innerHTML = '';
+
+            labels.forEach((label, index) => {
+                const colorClasses = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'];
+                const colorClass = colorClasses[index % colorClasses.length];
+
+                const item = `
+              <li class="d-flex mb-4 pb-1">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-${colorClass}">
+                    <i class="bx bx-globe"></i>
+                  </span>
+                </div>
+                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="me-2">
+                    <h6 class="mb-0">${label}</h6>
+                    <small class="text-muted">Fonte de Tráfego</small>
+                  </div>
+                  <div class="user-progress">
+                    <small class="fw-medium">${sources[label]}</small>
+                  </div>
+                </div>
+              </li>
+            `;
+                trafficSourcesList.innerHTML += item;
+            });
+        }
+    }
+
     document.getElementById('log-out').addEventListener('click', logout);
 
     restoreSelectedCustomer();
@@ -420,6 +583,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             await fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate));
             await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
             await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
+            await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
         });
     }
 });
