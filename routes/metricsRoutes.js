@@ -8,5 +8,6 @@ router.post('/reach', authenticateToken, metricsController.getReachMetrics);
 router.post('/impressions', authenticateToken, metricsController.getImpressionMetrics);
 router.post('/followers', authenticateToken, metricsController.getfollowersMetrics);
 router.post('/traffic', authenticateToken, metricsController.getTrafficMetrics);
+router.post('/search-volume', authenticateToken, metricsController.getSearchVolumeMetrics);
 
 module.exports = router;

@@ -570,6 +570,97 @@
             </div>
             <!-- / Tráfego de site -->
 
+            <!-- Volume de pesquisa -->
+            <div class="row">
+              <div class="col-lg-8 mb-4 order-0">
+                <div class="card">
+                  <div class="d-flex align-items-end row">
+                    <h5 class="card-header m-0 me-2 pb-3">Volume de pesquisa</h5>
+                    <div class="col-sm-12">
+                      <div class="card-body">
+                        <div id="searchVolumChart"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
+                <div class="row">
+                  <div class="col-6 mb-4">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="card-title d-flex align-items-start justify-content-between">
+                          <div class="avatar flex-shrink-0">
+                            <span class="avatar-initial rounded bg-label-info">
+                              <i class="bx bx-globe"></i>
+                            </span>
+                          </div>
+                          <div class="dropdown">
+                            <button class="btn p-0" type="button" id="cardOpt4" data-bs-toggle="dropdown"
+                              aria-haspopup="true" aria-expanded="false">
+                              <i class="bx bx-dots-vertical-rounded"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
+                              <a class="dropdown-item" href="javascript:void(0);">View More</a>
+                              <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                            </div>
+                          </div>
+                        </div>
+                        <span class="d-block mb-1">Organic Search</span>
+                        <h3 id="organic-search-qtd" class="card-title text-nowrap mb-2"></h3>
+                        <small id="organic-search-percent" class="text-danger fw-medium"><i class="bx bx-down-arrow-alt"></i></small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-6 mb-4">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="card-title d-flex align-items-start justify-content-between">
+                          <div class="avatar flex-shrink-0">
+                            <span class="avatar-initial rounded bg-label-dark">
+                              <i class="bx bx-globe"></i>
+                            </span>
+                          </div>
+                          <div class="dropdown">
+                            <button class="btn p-0" type="button" id="cardOpt1" data-bs-toggle="dropdown"
+                              aria-haspopup="true" aria-expanded="false">
+                              <i class="bx bx-dots-vertical-rounded"></i>
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="cardOpt1">
+                              <a class="dropdown-item" href="javascript:void(0);">View More</a>
+                              <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                            </div>
+                          </div>
+                        </div>
+                        <span class="fw-medium d-block mb-1">Outras fontes</span>
+                        <h3 id="other-sources-qtd" class="card-title mb-2"></h3>
+                        <small id="other-sources-percent" class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i></small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 mb-4">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
+                          <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
+                            <div class="card-title">
+                              <h5 class="text-nowrap mb-2">Novos leads</h5>
+                              <span id="new-leads-qtd-days" class="badge bg-label-warning rounded-pill"></span>
+                            </div>
+                            <div class="mt-sm-auto">
+                              <h3 id="new-leads-qtd" class="mb-0"></h3>
+                            </div>
+                          </div>
+                          <div id="newLeadsChart"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- / Volume de pesquisa -->
+
           </div>
           <!-- / Content -->
 

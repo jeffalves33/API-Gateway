@@ -47,7 +47,7 @@ exports.getImpressionMetrics = async (req, res) => {
       facebookService.getImpressions(facebook.page_id, facebook.access_token, startDate, endDate),
       instagramService.getImpressions(instagram.page_id, instagram.access_token, startDate, endDate),
       googleAnalyticsService.getImpressions(google, startDate, endDate),
-      [0,0,0,0,0,0]
+      [0, 0, 0, 0, 0, 0]
     ]);
 
     const labels = facebookData.map((_, i) => {
@@ -120,5 +120,20 @@ exports.getTrafficMetrics = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erro ao buscar dados de tráfego' });
+  }
+};
+
+exports.getSearchVolumeMetrics = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+    const { id_customer, startDate, endDate } = req.body;
+
+    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+
+    const googleData = await googleAnalyticsService.getSearchVolumeData(google, startDate, endDate);
+    res.json(googleData);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erro ao buscar dados de volume de pesquisa' });
   }
 };

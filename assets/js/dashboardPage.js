@@ -9,9 +9,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     let reachChartInstance = null;
     let trafficChartInstance = null;
+    let newLeadsChartInstance = null;
     let followersChartInstance = null;
     let impressionsChartInstance = null;
+    let searchVolumeChartInstance = null;
     let trafficSourcesChartInstance = null;
+
     let userId = null;
 
     function updateSelectedCustomerDisplay(name) {
@@ -215,6 +218,25 @@ document.addEventListener('DOMContentLoaded', async function () {
             renderTrafficSourcesChart(data); // Pizza + lista de fontes
         } catch (error) {
             console.error('Erro ao buscar dados de tráfego:', error);
+        }
+    }
+
+    async function fetchAndRenderSearchVolumeChart(startDate, endDate) {
+        const id_customer = localStorage.getItem('selectedCustomerId');
+        if (!id_customer) return;
+
+        try {
+            const res = await fetch('/api/metrics/search-volume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_customer, startDate, endDate })
+            });
+
+            const data = await res.json();
+            renderSearchVolumeLineChart(data);
+            renderSearchVolumeCards(data);
+        } catch (error) {
+            console.error('Erro ao buscar dados de volume de pesquisa:', error);
         }
     }
 
@@ -465,7 +487,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         trafficChartInstance.render();
     }
 
-
     function renderTrafficSourcesChart(data) {
         const pizzaChartContainer = document.querySelector('#orderTrafficPizzaChart');
         const trafficSourcesList = document.querySelector('#traffic-sources-list');
@@ -557,6 +578,116 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+    function renderSearchVolumeLineChart(data) {
+        const searchVolumeChartContainer = document.querySelector('#searchVolumChart');
+
+        if (searchVolumeChartInstance) searchVolumeChartInstance.destroy();
+
+        const formattedDates = data.labels.map(dateStr => {
+            if (!dateStr) return '';
+            return new Date(
+                dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
+            ).toLocaleDateString('pt-BR');
+        });
+
+        searchVolumeChartInstance = new ApexCharts(searchVolumeChartContainer, {
+            chart: {
+                height: 400,
+                type: 'line',
+                toolbar: { show: true }
+            },
+            series: [
+                {
+                    name: 'Visitas por busca',
+                    data: data.organicSessions || []
+                }
+            ],
+            xaxis: {
+                categories: formattedDates
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            colors: ['#696CFF'], // Azul padrão
+            dataLabels: { enabled: false },
+            markers: { size: 5 },
+            tooltip: {
+                y: {
+                    formatter: val => parseInt(val)
+                }
+            }
+        });
+
+        searchVolumeChartInstance.render();
+    }
+
+    function renderSearchVolumeCards(data) {
+        // Atualizar quantidade e crescimento Organic Search
+        document.getElementById('organic-search-qtd').textContent = data.totalOrganicSearch;
+        document.getElementById('organic-search-percent').innerHTML = `
+          <i class="bx ${data.percentOrganicSearch >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
+          ${Math.abs(data.percentOrganicSearch)}%
+        `;
+
+        // Atualizar quantidade e crescimento Outras Fontes
+        document.getElementById('other-sources-qtd').textContent = data.totalOtherSources;
+        document.getElementById('other-sources-percent').innerHTML = `
+          <i class="bx ${data.percentOtherSources >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
+          ${Math.abs(data.percentOtherSources)}%
+        `;
+
+        // Atualizar quantidade de Novos Leads
+        document.getElementById('new-leads-qtd').textContent = data.totalNewLeads;
+        document.getElementById('new-leads-qtd-days').textContent = `${data.days} dias`;
+
+        // Renderizar o mini gráfico Sparkline
+        const newLeadsChartContainer = document.querySelector('#newLeadsChart');
+
+        if (newLeadsChartInstance) newLeadsChartInstance.destroy();
+
+        newLeadsChartInstance = new ApexCharts(newLeadsChartContainer, {
+            chart: {
+                height: 80,
+                type: 'line',
+                toolbar: { show: false },
+                dropShadow: {
+                    enabled: true,
+                    top: 10,
+                    left: 5,
+                    blur: 3,
+                    color: '#FFC107', // Amarelo
+                    opacity: 0.15
+                },
+                sparkline: { enabled: true }
+            },
+            grid: {
+                show: false,
+                padding: { right: 8 }
+            },
+            colors: ['#FFC107'],
+            dataLabels: { enabled: false },
+            stroke: {
+                width: 5,
+                curve: 'smooth'
+            },
+            series: [
+                {
+                    data: data.newLeadsPerDay || []
+                }
+            ],
+            xaxis: {
+                show: false,
+                lines: { show: false },
+                labels: { show: false },
+                axisBorder: { show: false }
+            },
+            yaxis: { show: false }
+        });
+
+        newLeadsChartInstance.render();
+    }
+
     document.getElementById('log-out').addEventListener('click', logout);
 
     restoreSelectedCustomer();
@@ -584,6 +715,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
             await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
             await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
+            await fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate));
         });
     }
 });

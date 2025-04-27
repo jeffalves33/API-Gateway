@@ -78,6 +78,68 @@ exports.getTrafficData = async (keys, startDate, endDate) => {
   };
 };
 
+exports.getSearchVolumeData = async (keys, startDate, endDate) => {
+  const credentials = keys.credentials;
+  const propertyId = keys.property_id;
+
+  const auth = new GoogleAuth({ credentials, scopes: 'https://www.googleapis.com/auth/analytics.readonly' });
+  const client = new BetaAnalyticsDataClient({ auth });
+
+  const allDates = getAllDaysBetween(startDate, endDate);
+  const dateRange = {
+    startDate: formatDate(startDate),
+    endDate: formatDate(endDate)
+  };
+
+  const [response] = await client.runReport({
+    property: `properties/${propertyId}`,
+    dateRanges: [dateRange],
+    dimensions: [
+      { name: 'sessionDefaultChannelGroup' },
+      { name: 'date' }
+    ],
+    metrics: [{ name: 'sessions' }]
+  });
+
+  const organicSessionsPerDay = {};
+  const otherSessionsPerDay = {};
+  let totalOrganicSearch = 0;
+  let totalOtherSources = 0;
+
+  response.rows.forEach(row => {
+    const channelGroup = row.dimensionValues[0].value; // Ex: Organic Search, Direct, etc
+    const date = row.dimensionValues[1].value;
+    const sessions = Number(row.metricValues[0].value);
+
+    if (channelGroup === 'Organic Search') {
+      organicSessionsPerDay[date] = (organicSessionsPerDay[date] || 0) + sessions;
+      totalOrganicSearch += sessions;
+    } else {
+      otherSessionsPerDay[date] = (otherSessionsPerDay[date] || 0) + sessions;
+      totalOtherSources += sessions;
+    }
+  });
+
+  const organicSessionsArray = allDates.map(date => organicSessionsPerDay[date] || 0);
+  const otherSessionsArray = allDates.map(date => otherSessionsPerDay[date] || 0);
+
+  const totalSessions = totalOrganicSearch + totalOtherSources;
+  const percentOrganicSearch = totalSessions ? Math.round((totalOrganicSearch / totalSessions) * 100) : 0;
+  const percentOtherSources = totalSessions ? Math.round((totalOtherSources / totalSessions) * 100) : 0;
+
+  return {
+    labels: allDates,
+    organicSessions: organicSessionsArray,
+    totalOrganicSearch,
+    percentOrganicSearch,
+    totalOtherSources,
+    percentOtherSources,
+    totalNewLeads: totalOrganicSearch, // Podemos usar o totalOrganicSearch como "leads" por enquanto
+    newLeadsPerDay: organicSessionsArray,
+    days: allDates.length
+  };
+};
+
 function getAllDaysBetween(start, end) {
   const startDate = new Date(start);
   const endDate = new Date(end);
