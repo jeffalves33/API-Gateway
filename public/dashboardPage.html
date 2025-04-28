@@ -86,8 +86,7 @@
           </li>
 
           <li class="menu-item">
-            <a href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/html/vertical-menu-template/app-calendar.html"
-              target="_blank" class="menu-link">
+            <a href="/analyzesPage.html" target="_blank" class="menu-link">
               <i class="menu-icon tf-icons bi bi-robot"></i>
               <div data-i18n="Calendar">Análises</div>
             </a>
@@ -223,9 +222,8 @@
                     <div class="dropdown-divider"></div>
                   </li>
                   <li>
-                    <a class="dropdown-item" href="javascript:void(0);" id="log-out">
-                      <i class="bx bx-power-off me-2"></i>
-                      <span class="align-middle">Sair</span>
+                    <i class="bx bx-power-off me-2"></i>
+                    <span class="align-middle">Sair</span>
                     </a>
                   </li>
                 </ul>
@@ -236,43 +234,51 @@
         </nav>
 
         <!-- Intervalo de busca -->
-        <div class="row justify-content-center py-2 px-4">
-          <div class="col-lg-12">
-            <div class="card shadow-sm border-0">
-              <div class="card-body p-4">
-                <h5 class="card-title mb-4">Intervalo de Busca</h5>
+        <div class="container py-4">
+          <div class="card border-0">
+            <div class="card-header p-0">
+              <button
+                class="btn btn-link text-decoration-none text-dark w-100 text-start pt-3 d-flex justify-content-between align-items-center"
+                type="button" data-bs-toggle="collapse" data-bs-target="#searchIntervalCollapse" aria-expanded="false"
+                aria-controls="searchIntervalCollapse">
+                <div>
+                  <h5><i class="bi bi-calendar-range me-2"></i> Intervalo de Busca</h5>
+                </div>
+                <h5><i class="bi bi-chevron-down"></i></h5>
+              </button>
+            </div>
 
+            <div class="collapse" id="searchIntervalCollapse">
+              <div class="card-body p-4">
                 <form id="form-busca">
-                  <div class="row g-3 align-items-center">
+                  <div class="row">
                     <!-- Start Date -->
-                    <div class="col-md-5">
-                      <div class="form-floating">
-                        <div class="input-group">
-                          <span class="input-group-text bg-primary bg-opacity-10 border-primary border-opacity-25">
-                            <i class="bi bi-calendar"></i>
-                          </span>
-                          <input type="text" class="form-control date-picker border-primary border-opacity-25"
-                            id="startDate" autocomplete="off" placeholder="Data Inicial">
-                        </div>
+                    <div class="col-md-5 mb-3 mb-md-0">
+                      <label for="startDate" class="form-label mb-2">Data Inicial</label>
+                      <div class="input-group">
+                        <span class="input-group-text bg-primary text-white">
+                          <i class="bi bi-calendar"></i>
+                        </span>
+                        <input type="text" class="form-control date-picker" id="startDate" autocomplete="off"
+                          placeholder="Selecione a data inicial">
                       </div>
                     </div>
 
                     <!-- End Date -->
-                    <div class="col-md-5">
-                      <div class="form-floating">
-                        <div class="input-group">
-                          <span class="input-group-text bg-primary bg-opacity-10 border-primary border-opacity-25">
-                            <i class="bi bi-calendar"></i>
-                          </span>
-                          <input type="text" class="form-control date-picker border-primary border-opacity-25"
-                            id="endDate" autocomplete="off" placeholder="Data Final">
-                        </div>
+                    <div class="col-md-5 mb-3 mb-md-0">
+                      <label for="endDate" class="form-label mb-2">Data Final</label>
+                      <div class="input-group">
+                        <span class="input-group-text bg-primary text-white">
+                          <i class="bi bi-calendar"></i>
+                        </span>
+                        <input type="text" class="form-control date-picker" id="endDate" autocomplete="off"
+                          placeholder="Selecione a data final">
                       </div>
                     </div>
 
                     <!-- Search Button -->
-                    <div class="col-md-2">
-                      <button type="submit" id="btn-buscar" class="btn btn-primary w-100 py-3">
+                    <div class="col-md-2 d-flex flex-column justify-content-end">
+                      <button type="submit" id="btn-buscar" class="btn btn-primary px-4 py-2">
                         <span id="btn-buscar-texto">
                           <i class="bi bi-search me-2"></i>Buscar
                         </span>
@@ -291,8 +297,15 @@
 
         <!-- Content wrapper -->
         <div class="content-wrapper">
+          <!-- Mensagem inicial antes da busca -->
+          <div id="instruction-message" class="container-xxl flex-grow-1 container-p-y"
+            style="text-align: center; padding: 50px;">
+            <h4>Para visualizar o dashboard, selecione um intervalo de datas e clique no botão <strong>Buscar</strong>.
+            </h4>
+          </div>
+
           <!-- Content -->
-          <div class="container-xxl flex-grow-1 container-p-y">
+          <div id="content-dashboard" class="container-xxl flex-grow-1 container-p-y" style="display: none;">
             <!-- Alcance -->
             <div class="row">
               <div class="col-lg-10 mb-4 order-0">
@@ -608,7 +621,8 @@
                         </div>
                         <span class="d-block mb-1">Organic Search</span>
                         <h3 id="organic-search-qtd" class="card-title text-nowrap mb-2"></h3>
-                        <small id="organic-search-percent" class="text-danger fw-medium"><i class="bx bx-down-arrow-alt"></i></small>
+                        <small id="organic-search-percent" class="text-danger fw-medium"><i
+                            class="bx bx-down-arrow-alt"></i></small>
                       </div>
                     </div>
                   </div>
@@ -634,7 +648,8 @@
                         </div>
                         <span class="fw-medium d-block mb-1">Outras fontes</span>
                         <h3 id="other-sources-qtd" class="card-title mb-2"></h3>
-                        <small id="other-sources-percent" class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i></small>
+                        <small id="other-sources-percent" class="text-success fw-medium"><i
+                            class="bx bx-up-arrow-alt"></i></small>
                       </div>
                     </div>
                   </div>
@@ -663,27 +678,9 @@
 
           </div>
           <!-- / Content -->
-
-          <!-- Footer -->
-          <footer class="content-footer footer bg-footer-theme">
-            <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
-              <div class="mb-2 mb-md-0">
-                © 2019 by ho.ko Comunicação.
-              </div>
-              <div class="d-none d-lg-inline-block">
-                <a href="" class="footer-link me-4" target="_blank">Termos de Uso</a>
-
-                <a href="" target="_blank" class="footer-link me-4">Documentação</a>
-
-                <a href="" target="_blank" class="footer-link">Suporte</a>
-              </div>
-            </div>
-          </footer>
-          <!-- / Footer -->
-
           <div class="content-backdrop fade"></div>
         </div>
-        <!-- Content wrapper -->
+        <!-- / Content wrapper -->
       </div>
       <!-- / Layout page -->
     </div>
@@ -761,8 +758,6 @@
       });
     });
   </script>
-
-  <!-- Jeferson: dados do cliente logado -->
   <script src="/assets/js/dashboardPage.js"></script>
 
 </body>

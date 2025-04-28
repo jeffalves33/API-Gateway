@@ -4,8 +4,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     const selectedCustomerNameElement = document.getElementById('selected-customer-name');
     const userNameElement = document.getElementById('user-name');
     const reachChartContainer = document.getElementById('reachChart');
+    const contentDashboard = document.getElementById('content-dashboard');
     const impressionsChartContainer = document.getElementById('impressionsChart');
     const followersChartContainer = document.getElementById('followersChart');
+    const instructionMessage = document.getElementById('instruction-message'); // <- Agora existe no HTML
 
     let reachChartInstance = null;
     let trafficChartInstance = null;
@@ -688,7 +690,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         newLeadsChartInstance.render();
     }
 
-    document.getElementById('log-out').addEventListener('click', logout);
+    document.getElementById('log-out')?.addEventListener('click', logout);
 
     restoreSelectedCustomer();
     await loadUserProfile();
@@ -706,16 +708,37 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
+            const btnBuscarTexto = document.getElementById('btn-buscar-texto');
+            const btnBuscarLoading = document.getElementById('btn-buscar-loading');
+
             const formatToISO = (dateStr) => {
                 const [day, month, year] = dateStr.split('/');
                 return `${year}-${month}-${day}`;
             };
 
-            await fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate));
-            await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
-            await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
-            await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
-            await fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate));
+            try {
+                // Mostra loading no botão
+                btnBuscarTexto.classList.add('d-none');
+                btnBuscarLoading.classList.remove('d-none');
+
+                // Executa todas as buscas
+                await fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate));
+
+                // Exibe dashboard e esconde instrução
+                if (instructionMessage) instructionMessage.style.display = 'none';
+                if (contentDashboard) contentDashboard.style.display = 'block';
+
+            } catch (error) {
+                console.error('Erro ao buscar dados do dashboard:', error);
+                alert('Erro ao buscar dados. Tente novamente.');
+            } finally {
+                btnBuscarTexto.classList.remove('d-none');
+                btnBuscarLoading.classList.add('d-none');
+            }
         });
     }
 });
