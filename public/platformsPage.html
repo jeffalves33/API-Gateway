@@ -86,7 +86,7 @@
                         </a>
                     </li>
 
-                    <li class="menu-item active">
+                    <li class="menu-item">
                         <a href="/analyzesPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-robot"></i>
                             <div data-i18n="Calendar">Análises</div>
@@ -104,7 +104,7 @@
                         <span class="menu-header-text">Plataformas</span>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item active">
                         <a href="/platformsPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-link-45deg"></i>
                             <div data-i18n="Chat">Suas plataformas</div>
@@ -266,120 +266,136 @@
                     </div>
                 </nav>
 
-                <div class="container py-4">
-                    <div class="card border-0">
-                        <div class="card-header p-0">
-                            <button
-                                class="btn btn-link text-decoration-none text-dark w-100 text-start pt-3 d-flex justify-content-between align-items-center"
-                                type="button" data-bs-toggle="collapse" data-bs-target="#configCollapse"
-                                aria-expanded="false" aria-controls="configCollapse">
-                                <h5><i class="bi bi-clipboard-data me-2"></i>Configuração para análise</h5>
-                                <h5><i class="bi bi-chevron-down"></i></h5>
-                            </button>
+                <div class="container pt-4">
+                    <h4 class="py-2"><span class="text-muted fw-light">Plataformas /</span> Suas Plataformas</h4>
+                    <div class="row">
+                        <div class="col-md-6 col-12 mb-md-0 mb-4">
+                            <div class="card overflow-hidden mb-4" style="height: 500px">
+                                <h5 class="card-header">Plataformas</h5>
+                                <div class="card-body" id="vertical-example">
+                                    <p>Conecte suas plataformas aqui</p>
+                                    <!-- Connections -->
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/img/icons/brands/facebook.png" alt="facebook"
+                                                class="me-3" height="30" />
+                                        </div>
+                                        <div class="flex-grow-1 row">
+                                            <div class="col-9 mb-sm-0 mb-2">
+                                                <h6 class="mb-0">Facebook</h6>
+                                                <small class="text-muted">Paginas</small>
+                                            </div>
+                                            <div class="col-3 text-end">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input float-end" type="checkbox"
+                                                        role="switch">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/img/icons/brands/instagram.png" alt="instagram"
+                                                class="me-3" height="30" />
+                                        </div>
+                                        <div class="flex-grow-1 row">
+                                            <div class="col-9 mb-sm-0 mb-2">
+                                                <h6 class="mb-0">Instagram</h6>
+                                                <small class="text-muted">Paginas</small>
+                                            </div>
+                                            <div class="col-3 text-end">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input float-end" type="checkbox"
+                                                        role="switch">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/img/icons/brands/google.png" alt="google" class="me-3"
+                                                height="30" />
+                                        </div>
+                                        <div class="flex-grow-1 row">
+                                            <div class="col-9 mb-sm-0 mb-2">
+                                                <h6 class="mb-0">Google</h6>
+                                                <small class="text-muted">Site</small>
+                                            </div>
+                                            <div class="col-3 text-end">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input float-end" type="checkbox"
+                                                        role="switch" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/img/icons/brands/linkedin.png" alt="linkedin"
+                                                class="me-3" height="30" />
+                                        </div>
+                                        <div class="flex-grow-1 row">
+                                            <div class="col-9 mb-sm-0 mb-2">
+                                                <h6 class="mb-0">Linkedin</h6>
+                                                <small class="text-muted">Paginas</small>
+                                            </div>
+                                            <div class="col-3 text-end">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input float-end" type="checkbox"
+                                                        role="switch" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/img/icons/brands/tiktok.png" alt="tiktok"
+                                                class="me-3" height="30" />
+                                        </div>
+                                        <div class="flex-grow-1 row">
+                                            <div class="col-9 mb-sm-0 mb-2">
+                                                <h6 class="mb-0">Tiktok</h6>
+                                                <small class="text-muted">Contas</small>
+                                            </div>
+                                            <div class="col-3 text-end">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input float-end" type="checkbox"
+                                                        role="switch" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/img/icons/brands/twitter.png" alt="twitter"
+                                                class="me-3" height="30" />
+                                        </div>
+                                        <div class="flex-grow-1 row">
+                                            <div class="col-9 mb-sm-0 mb-2">
+                                                <h6 class="mb-0">Twitter</h6>
+                                                <small class="text-muted">Contas</small>
+                                            </div>
+                                            <div class="col-3 text-end">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input float-end" type="checkbox"
+                                                        role="switch" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /Connections -->
+                                </div>
+                            </div>
                         </div>
+                        <div class="col-md-6 col-12">
+                            <div class="card overflow-hidden mb-4" style="height: 500px">
+                                <h5 class="card-header">Páginas e sites</h5>
+                                <div class="card-body" id="vertical-example">
+                                    <p>Habilite com quem deseja trabalhar</p>
+                                    <!-- Connections -->
 
-                        <div class="collapse" id="configCollapse">
-                            <div class="card-body p-4">
-                                <form id="form-busca">
-                                    <!-- Datas -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-6 mb-3 mb-md-0">
-                                            <label for="startDate" class="form-label mb-2">Data Inicial</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-primary text-white">
-                                                    <i class="bi bi-calendar"></i>
-                                                </span>
-                                                <input type="text" class="form-control date-picker" id="startDate"
-                                                    autocomplete="off" placeholder="Selecione a data inicial">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label for="endDate" class="form-label mb-2">Data Final</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-primary text-white">
-                                                    <i class="bi bi-calendar"></i>
-                                                </span>
-                                                <input type="text" class="form-control date-picker" id="endDate"
-                                                    autocomplete="off" placeholder="Selecione a data final">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Plataformas e Tipo de análise -->
-                                    <div class="row mb-4">
-                                        <!-- Plataformas -->
-                                        <div class="col-md-6 mb-3 mb-md-0">
-                                            <label class="form-label mb-2 fw-medium">Plataformas</label>
-                                            <div class="ps-2">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="facebook">
-                                                    <label class="form-check-label" for="facebook">Facebook</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="instagram"
-                                                        checked>
-                                                    <label class="form-check-label" for="instagram">Instagram</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="googleAnalytics"
-                                                        checked>
-                                                    <label class="form-check-label" for="googleAnalytics">Google
-                                                        Analytics</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Tipo de análise -->
-                                        <div class="col-md-6">
-                                            <label class="form-label mb-2 fw-medium">Tipo de análise</label>
-                                            <div class="ps-2">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
-                                                        id="descritiva" checked>
-                                                    <label class="form-check-label" for="descritiva">Descritiva</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
-                                                        id="prescritiva">
-                                                    <label class="form-check-label"
-                                                        for="prescritiva">Prescritiva</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
-                                                        id="preditiva">
-                                                    <label class="form-check-label" for="preditiva">Preditiva</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Formato do relatório -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-6">
-                                            <label for="formatoRelatorio" class="form-label mb-2 fw-medium">Formato do
-                                                relatório</label>
-                                            <select class="form-select" id="formatoRelatorio">
-                                                <option selected disabled>Selecione</option>
-                                                <option value="resumido">Resumido</option>
-                                                <option value="topico">Tópicos</option>
-                                                <option value="detalhado">Detalhado</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Botão Gerar -->
-                                    <div class="d-flex justify-content-end mt-4">
-                                        <button type="submit" id="btn-buscar" class="btn btn-primary px-4 py-2">
-                                            <span id="btn-buscar-texto">
-                                                <i class="bi bi-robot me-2"></i>Gerar
-                                            </span>
-                                            <span id="btn-buscar-loading"
-                                                class="spinner-border spinner-border-sm d-none" role="status"
-                                                aria-hidden="true"></span>
-                                        </button>
-                                    </div>
-                                </form>
+                                    <!-- /Connections -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -387,25 +403,6 @@
                 <!-- / Intervalo de busca -->
                 <!-- / Navbar -->
 
-
-                <!-- Content wrapper -->
-                <div class="content-wrapper">
-                    <!-- Mensagem inicial antes da busca -->
-                    <div id="instruction-message" class="container-xxl flex-grow-1 container-p-y"
-                        style="text-align: center; padding: 50px;">
-                        <h4>Para obter a análise, preencha o formulário acima e clique no botão
-                            <strong>Buscar</strong>.
-                        </h4>
-                    </div>
-
-                    <!-- Content -->
-                    <div id="content-dashboard" class="container-xxl flex-grow-1 container-p-y" style="display: none;">
-
-                    </div>
-                    <!-- / Content -->
-                    <div class="content-backdrop fade"></div>
-                </div>
-                <!-- / Content wrapper -->
             </div>
             <!-- / Layout page -->
         </div>
@@ -447,47 +444,46 @@
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
-    <!-- Lógica para os inputs de data -->
-    <!-- Jeferson: Flatpickr JS -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <!-- Localization para português (opcional) -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Configuração básica para os datepickers
-            const dateConfig = {
-                dateFormat: "d/m/Y",  // Formato brasileiro de data
-                locale: "pt",         // Localização para português
-                allowInput: true,
-                disableMobile: false, // Para funcionar melhor em dispositivos móveis
-                prevArrow: '<i class="bi bi-chevron-left"></i>',
-                nextArrow: '<i class="bi bi-chevron-right"></i>'
-            };
-
-            // Inicializa o datepicker para a data inicial
-            const startDatePicker = flatpickr("#startDate", {
-                ...dateConfig,
-                onChange: function (selectedDates, dateStr) {
-                    // Atualiza a data mínima do datepicker de data final
-                    endDatePicker.set('minDate', dateStr);
-                }
-            });
-
-            // Inicializa o datepicker para a data final
-            const endDatePicker = flatpickr("#endDate", {
-                ...dateConfig,
-                onChange: function (selectedDates, dateStr) {
-                    // Atualiza a data máxima do datepicker de data inicial
-                    startDatePicker.set('maxDate', dateStr);
-                }
-            });
-        });
-    </script>
     <!-- Jeferson: dados do cliente logado -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- Jeferson: dados do cliente logado -->
-    <script src="/assets/js/analyzesPage.js"></script>
+    <script src="/assets/js/platformsPage.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            (function () {
+                const verticalExample = document.getElementById('vertical-example'),
+                    horizontalExample = document.getElementById('horizontal-example'),
+                    horizVertExample = document.getElementById('both-scrollbars-example');
+
+                // Vertical Example
+                // --------------------------------------------------------------------
+                if (verticalExample) {
+                    new PerfectScrollbar(verticalExample, {
+                        wheelPropagation: false
+                    });
+                }
+
+                // Horizontal Example
+                // --------------------------------------------------------------------
+                if (horizontalExample) {
+                    new PerfectScrollbar(horizontalExample, {
+                        wheelPropagation: false,
+                        suppressScrollY: true
+                    });
+                }
+
+                // Both vertical and Horizontal Example
+                // --------------------------------------------------------------------
+                if (horizVertExample) {
+                    new PerfectScrollbar(horizVertExample, {
+                        wheelPropagation: false
+                    });
+                }
+            })();
+        });
+
+    </script>
 
 
 </body>
