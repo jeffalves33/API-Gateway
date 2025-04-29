@@ -48,6 +48,294 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="/assets/js/config.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #4f46e5;
+            --light-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+        }
+
+        .chat-container {
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #fff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            height: 72px;
+        }
+
+        .search-container {
+            background-color: var(--light-bg);
+            border-radius: 1.5rem;
+            padding: 0.5rem 1rem;
+            width: 300px;
+        }
+
+        .search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+
+        .credit-badge {
+            background-color: rgba(220, 252, 231, 0.5);
+            border-radius: 1rem;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            color: #166534;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            border-radius: 1rem;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .upgrade-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .chat-messages {
+            height: calc(100vh - 72px - 80px);
+            overflow-y: auto;
+            padding: 1.5rem;
+            background-color: #fff;
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+        }
+
+        .user-avatar,
+        .ai-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background-color: #e0e7ff;
+            color: var(--primary-color);
+        }
+
+        .ai-avatar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .message-content {
+            max-width: 85%;
+        }
+
+        .ai-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--primary-color);
+        }
+
+        .message-text {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .user-message .message-text {
+            background-color: #f3f4f6;
+            border-radius: 0.75rem 0.75rem 0.75rem 0;
+        }
+
+        .ai-message .message-text {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem 0.75rem 0 0.75rem;
+        }
+
+        .hashtag {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .reaction-btn {
+            background-color: #f3f4f6;
+            border: none;
+            border-radius: 0.5rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .reaction-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .chat-input {
+            background-color: #fff;
+            border-top: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+            height: 80px;
+        }
+
+        .customer-dropdown {
+            background-color: #f3f4f6;
+            border: none;
+            border-radius: 1.5rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .input-container {
+            background-color: #f3f4f6;
+            border-radius: 1.5rem;
+            padding: 0.25rem 0.25rem 0.25rem 1.25rem;
+            flex-grow: 1;
+        }
+
+        .chat-input-field {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            height: 40px;
+            font-size: 0.95rem;
+        }
+
+        .send-btn {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .chat-history {
+            background-color: #fff;
+            border-left: 1px solid var(--border-color);
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .history-header {
+            padding: 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            height: 72px;
+            display: flex;
+            align-items: center;
+        }
+
+        .history-item {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .history-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #111827;
+        }
+
+        .history-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .history-icon {
+            font-size: 1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-icon:hover {
+            color: var(--primary-color);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .chat-history {
+                display: none;
+            }
+
+            .col-md-8 {
+                width: 100%;
+            }
+
+            .search-container {
+                width: 180px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .credit-badge {
+                display: none;
+            }
+
+            .search-container {
+                width: 120px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -86,17 +374,15 @@
                         </a>
                     </li>
 
-                    <li class="menu-item active">
-                        <a href="/analyzesPage.html"
-                            target="_blank" class="menu-link">
+                    <li class="menu-item">
+                        <a href="/analyzesPage.html" target="_blank" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-robot"></i>
                             <div data-i18n="Calendar">Análises</div>
                         </a>
                     </li>
 
-                    <li class="menu-item">
-                        <a href="/chatPage.html"
-                            target="_blank" class="menu-link">
+                    <li class="menu-item active">
+                        <a href="/chatPage.html" target="_blank" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-chat"></i>
                             <div data-i18n="Chat">Chat</div>
                         </a>
@@ -118,38 +404,6 @@
                     </div>
 
                     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-                        <!-- Objetivo 
-            <div class="navbar-nav align-items-center">
-              <div class="nav-item d-flex align-items-center">
-                <ul class="navbar-nav flex-row align-items-center ms-auto">
-                  <!-- Place this tag where you want the button to render. 
-                  <li class="nav-item lh-1 me-3">
-                    <div class="dropdown">
-                      <button class="btn border d-flex align-items-center justify-content-between w-100 py-2"
-                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                          class="bi bi-chevron-down" viewBox="0 0 16 16">
-                          <path fill-rule="evenodd"
-                            d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
-                        </svg>
-                        <span class="mx-3">Objetivo do cliente</span>
-                      </button>
-                      <ul class="dropdown-menu w-100">
-                        <li><a class="dropdown-item" href="#">Profile 1</a></li>
-                        <li><a class="dropdown-item" href="#">Profile 2</a></li>
-                        <li><a class="dropdown-item" href="#">Profile 3</a></li>
-                        <li>
-                          <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#">Add new profile</a></li>
-                      </ul>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <!-- /Objetivo -->
-
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
                             <!-- Place this tag where you want the button to render. -->
                             <li class="nav-item lh-1 me-3">
@@ -242,118 +496,70 @@
 
                 <div class="container py-4">
                     <div class="card border-0">
-                        <div class="card-header p-0">
-                            <button
-                                class="btn btn-link text-decoration-none text-dark w-100 text-start pt-3 d-flex justify-content-between align-items-center"
-                                type="button" data-bs-toggle="collapse" data-bs-target="#configCollapse"
-                                aria-expanded="false" aria-controls="configCollapse">
-                                <h5><i class="bi bi-clipboard-data me-2"></i>Configuração para análise</h5>
-                                <h5><i class="bi bi-chevron-down"></i></h5>
-                            </button>
-                        </div>
+                        <div class="row g-0 chat-container">
+                            <!-- Chat Section -->
+                            <div class="col-md">
+                                <!-- Chat Header -->
+                                <div class="chat-header d-flex justify-content-between align-items-center">
 
-                        <div class="collapse" id="configCollapse">
-                            <div class="card-body p-4">
-                                <form id="form-busca">
-                                    <!-- Datas -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-6 mb-3 mb-md-0">
-                                            <label for="startDate" class="form-label mb-2">Data Inicial</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-primary text-white">
-                                                    <i class="bi bi-calendar"></i>
-                                                </span>
-                                                <input type="text" class="form-control date-picker" id="startDate"
-                                                    autocomplete="off" placeholder="Selecione a data inicial">
-                                            </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="credit-badge me-3">
+                                            <i class="bi bi-circle-fill text-success me-1"
+                                                style="font-size: 0.6rem;"></i>
+                                            <span>Free credit: 5000</span>
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <div class="col-md-6">
-                                            <label for="endDate" class="form-label mb-2">Data Final</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-primary text-white">
-                                                    <i class="bi bi-calendar"></i>
-                                                </span>
-                                                <input type="text" class="form-control date-picker" id="endDate"
-                                                    autocomplete="off" placeholder="Selecione a data final">
+                                <!-- Chat Messages -->
+                                <div class="chat-messages">
+                                    <!-- User Message -->
+                                    <div class="d-flex message user-message">
+                                        <div class="user-avatar">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                        <div class="message-content">
+                                            <div class="message-text">
+                                                <p class="mb-0">Teste 123</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Plataformas e Tipo de análise -->
-                                    <div class="row mb-4">
-                                        <!-- Plataformas -->
-                                        <div class="col-md-6 mb-3 mb-md-0">
-                                            <label class="form-label mb-2 fw-medium">Plataformas</label>
-                                            <div class="ps-2">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="facebook">
-                                                    <label class="form-check-label" for="facebook">Facebook</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="instagram"
-                                                        checked>
-                                                    <label class="form-check-label" for="instagram">Instagram</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="googleAnalytics"
-                                                        checked>
-                                                    <label class="form-check-label" for="googleAnalytics">Google
-                                                        Analytics</label>
-                                                </div>
-                                            </div>
+                                    <!-- AI Message -->
+                                    <div class="d-flex message ai-message">
+                                        <div class="ai-avatar">
+                                            <i class="bi bi-robot"></i>
                                         </div>
+                                        <div class="message-content">
+                                            <div class="ai-name">hoko AI</div>
+                                            <div class="message-text">
+                                                <p>🚀 teste 🚀</p>
+                                            </div>
 
-                                        <!-- Tipo de análise -->
-                                        <div class="col-md-6">
-                                            <label class="form-label mb-2 fw-medium">Tipo de análise</label>
-                                            <div class="ps-2">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
-                                                        id="descritiva" checked>
-                                                    <label class="form-check-label" for="descritiva">Descritiva</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
-                                                        id="prescritiva">
-                                                    <label class="form-check-label"
-                                                        for="prescritiva">Prescritiva</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
-                                                        id="preditiva">
-                                                    <label class="form-check-label" for="preditiva">Preditiva</label>
-                                                </div>
+                                            <div class="d-flex mt-3">
+                                                <button class="reaction-btn me-2">
+                                                    <i class="bi bi-hand-thumbs-up"></i>
+                                                </button>
+                                                <button class="reaction-btn">
+                                                    <i class="bi bi-hand-thumbs-down"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- Formato do relatório -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-6">
-                                            <label for="formatoRelatorio" class="form-label mb-2 fw-medium">Formato do
-                                                relatório</label>
-                                            <select class="form-select" id="formatoRelatorio">
-                                                <option selected disabled>Selecione</option>
-                                                <option value="resumido">Resumido</option>
-                                                <option value="topico">Tópicos</option>
-                                                <option value="detalhado">Detalhado</option>
-                                            </select>
+                                <!-- Chat Input -->
+                                <div class="chat-input">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="input-container d-flex align-items-center">
+                                            <input type="text" class="chat-input-field"
+                                                placeholder="Tell me what do you want?">
+                                            <button class="send-btn">
+                                                <i class="bi bi-send-fill"></i>
+                                            </button>
                                         </div>
                                     </div>
-
-                                    <!-- Botão Gerar -->
-                                    <div class="d-flex justify-content-end mt-4">
-                                        <button type="submit" id="btn-buscar" class="btn btn-primary px-4 py-2">
-                                            <span id="btn-buscar-texto">
-                                                <i class="bi bi-robot me-2"></i>Gerar
-                                            </span>
-                                            <span id="btn-buscar-loading"
-                                                class="spinner-border spinner-border-sm d-none" role="status"
-                                                aria-hidden="true"></span>
-                                        </button>
-                                    </div>
-                                </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -364,13 +570,6 @@
 
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
-                    <!-- Mensagem inicial antes da busca -->
-                    <div id="instruction-message" class="container-xxl flex-grow-1 container-p-y"
-                        style="text-align: center; padding: 50px;">
-                        <h4>Para visualizar o dashboard, selecione um intervalo de datas e clique no botão
-                            <strong>Buscar</strong>.
-                        </h4>
-                    </div>
 
                     <!-- Content -->
                     <div id="content-dashboard" class="container-xxl flex-grow-1 container-p-y" style="display: none;">
@@ -426,43 +625,13 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <!-- Localization para português (opcional) -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Configuração básica para os datepickers
-            const dateConfig = {
-                dateFormat: "d/m/Y",  // Formato brasileiro de data
-                locale: "pt",         // Localização para português
-                allowInput: true,
-                disableMobile: false, // Para funcionar melhor em dispositivos móveis
-                prevArrow: '<i class="bi bi-chevron-left"></i>',
-                nextArrow: '<i class="bi bi-chevron-right"></i>'
-            };
 
-            // Inicializa o datepicker para a data inicial
-            const startDatePicker = flatpickr("#startDate", {
-                ...dateConfig,
-                onChange: function (selectedDates, dateStr) {
-                    // Atualiza a data mínima do datepicker de data final
-                    endDatePicker.set('minDate', dateStr);
-                }
-            });
-
-            // Inicializa o datepicker para a data final
-            const endDatePicker = flatpickr("#endDate", {
-                ...dateConfig,
-                onChange: function (selectedDates, dateStr) {
-                    // Atualiza a data máxima do datepicker de data inicial
-                    startDatePicker.set('maxDate', dateStr);
-                }
-            });
-        });
-    </script>
     <!-- Jeferson: dados do cliente logado -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- Jeferson: dados do cliente logado -->
-    <script src="/assets/js/analyzesPage.js"></script>
-    
+    <script src="/assets/js/chatPage.js"></script>
+
 
 </body>
 

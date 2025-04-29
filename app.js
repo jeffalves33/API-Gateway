@@ -40,6 +40,10 @@ app.get('/analyzesPage.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analyzesPage.html'));
 });
 
+app.get('/chatPage.html', authenticatePageAccess, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'chatPage.html'));
+});
+
 app.get('/profile.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
