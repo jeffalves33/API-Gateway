@@ -65,6 +65,10 @@ app.get('/privacyPolicyPage.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'privacyPolicyPage.html'));
 });
 
+app.get('/termsUse.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'termsUse.html'));
+});
+
 // === Inicialização do servidor ===
 app.listen(port, async () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
