@@ -53,12 +53,16 @@ app.get('/profile.html', authenticatePageAccess, (req, res) => {
 });
 
 // === Páginas públicas ===
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+app.get('/privacyPolicyPage.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacyPolicyPage.html'));
 });
 
 // === Inicialização do servidor ===
