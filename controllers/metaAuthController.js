@@ -31,7 +31,13 @@ exports.startOAuth = (req, res) => {
 exports.handleOAuthCallback = async (req, res) => {
   const { code, state: id_user } = req.query;
 
+  console.log('⚙️ Callback iniciado');
+  console.log('📥 code:', code);
+  console.log('📥 id_user (state):', id_user);
+
   try {
+    // Etapa 1 — Short-lived token
+    console.log('🔗 Solicitando short-lived token...');
     const tokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
       params: {
         client_id: META_APP_ID,
@@ -40,9 +46,12 @@ exports.handleOAuthCallback = async (req, res) => {
         code
       }
     });
+    console.log('✅ Short-lived token recebido:', tokenRes.data);
 
     const shortLivedToken = tokenRes.data.access_token;
 
+    // Etapa 2 — Exchange para long-lived token
+    console.log('🔗 Trocando por long-lived token...');
     const longTokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
       params: {
         grant_type: 'fb_exchange_token',
@@ -51,25 +60,39 @@ exports.handleOAuthCallback = async (req, res) => {
         fb_exchange_token: shortLivedToken
       }
     });
+    console.log('✅ Long-lived token recebido:', longTokenRes.data);
 
     const longLivedToken = longTokenRes.data.access_token;
 
+    // Etapa 3 — Buscar ID do usuário Meta
+    console.log('🔗 Buscando Meta user id...');
     const meRes = await axios.get('https://graph.facebook.com/v22.0/me', {
       params: { access_token: longLivedToken }
     });
+    console.log('✅ Meta user id recebido:', meRes.data);
 
     const metakUserId = meRes.data.id;
 
+    // Etapa 4 — Salvar no banco
+    console.log('💾 Salvando no banco...');
     await pool.query(
       `INSERT INTO user_keys (id_user, id_user_meta, access_token_meta)
        VALUES ($1, $2, $3)
        ON CONFLICT (id_user) DO UPDATE SET id_user_meta = $2, access_token_meta = $3`,
       [id_user, metakUserId, longLivedToken]
     );
+    console.log('✅ Salvo com sucesso no banco!');
 
     return res.redirect('/platformsPage.html');
   } catch (error) {
-    console.error('Erro no OAuth:', error.response?.data || error.message);
+    if (error.response) {
+      console.error('❌ Erro na resposta da API:', error.response.status, error.response.data);
+    } else if (error.request) {
+      console.error('❌ Nenhuma resposta recebida:', error.request);
+    } else {
+      console.error('❌ Erro ao configurar a requisição:', error.message);
+    }
     return res.status(500).send('Erro ao conectar com o Facebook.');
   }
 };
+
