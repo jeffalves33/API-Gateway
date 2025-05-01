@@ -1,4 +1,4 @@
-// app.js
+// Arquivo: app.js
 
 const express = require('express');
 const cookieParser = require('cookie-parser');
@@ -9,7 +9,8 @@ const dotenv = require('dotenv');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
-const metricsRoutes = require('./routes/metricsRoutes'); // ✅ Importa rota de métricas
+const metricsRoutes = require('./routes/metricsRoutes');
+const metaAuthRoutes = require('./routes/metaAuthRoutes');
 
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 
@@ -30,6 +31,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/api', authRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/metrics', metricsRoutes);
+app.use('/', metaAuthRoutes);
 
 // === Páginas protegidas ===
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => {
