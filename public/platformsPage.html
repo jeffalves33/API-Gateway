@@ -498,15 +498,16 @@
                     });
                 }
             })();
+            document.querySelectorAll('.form-check-input').forEach(input => {
+                input.addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        window.location.href = '/auth/meta';
+                    }
+                });
+            });
+
         });
 
-        document.querySelectorAll('.form-check-input').forEach(input => {
-            input.addEventListener('change', function (e) {
-                if (e.target.checked) {
-                    window.location.href = '/auth/meta';
-                }
-            });
-        });
 
     </script>
 
