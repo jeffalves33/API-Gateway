@@ -1,4 +1,4 @@
-// public/js/analyzesPage.js
+// Arquivo: assets/js/platformsPage.js
 document.addEventListener('DOMContentLoaded', async function () {
     const customerListElement = document.getElementById('dropdown-customer-list');
     const selectedCustomerNameElement = document.getElementById('selected-customer-name');

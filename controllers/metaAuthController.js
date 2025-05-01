@@ -8,7 +8,6 @@ const META_APP_ID = '1832737137219562';//process.env.META_APP_ID;
 const META_APP_SECRET = 'b14bc1778c11a716e69ac80c52199798';//process.env.META_APP_SECRET;
 const REDIRECT_URI = 'https://api-gateway-9qt5.onrender.com/auth/meta/callback';
 
-// 1. Redirecionar para autorização
 exports.startOAuth = (req, res) => {
   const scopes = [
     'pages_show_list',
@@ -29,7 +28,6 @@ exports.startOAuth = (req, res) => {
   res.redirect(authUrl);
 };
 
-// 2. Callback após autorização
 exports.handleOAuthCallback = async (req, res) => {
   const { code, state: id_user } = req.query;
 
@@ -43,28 +41,35 @@ exports.handleOAuthCallback = async (req, res) => {
       }
     });
 
-    const access_token = tokenRes.data.access_token;
+    const shortLivedToken = tokenRes.data.access_token;
 
-    // Buscar as páginas vinculadas à conta
-    const pagesRes = await axios.get('https://graph.facebook.com/v22.0/me/accounts', {
-      params: { access_token }
+    const longTokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
+      params: {
+        grant_type: 'fb_exchange_token',
+        client_id: META_APP_ID,
+        client_secret: META_APP_SECRET,
+        fb_exchange_token: shortLivedToken
+      }
     });
 
-    const firstPage = pagesRes.data.data?.[0];
-    if (!firstPage) throw new Error('Nenhuma página vinculada encontrada.');
+    const longLivedToken = longTokenRes.data.access_token;
 
-    const { id: page_id, access_token: page_token } = firstPage;
-    console.log('firstPage: ', firstPage)
+    const meRes = await axios.get('https://graph.facebook.com/v22.0/me', {
+      params: { access_token: longLivedToken }
+    });
 
-    // Salvar no banco (você pode adaptar essa query/tabela)
-    /*await pool.query(
-      'UPDATE "user" SET facebook_access_token = $1, facebook_page_id = $2 WHERE id_user = $3',
-      [page_token, page_id, id_user]
-    );*/
+    const metakUserId = meRes.data.id;
+
+    await pool.query(
+      `INSERT INTO user_keys (id_user, id_user_meta, access_token_meta)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (id_user) DO UPDATE SET facebook_user_id = $2, access_token = $3`,
+      [id_user, metakUserId, longLivedToken]
+    );
 
     return res.redirect('/platformsPage.html');
   } catch (error) {
-    console.error('Erro ao finalizar OAuth do Meta:', error.response?.data || error.message);
+    console.error('Erro no OAuth:', error.response?.data || error.message);
     return res.status(500).send('Erro ao conectar com o Facebook.');
   }
 };
