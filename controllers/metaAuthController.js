@@ -63,7 +63,7 @@ exports.handleOAuthCallback = async (req, res) => {
     await pool.query(
       `INSERT INTO user_keys (id_user, id_user_meta, access_token_meta)
        VALUES ($1, $2, $3)
-       ON CONFLICT (id_user) DO UPDATE SET facebook_user_id = $2, access_token = $3`,
+       ON CONFLICT (id_user) DO UPDATE SET id_user_meta = $2, access_token_meta = $3`,
       [id_user, metakUserId, longLivedToken]
     );
 
