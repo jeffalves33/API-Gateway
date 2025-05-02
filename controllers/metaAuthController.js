@@ -31,13 +31,7 @@ exports.startOAuth = (req, res) => {
 exports.handleOAuthCallback = async (req, res) => {
   const { code, state: id_user } = req.query;
 
-  console.log('⚙️ Callback iniciado');
-  console.log('📥 code:', code);
-  console.log('📥 id_user (state):', id_user);
-
   try {
-    // Etapa 1 — Short-lived token
-    console.log('🔗 Solicitando short-lived token...');
     const tokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
       params: {
         client_id: META_APP_ID,
@@ -46,12 +40,9 @@ exports.handleOAuthCallback = async (req, res) => {
         code
       }
     });
-    console.log('✅ Short-lived token recebido:', tokenRes.data);
 
     const shortLivedToken = tokenRes.data.access_token;
 
-    // Etapa 2 — Exchange para long-lived token
-    console.log('🔗 Trocando por long-lived token...');
     const longTokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
       params: {
         grant_type: 'fb_exchange_token',
@@ -60,39 +51,72 @@ exports.handleOAuthCallback = async (req, res) => {
         fb_exchange_token: shortLivedToken
       }
     });
-    console.log('✅ Long-lived token recebido:', longTokenRes.data);
 
     const longLivedToken = longTokenRes.data.access_token;
 
-    // Etapa 3 — Buscar ID do usuário Meta
-    console.log('🔗 Buscando Meta user id...');
     const meRes = await axios.get('https://graph.facebook.com/v22.0/me', {
       params: { access_token: longLivedToken }
     });
-    console.log('✅ Meta user id recebido:', meRes.data);
 
     const metakUserId = meRes.data.id;
 
-    // Etapa 4 — Salvar no banco
-    console.log('💾 Salvando no banco...');
     await pool.query(
       `INSERT INTO user_keys (id_user, id_user_meta, access_token_meta)
        VALUES ($1, $2, $3)
        ON CONFLICT (id_user) DO UPDATE SET id_user_meta = $2, access_token_meta = $3`,
       [id_user, metakUserId, longLivedToken]
     );
-    console.log('✅ Salvo com sucesso no banco!');
 
     return res.redirect('/platformsPage.html');
   } catch (error) {
     if (error.response) {
-      console.error('❌ Erro na resposta da API:', error.response.status, error.response.data);
+      console.error('Erro na resposta da API:', error.response.status, error.response.data);
     } else if (error.request) {
-      console.error('❌ Nenhuma resposta recebida:', error.request);
+      console.error('Nenhuma resposta recebida:', error.request);
     } else {
-      console.error('❌ Erro ao configurar a requisição:', error.message);
+      console.error('Erro ao configurar a requisição:', error.message);
     }
     return res.status(500).send('Erro ao conectar com o Facebook.');
   }
 };
 
+exports.getMetaPages = async (req, res) => {
+  try {
+    const { id } = req.user;
+
+    const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Token do usuário não encontrado' });
+    }
+
+    const access_token = result.rows[0].access_token_meta;
+
+    const fbRes = await axios.get('https://graph.facebook.com/v22.0/me/accounts', {
+      params: { access_token }
+    });
+
+    const pages = fbRes.data.data.map(p => ({
+      id: p.id,
+      name: p.name
+    }));
+
+    res.json(pages);
+  } catch (error) {
+    console.error('Erro ao buscar páginas do Facebook:', error.response?.data || error.message);
+    res.status(500).json({ message: 'Erro ao buscar páginas do Facebook' });
+  }
+};
+
+exports.checkMetaStatus = async (req, res) => {
+  const id_user = req.user.id;
+
+  try {
+      const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id_user]);
+      const facebookConnected = result.rows.length > 0 && result.rows[0].access_token_meta !== null;
+
+      res.json({ facebookConnected });
+  } catch (error) {
+      console.error('Erro ao verificar status do Facebook:', error);
+      res.status(500).json({ facebookConnected: false });
+  }
+};
