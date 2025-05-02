@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     function saveSelectedCustomer(id, name) {
         localStorage.setItem('selectedCustomerId', id);
         localStorage.setItem('selectedCustomerName', name);
+        localStorage.setItem('selectedCustomerFacebookPageId', facebookPageId || '');
     }
 
     function restoreSelectedCustomer() {
@@ -50,7 +51,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 item.innerHTML = `
                     <a class="dropdown-item dropdown-customer-list-items" href="#" 
                        data-id="${customer.id_customer}" 
-                       data-name="${customer.name}">
+                       data-name="${customer.name}"
+                       data-facebook-page-id="${customer.id_page_facebook || ''}">
                       ${customer.name}
                     </a>`;
                 customerListElement.appendChild(item);
@@ -66,10 +68,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                     e.preventDefault();
                     const id = this.getAttribute('data-id');
                     const name = this.getAttribute('data-name');
+                    const facebookPageId = this.getAttribute('data-facebook-page-id');
 
-                    saveSelectedCustomer(id, name);
+                    saveSelectedCustomer(id, name, facebookPageId);
                     updateSelectedCustomerDisplay(name);
-                    console.log(`Cliente selecionado: ${id}`);
 
                     if (userId && id) {
                         try {
