@@ -6,7 +6,7 @@ const addFacebookCustomer = async (req, res) => {
     const { id_customer, id_user, id_page_facebook, name } = req.body;
 
     await postCustomerFacebook(id_customer, id_user, name);
-    await postCustomerFacebookKeys(id_customer, id_page_facebook);
+    await postCustomerFacebookKeys(id_customer, id_user, id_page_facebook);
 
     res.status(200).json({ success: true, message: 'Cliente Facebook adicionado com sucesso' });
   } catch (error) {

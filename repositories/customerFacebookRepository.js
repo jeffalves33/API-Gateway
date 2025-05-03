@@ -19,7 +19,7 @@ const postCustomerFacebook = async (id_customer, id_user, name) => {
   }
 };
 
-const postCustomerFacebookKeys = async (id_customer, id_page_facebook) => {
+const postCustomerFacebookKeys = async (id_customer, id_user, id_page_facebook) => {
   try {
     const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id_user]);
     if (result.rows.length === 0) {
