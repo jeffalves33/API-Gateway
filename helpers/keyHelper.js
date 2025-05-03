@@ -161,11 +161,41 @@ const clearCacheForUser = (id_user) => {
   }
 };
 
+
+const getFacebookCustomerKey = async (id_user, id_customer) => {
+  const cacheKey = `facebook:${id_user}:${id_customer}`;
+
+  if (cache.has(cacheKey)) {
+    const { expires, data } = cache.get(cacheKey);
+    if (Date.now() < expires) return data;
+    cache.delete(cacheKey);
+  }
+
+  const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
+  if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
+
+  const customerFacebookKeys = await getCustomerFacebookKeys(id_customer);
+
+  const facebookKeys = {
+    page_id: customerFacebookKeys.id_page_facebook,
+    access_token: customerFacebookKeys.access_token_page
+  };
+
+  cache.set(cacheKey, {
+    data: facebookKeys,
+    expires: Date.now() + 1000 * 60 * 5
+  });
+
+  return facebookKeys;
+};
+
+
 module.exports = {
   getFacebookKeys,
   getInstagramKeys,
   getGoogleAnalyticsKeys,
   getAllKeys,
   clearCacheForUser,
-  refreshKeysForCustomer
+  refreshKeysForCustomer,
+  getFacebookCustomerKey
 };

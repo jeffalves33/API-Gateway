@@ -1,5 +1,5 @@
 // Arquivo: controllers/metricsController.js
-const { getFacebookKeys, getInstagramKeys, getGoogleAnalyticsKeys } = require('../helpers/keyHelper');
+const { getFacebookKeys, getInstagramKeys, getGoogleAnalyticsKeys, getFacebookCustomerKey } = require('../helpers/keyHelper');
 const facebookService = require('../services/facebookService');
 const instagramService = require('../services/instagramService');
 const googleAnalyticsService = require('../services/googleAnalyticsService');
@@ -9,7 +9,7 @@ exports.getReachMetrics = async (req, res) => {
     const id_user = req.user.id;
     const { id_customer, startDate, endDate } = req.body;
 
-    const facebook = await getFacebookKeys(id_user, id_customer);
+    const facebook = await getFacebookCustomerKey(id_user, id_customer);
     //const instagram = await getInstagramKeys(id_user, id_customer);
 
     const [facebookData, instagramData] = await Promise.all([
@@ -40,14 +40,14 @@ exports.getImpressionMetrics = async (req, res) => {
     const { id_customer, startDate, endDate } = req.body;
 
     const facebook = await getFacebookKeys(id_user, id_customer);
-    const instagram = await getInstagramKeys(id_user, id_customer);
-    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+    //const instagram = await getInstagramKeys(id_user, id_customer);
+    //const google = await getGoogleAnalyticsKeys(id_user, id_customer);
 
     const [facebookData, instagramData, googleData, linkedinData] = await Promise.all([
       facebookService.getImpressions(facebook.page_id, facebook.access_token, startDate, endDate),
-      instagramService.getImpressions(instagram.page_id, instagram.access_token, startDate, endDate),
-      googleAnalyticsService.getImpressions(google, startDate, endDate),
-      [0, 0, 0, 0, 0, 0]
+      [],//instagramService.getImpressions(instagram.page_id, instagram.access_token, startDate, endDate),
+      [],//googleAnalyticsService.getImpressions(google, startDate, endDate),
+      []//[0, 0, 0, 0, 0, 0]
     ]);
 
     const labels = facebookData.map((_, i) => {
@@ -75,13 +75,13 @@ exports.getfollowersMetrics = async (req, res) => {
     const { id_customer, startDate, endDate } = req.body;
 
     const facebook = await getFacebookKeys(id_user, id_customer);
-    const instagram = await getInstagramKeys(id_user, id_customer);
+    //const instagram = await getInstagramKeys(id_user, id_customer);
 
     const [facebookData, instagramData, linkedinData, youtubeData] = await Promise.all([
       facebookService.getFollowers(facebook.page_id, facebook.access_token, startDate, endDate),
-      instagramService.getFollowers(instagram.page_id, instagram.access_token, startDate, endDate),
-      2301,
-      6213
+      0,//instagramService.getFollowers(instagram.page_id, instagram.access_token, startDate, endDate),
+      0,
+      0
     ]);
 
     const labels = facebookData.map((_, i) => {

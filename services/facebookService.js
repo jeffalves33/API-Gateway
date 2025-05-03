@@ -2,15 +2,14 @@
 const axios = require('axios');
 const { splitDateRange, formatDate } = require('../utils/dateUtils');
 
-const BASE_URL = 'https://graph.facebook.com/v20.0';
+const BASE_URL = 'https://graph.facebook.com/v22.0';
 
 exports.getReach = async (pageId, accessToken, startDate, endDate, period = 'day') => {
   const allValues = [];
 
   for (const [since, until] of splitDateRange(startDate, endDate, 30)) {
-    const response = await axios.get(`${BASE_URL}/${pageId}/insights`, {
+    const response = await axios.get(`${BASE_URL}/${pageId}/insights/page_impressions_unique`, {
       params: {
-        metric: 'page_impressions_unique',
         access_token: accessToken,
         period,
         since: formatDate(since),

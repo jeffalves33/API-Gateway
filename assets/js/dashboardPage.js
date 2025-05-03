@@ -725,8 +725,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 // Executa todas as buscas
                 await fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate));
-                //await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
-                //await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
                 //await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
                 //await fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate));
 
