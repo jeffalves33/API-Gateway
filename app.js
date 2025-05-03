@@ -9,6 +9,7 @@ const dotenv = require('dotenv');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const customerFacebookRoutes = require('./routes/customerFacebookRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const metaAuthRoutes = require('./routes/metaAuthRoutes');
 
@@ -30,6 +31,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // === Rotas da API ===
 app.use('/api', authRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/customers/facebook', customerFacebookRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/', metaAuthRoutes);
 

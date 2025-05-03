@@ -95,9 +95,20 @@ exports.getMetaPages = async (req, res) => {
       params: { access_token }
     });
 
-    const pages = fbRes.data.data.map(p => ({
-      id: p.id,
-      name: p.name
+    const fbPages = fbRes.data.data;
+
+    const dbRes = await pool.query(
+      'SELECT cfk.id_page_facebook FROM customer_facebook_keys cfk JOIN customer_facebook cf ON cfk.id_customer = cf.id_customer WHERE cf.id_user = $1',
+      [id]
+    );
+
+    const existingPageIds = new Set(dbRes.rows.map(row => row.id_page_facebook));
+
+    const pages = fbPages.map(fbPage => ({
+      id: id,
+      name: fbPage.name,
+      id_page: fbPage.id,
+      connected: existingPageIds.has(fbPage.id)
     }));
 
     res.json(pages);
@@ -111,12 +122,12 @@ exports.checkMetaStatus = async (req, res) => {
   const id_user = req.user.id;
 
   try {
-      const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id_user]);
-      const facebookConnected = result.rows.length > 0 && result.rows[0].access_token_meta !== null;
+    const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id_user]);
+    const facebookConnected = result.rows.length > 0 && result.rows[0].access_token_meta !== null;
 
-      res.json({ facebookConnected });
+    res.json({ facebookConnected });
   } catch (error) {
-      console.error('Erro ao verificar status do Facebook:', error);
-      res.status(500).json({ facebookConnected: false });
+    console.error('Erro ao verificar status do Facebook:', error);
+    res.status(500).json({ facebookConnected: false });
   }
 };

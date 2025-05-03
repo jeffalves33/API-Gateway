@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             customerListElement.innerHTML += `
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#">Adicionar cliente</a></li>
+                <li><a class="dropdown-item" href="/platformsPage.html">Adicionar cliente</a></li>
             `;
 
             document.querySelectorAll('.dropdown-customer-list-items').forEach(item => {
