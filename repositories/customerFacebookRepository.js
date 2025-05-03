@@ -1,5 +1,6 @@
 // Arquivo: repositories/customerFacebookRepository.js
 const { pool } = require('../config/db');
+const axios = require('axios');
 
 const getCustomerFacebookKeys = async (id_customer) => {
   const result = await pool.query('SELECT * FROM customer_facebook_keys WHERE id_customer = $1', [id_customer]);
