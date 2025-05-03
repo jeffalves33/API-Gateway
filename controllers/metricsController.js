@@ -10,11 +10,11 @@ exports.getReachMetrics = async (req, res) => {
     const { id_customer, startDate, endDate } = req.body;
 
     const facebook = await getFacebookKeys(id_user, id_customer);
-    const instagram = await getInstagramKeys(id_user, id_customer);
+    //const instagram = await getInstagramKeys(id_user, id_customer);
 
     const [facebookData, instagramData] = await Promise.all([
       facebookService.getReach(facebook.page_id, facebook.access_token, startDate, endDate),
-      instagramService.getReach(instagram.page_id, instagram.access_token, startDate, endDate)
+      []//instagramService.getReach(instagram.page_id, instagram.access_token, startDate, endDate)
     ]);
 
     const labels = facebookData.map((_, i) => {

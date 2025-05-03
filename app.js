@@ -31,7 +31,8 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // === Rotas da API ===
 app.use('/api', authRoutes);
 app.use('/api/customers', customerRoutes);
-app.use('/api/customers/facebook', customerFacebookRoutes);
+app.use('/api/customers/facebook', customerFacebookRoutes); // Refatorar
+app.use('/', customerFacebookRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/', metaAuthRoutes);
 

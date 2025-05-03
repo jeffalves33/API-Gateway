@@ -1,5 +1,6 @@
 // Arquivo: helpers/keyHelper.js
-const { getCustomerKeys, checkCustomerBelongsToUser } = require('../repositories/customerRepository');
+const { checkCustomerBelongsToUser } = require('../repositories/customerRepository');
+const { getCustomerFacebookKeys } = require('../repositories/customerFacebookRepository');
 const { getUserKeys } = require('../repositories/userRepository');
 
 const cache = new Map();
@@ -8,7 +9,7 @@ const refreshKeysForCustomer = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const customerKeys = await getCustomerKeys(id_customer);
+  const customerKeys = await getCustomerFacebookKeys(id_customer);
   const userKeys = await getUserKeys(id_user);
 
   const composed = {
@@ -58,12 +59,12 @@ const getFacebookKeys = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const customerKeys = await getCustomerKeys(id_customer);
+  const customerFacebookKeys = await getCustomerFacebookKeys(id_customer);
   const userKeys = await getUserKeys(id_user);
 
   const facebookKeys = {
-    page_id: customerKeys.facebook_page_id,
-    access_token: userKeys.facebook_access_token
+    page_id: customerFacebookKeys.id_page_facebook,
+    access_token: userKeys.access_token_meta
   };
 
   cache.set(cacheKey, {
@@ -86,7 +87,7 @@ const getInstagramKeys = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const customerKeys = await getCustomerKeys(id_customer);
+  const customerKeys = await getCustomerInstagramKeys(id_customer);
   const userKeys = await getUserKeys(id_user);
 
   const instagramKeys = {
