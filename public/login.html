@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="light-style layout-wide customizer-hide" dir="ltr" data-theme="theme-default"
+  data-assets-path="../assets/" data-template="vertical-menu-template-free">
 
 <head>
   <meta charset="utf-8" />
@@ -106,7 +107,7 @@
               <div class="mb-3 form-password-toggle">
                 <div class="d-flex justify-content-between">
                   <label class="form-label" for="password">Senha</label>
-                  <a href="auth-forgot-password-basic.html">
+                  <a href="#">
                     <small>Esqueceu a senha?</small>
                   </a>
                 </div>
@@ -137,7 +138,7 @@
 
             <p class="text-center">
               <span>Novo em nossa plataforma?</span>
-              <a href="auth-register-basic.html">
+              <a href="/register.html">
                 <span>Crie uma conta</span>
               </a>
             </p>
@@ -191,17 +192,10 @@
           throw new Error(data.message || 'Erro ao fazer login');
         }
 
-        // Exibir mensagem de sucesso
-        /*alertContainer.innerHTML = `
-          <div class="alert alert-success alert-dismissible fade show" role="alert">
-            Login realizado com sucesso! Redirecionando para o perfil...
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-          </div>
-        `;*/
-
         // Redirecionar para a página de perfil após 1 segundo
         setTimeout(() => {
           window.location.href = '/dashboardPage.html';
+          localStorage.clear();
         }, 1000);
 
       } catch (error) {
@@ -220,6 +214,8 @@
       }
     });
   </script>
+
+  <script src="/assets/js/main.js"></script>
 </body>
 
 </html>
