@@ -1,5 +1,6 @@
 // Arquivo: controllers/customerController.js
 const { postCustomerFacebook, postCustomerFacebookKeys } = require('../repositories/customerFacebookRepository');
+const { pool } = require('../config/db');
 
 const addFacebookCustomer = async (req, res) => {
   try {
@@ -17,12 +18,15 @@ const addFacebookCustomer = async (req, res) => {
 
 const removeFacebookCustomer = async (req, res) => {
   try {
-    const { id } = req.user;
-    const { idPage } = req.params;
+    const { idCustomer } = req.params;
+    await pool.query(
+      'DELETE FROM customer_facebook_keys WHERE id_customer = $1',
+      [idCustomer]
+    );
 
     await pool.query(
-      'DELETE FROM customer_facebook_keys WHERE id_customer = $1 AND id_page_facebook = $2',
-      [id, idPage]
+      'DELETE FROM customer_facebook WHERE id_customer = $1',
+      [idCustomer]
     );
 
     res.status(200).json({ success: true, message: 'Cliente Facebook removido com sucesso' });

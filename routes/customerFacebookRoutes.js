@@ -6,6 +6,6 @@ const { addFacebookCustomer, removeFacebookCustomer } = require('../controllers/
 
 
 router.post('/', authenticateToken, addFacebookCustomer);
-router.delete('/:idPage', authenticateToken, removeFacebookCustomer);
+router.delete('/:idCustomer', authenticateToken, removeFacebookCustomer);
 
 module.exports = router;

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         selectedCustomerNameElement.textContent = name || 'Cliente';
     }
 
-    function saveSelectedCustomer(id, name) {
+    function saveSelectedCustomer(id, name, facebookPageId) {
         localStorage.setItem('selectedCustomerId', id);
         localStorage.setItem('selectedCustomerName', name);
         localStorage.setItem('selectedCustomerFacebookPageId', facebookPageId || '');

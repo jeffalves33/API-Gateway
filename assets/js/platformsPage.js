@@ -1,27 +1,8 @@
 // Arquivo: assets/js/platformsPage.js
 document.addEventListener('DOMContentLoaded', async function () {
-    const customerListElement = document.getElementById('dropdown-customer-list');
-    const selectedCustomerNameElement = document.getElementById('selected-customer-name');
     const userNameElement = document.getElementById('user-name');
 
     let userId = null;
-
-    function updateSelectedCustomerDisplay(name) {
-        selectedCustomerNameElement.textContent = name || 'Cliente';
-    }
-
-    function saveSelectedCustomer(id, name) {
-        localStorage.setItem('selectedCustomerId', id);
-        localStorage.setItem('selectedCustomerName', name);
-        localStorage.setItem('selectedCustomerFacebookPageId', facebookPageId || '');
-    }
-
-    function restoreSelectedCustomer() {
-        const savedName = localStorage.getItem('selectedCustomerName');
-        if (savedName) {
-            updateSelectedCustomerDisplay(savedName);
-        }
-    }
 
     async function loadUserProfile() {
         try {
@@ -35,64 +16,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             userId = data.user.id_user;
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);
-        }
-    }
-
-    async function loadCustomers() {
-        try {
-            const response = await fetch('/api/customers');
-            if (!response.ok) throw new Error('Erro ao buscar clientes');
-
-            const { customers } = await response.json();
-            customerListElement.innerHTML = '';
-
-            customers.forEach(customer => {
-                const item = document.createElement('li');
-                item.innerHTML = `
-                    <a class="dropdown-item dropdown-customer-list-items" href="#" 
-                       data-id="${customer.id_customer}" 
-                       data-name="${customer.name}"
-                       data-facebook-page-id="${customer.id_page_facebook || ''}">
-                      ${customer.name}
-                    </a>`;
-                customerListElement.appendChild(item);
-            });
-
-            customerListElement.innerHTML += `
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/platformsPage.html">Adicionar cliente</a></li>
-            `;
-
-            document.querySelectorAll('.dropdown-customer-list-items').forEach(item => {
-                item.addEventListener('click', async function (e) {
-                    e.preventDefault();
-                    const id = this.getAttribute('data-id');
-                    const name = this.getAttribute('data-name');
-                    const facebookPageId = this.getAttribute('data-facebook-page-id');
-
-                    saveSelectedCustomer(id, name, facebookPageId);
-                    updateSelectedCustomerDisplay(name);
-
-                    if (userId && id) {
-                        try {
-                            const response = await fetch('/api/customers/cache', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ id_user: userId, id_customer: id })
-                            });
-
-                            if (!response.ok) {
-                                const data = await response.json();
-                                throw new Error(data.message || 'Erro ao atualizar chaves');
-                            }
-                        } catch (error) {
-                            console.error('Erro ao atualizar cache de chaves:', error);
-                        }
-                    }
-                });
-            });
-        } catch (error) {
-            console.error('Erro ao carregar clientes:', error);
         }
     }
 
@@ -222,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const botaoClicado = event.target.closest('button[data-id]');
                     if (!botaoClicado) return;
 
-                    const id = botaoClicado.dataset.id;
+                    const idCustomer = botaoClicado.dataset.id;
                     const nome = botaoClicado.dataset.name;
                     const idPage = botaoClicado.dataset.idpage;
                     const connected = botaoClicado.dataset.connected === 'true';
@@ -230,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     if (connected) {
                         // fluxo para desconectar
                         try {
-                            const res = await fetch(`/api/customers/facebook/${id}`, {
+                            const res = await fetch(`/api/customers/facebook/${idCustomer}`, {
                                 method: 'DELETE',
                                 headers: { 'Content-Type': 'application/json' }
                             });
@@ -243,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             botaoClicado.querySelector('i').className = 'bx bx-link-alt';
                             botaoClicado.closest('.d-flex').querySelector('small').textContent = 'Desconectado';
 
-                            console.log('🚀 Cliente desconectado');
+                            localStorage.clear();
                         } catch (error) {
                             console.error('Erro ao desconectar cliente:', error);
                         }
@@ -254,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    id_customer: id,
+                                    id_customer: idCustomer,
                                     id_user: userId,
                                     id_page_facebook: idPage,
                                     name: nome
@@ -281,8 +204,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     document.getElementById('log-out')?.addEventListener('click', logout);
 
-    restoreSelectedCustomer();
     await loadUserProfile();
-    await loadCustomers();
 
 });
