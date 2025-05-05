@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const META_APP_ID = '1832737137219562';//process.env.META_APP_ID;
 const META_APP_SECRET = 'b14bc1778c11a716e69ac80c52199798';//process.env.META_APP_SECRET;
-const REDIRECT_URI = 'https://api-gateway-9qt5.onrender.com/auth/meta/callback';
+const REDIRECT_URI = 'https://api-gateway-9qt5.onrender.com/api/meta/auth/callback';
 
 exports.startOAuth = (req, res) => {
   const scopes = [
