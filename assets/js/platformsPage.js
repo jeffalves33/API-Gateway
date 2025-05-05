@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.querySelectorAll('.form-check-input').forEach(input => {
         input.addEventListener('change', function (e) {
             if (e.target.checked) {
-                window.location.href = '/auth/meta';
+                window.location.href = '/api/meta/auth';
             }
         });
     });

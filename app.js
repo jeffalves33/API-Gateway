@@ -11,7 +11,7 @@ const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const customerFacebookRoutes = require('./routes/customerFacebookRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
-const metaAuthRoutes = require('./routes/metaAuthRoutes');
+const metaRoutes = require('./routes/metaRoutes');
 
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 
@@ -29,12 +29,12 @@ app.use(cookieParser());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // === Rotas da API ===
-app.use('/api', authRoutes);
+app.use('/api', authRoutes); // Não deve ser /api
 app.use('/api/customers', customerRoutes);
 app.use('/api/customers/facebook', customerFacebookRoutes); // Refatorar
 app.use('/', customerFacebookRoutes);
 app.use('/api/metrics', metricsRoutes);
-app.use('/', metaAuthRoutes);
+app.use('/api/meta', metaRoutes);
 
 // === Páginas protegidas ===
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => {
@@ -51,6 +51,10 @@ app.get('/chatPage.html', authenticatePageAccess, (req, res) => {
 
 app.get('/platformsPage.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'platformsPage.html'));
+});
+
+app.get('/customersPage.html', authenticatePageAccess, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'customersPage.html'));
 });
 
 app.get('/profile.html', authenticatePageAccess, (req, res) => {
