@@ -254,8 +254,10 @@
                 </nav>
 
                 <div class="container pt-4">
-                    <h4 class="py-2"><span class="text-muted fw-light">Plataformas & Páginas/</span> Adicionar Clientes
+                    <h4 class="py-2">
+                        <span class="text-muted fw-light">Plataformas & Páginas/</span> Adicionar Clientes
                     </h4>
+                    <div id="feedback-message" class="alert" style="display: none; margin-top: 10px;"></div>
                     <div class="row">
                         <div class="col-xxl">
                             <div class="card mb-4">
@@ -336,8 +338,46 @@
     </div>
     <!-- / Layout wrapper -->
 
-    <!-- Jeferson: container para mensagem de erro -->
-    <div id="alert-container"></div>
+    <!-- Jeferson: toast success -->
+    <div id="customer-success-toast" class="bs-toast toast toast-placement-ex top-0 end-0 m-2 bg-success" role="alert"
+        aria-live="assertive" aria-atomic="true" data-bs-delay="3000" style="z-index: 9999;">
+        <div class="toast-header">
+            <i class="bx bx-bell me-2"></i>
+            <div class="me-auto fw-medium">Sucesso</div>
+            <small>Agora</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Cliente adicionado com sucesso!
+        </div>
+    </div>
+
+    <div id="customer-success-toast" class="bs-toast toast toast-placement-ex top-0 end-0 m-2 bg-success" role="alert"
+        aria-live="assertive" aria-atomic="true" data-bs-delay="3000" style="z-index: 9999;">
+        <div class="toast-header">
+            <i class="bx bx-bell me-2"></i>
+            <div class="me-auto fw-medium">Sucesso</div>
+            <small>Agora</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Cliente adicionado com sucesso!
+        </div>
+    </div>
+    <div id="customer-error-toast" class="bs-toast toast top-0 end-0 m-2 bg-danger" role="alert" aria-live="assertive"
+        aria-atomic="true" data-bs-delay="3000" style="position: fixed; z-index: 9999;">
+        <div class="toast-header">
+            <i class="bx bx-error-circle me-2"></i>
+            <div class="me-auto fw-medium">Erro</div>
+            <small>Agora</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Erro ao adicionar cliente. Tente novamente.
+        </div>
+    </div>
+
+
 
 
     <!-- Core JS -->
@@ -372,17 +412,32 @@
 
             try {
                 // Simulação: API que retorna páginas conectadas do usuário logado
+                const responseCustomers = await fetch('/customer');
+                const { customers } = await responseCustomers.json();
+
+                const registeredPageIds = customers
+                    .map(c => c.id_facebook_page)
+                    .filter(id => id !== null);
+
                 const response = await fetch('/api/meta/pages');
                 const pagesJson = await response.json();
-                const pages = pagesJson.customers;
-                console.log("pages: ", pages)
+                const pages = pagesJson;
+
                 pages.forEach(page => {
+                    const isRegistered = registeredPageIds.includes(page.id_page);
+                    if (isRegistered) return;
+
                     const div = document.createElement('div');
                     div.classList.add('form-check');
 
                     div.innerHTML = `
-                        <input class="form-check-input" type="checkbox" id="fb-page-${page.id_page}" value="${page.id_page}" />
-                        <label class="form-check-label" for="fb-page-${page.id_page}">${page.name}</label>
+                        <input class="form-check-input" name="fb-pages" type="radio"
+                            id="fb-page-${page.id_page}" value="${page.id_page}"
+                            data-access-token="${page.access_token}"/>
+                        <label class="form-check-label}"
+                            for="fb-page-${page.id_page}">
+                            ${page.name}
+                        </label>
                     `;
 
                     facebookPagesList.appendChild(div);
@@ -400,32 +455,45 @@
             const email = document.getElementById('customer-email').value;
             const phone = document.getElementById('customer-phone').value;
 
-            const selectedPages = Array.from(document.querySelectorAll('#facebook-pages-list input:checked'))
-                .map(input => input.value);
+            const selectedInput = document.querySelector('input[name="fb-pages"]:checked');
+            const selectedPageId = selectedInput?.value;
+            const accessToken = selectedInput?.dataset.accessToken;
+
+            if (!selectedInput) {
+                alert('Selecione uma página do Facebook.');
+                return;
+            }
 
             const payload = {
                 name,
                 company,
                 email,
                 phone,
-                platforms: selectedPages.map(pageId => ({
-                    type: 'facebook',
-                    page_id: pageId
-                }))
+                platforms: [
+                    {
+                        type: 'facebook',
+                        id_facebook_page: selectedPageId,
+                        access_token: accessToken
+                    }
+                ]
             };
 
             try {
-                const response = await fetch('/customer', {
+                const response = await fetch('/customer/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
-                    alert('Cliente adicionado com sucesso!');
+                    const toastElSuccess = document.getElementById('customer-success-toast');
+                    const toastSuccess = new bootstrap.Toast(toastElSuccess);
+                    toastSuccess.show();
                     document.getElementById('add-customer-form').reset();
                 } else {
-                    alert('Erro ao salvar cliente.');
+                    const toastElError = document.getElementById('customer-error-toast');
+                    const toastError = new bootstrap.Toast(toastElError);
+                    toastError.show();
                 }
             } catch (error) {
                 console.error('Erro ao enviar formulário:', error);

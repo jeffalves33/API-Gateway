@@ -83,25 +83,24 @@ exports.handleOAuthCallback = async (req, res) => {
 exports.getFacebookPages = async (req, res) => {
   try {
     const { id } = req.user;
-    console.log("id: ", id)
+
     const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Token do usuário não encontrado' });
     }
 
     const access_token = result.rows[0].access_token_meta;
-    console.log("access_token: ", access_token)
     const fbRes = await axios.get('https://graph.facebook.com/v22.0/me/accounts', {
       params: { access_token }
     });
 
     const fbPages = fbRes.data.data;
-
     const pages = fbPages.map(fbPage => ({
       name: fbPage.name,
-      id_page: fbPage.id
+      id_page: fbPage.id,
+      access_token: fbPage.access_token
     }));
-    console.log("pages: ", pages)
+
     res.json(pages);
   } catch (error) {
     console.error('Erro ao buscar páginas do Facebook:', error.response?.data || error.message);

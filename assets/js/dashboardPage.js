@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     async function loadCustomers() {
         try {
-            const response = await fetch('/api/customers');
+            const response = await fetch('/customer');
             if (!response.ok) throw new Error('Erro ao buscar clientes');
 
             const { customers } = await response.json();
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <a class="dropdown-item dropdown-customer-list-items" href="#" 
                        data-id="${customer.id_customer}" 
                        data-name="${customer.name}"
-                       data-facebook-page-id="${customer.id_page_facebook || ''}">
+                       data-facebook-page-id="${customer.id_facebook_page || ''}">
                       ${customer.name}
                     </a>`;
                 customerListElement.appendChild(item);
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     if (userId && id) {
                         try {
-                            const response = await fetch('/api/customers/cache', {
+                            const response = await fetch('/customer/cache', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ id_user: userId, id_customer: id })
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         btnBuscarLoading.classList.remove('d-none');
 
         try {
-            const res = await fetch('/api/metrics/reach', {
+            const res = await fetch('/customer/cache', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
