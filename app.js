@@ -59,6 +59,10 @@ app.get('/customersPage.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'customersPage.html'));
 });
 
+app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html'));
+});
+
 app.get('/profile.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
