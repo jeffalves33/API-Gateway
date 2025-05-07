@@ -14,8 +14,8 @@ const refreshKeysForCustomer = async (id_user, id_customer) => {
 
   const composed = {
     facebook: {
-      page_id: customerKeys.facebook_page_id,
-      access_token: userKeys.facebook_access_token
+      page_id: customerKeys.id_facebook_page,
+      access_token: customerKeys.access_token_page_facebook
     },
     instagram: {
       page_id: customerKeys.instagram_page_id,
@@ -63,8 +63,8 @@ const getFacebookKeys = async (id_user, id_customer) => {
   const userKeys = await getUserKeys(id_user);
 
   const facebookKeys = {
-    page_id: customerFacebookKeys.id_page_facebook,
-    access_token: userKeys.access_token_meta
+    page_id: customerFacebookKeys.id_facebook_page,
+    access_token: userKeys.access_token_page_facebook
   };
 
   cache.set(cacheKey, {
@@ -177,8 +177,8 @@ const getFacebookCustomerKey = async (id_user, id_customer) => {
   const customerFacebookKeys = await getCustomerFacebookKeys(id_customer);
 
   const facebookKeys = {
-    page_id: customerFacebookKeys.id_page_facebook,
-    access_token: customerFacebookKeys.access_token_page
+    page_id: customerFacebookKeys.id_facebook_page,
+    access_token: customerFacebookKeys.access_token_page_facebook
   };
 
   cache.set(cacheKey, {

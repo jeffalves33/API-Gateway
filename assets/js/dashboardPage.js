@@ -147,12 +147,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         btnBuscarLoading.classList.remove('d-none');
 
         try {
-            const res = await fetch('/customer/cache', {
+            const res = await fetch('/api/metrics/reach', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-
             const data = await res.json();
             renderReachChart(data);
             reachChartContainer.style.display = 'block';
@@ -171,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         impressionsChartContainer.style.display = 'none';
 
         try {
-            const res = await fetch('/api/metrics/impressions', {
+            const res = await fetch('/api/metrics/impressions', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
