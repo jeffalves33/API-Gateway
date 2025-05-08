@@ -80,7 +80,7 @@ exports.handleOAuthCallback = async (req, res) => {
   }
 };
 
-exports.getFacebookPages = async (req, res) => {
+exports.getMetaPages = async (req, res) => {
   try {
     const { id } = req.user;
 
@@ -90,23 +90,53 @@ exports.getFacebookPages = async (req, res) => {
     }
 
     const access_token = result.rows[0].access_token_meta;
+
+    // ================= FACEBOOK =================
     const fbRes = await axios.get('https://graph.facebook.com/v22.0/me/accounts', {
       params: { access_token }
     });
 
-    const fbPages = fbRes.data.data;
-    const pages = fbPages.map(fbPage => ({
+    const fbPages = fbRes.data.data.map(fbPage => ({
       name: fbPage.name,
       id_page: fbPage.id,
       access_token: fbPage.access_token
     }));
 
-    res.json(pages);
+    // ================= INSTAGRAM =================
+    const igPages = [];
+    for (const fbPage of fbRes.data.data) {
+      try {
+        const igRes = await axios.get(
+          `https://graph.facebook.com/v22.0/${fbPage.id}`,
+          {
+            params: {
+              access_token: fbPage.access_token,
+              fields: 'instagram_business_account{name,username,id}'
+            }
+          }
+        );
+
+        const igAccount = igRes.data.instagram_business_account;
+        if (igAccount) {
+          igPages.push({
+            name: igAccount.name || igAccount.username,
+            id_page: igAccount.id,
+            access_token: fbPage.access_token
+          });
+        }
+      } catch (err) {
+        console.warn(`Página ${fbPage.id} sem conta IG vinculada ou erro ao buscar IG.`, err.response?.data || err.message);
+        continue;
+      }
+    }
+
+    res.json({ facebook: fbPages, instagram: igPages });
   } catch (error) {
-    console.error('Erro ao buscar páginas do Facebook:', error.response?.data || error.message);
-    res.status(500).json({ message: 'Erro ao buscar páginas do Facebook' });
+    console.error('Erro ao buscar páginas:', error.response?.data || error.message);
+    res.status(500).json({ message: 'Erro ao buscar páginas do Facebook/Instagram' });
   }
 };
+
 
 exports.checkMetaStatus = async (req, res) => {
   const id_user = req.user.id;

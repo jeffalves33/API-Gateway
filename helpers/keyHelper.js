@@ -1,6 +1,7 @@
 // Arquivo: helpers/keyHelper.js
 const { checkCustomerBelongsToUser } = require('../repositories/customerRepository');
 const { getCustomerFacebookKeys } = require('../repositories/customerFacebookRepository');
+const { getCustomerInstagramKeys } = require('../repositories/customerInstagramRepository');
 const { getUserKeys } = require('../repositories/userRepository');
 
 const cache = new Map();
@@ -189,6 +190,33 @@ const getFacebookCustomerKey = async (id_user, id_customer) => {
   return facebookKeys;
 };
 
+const getInstagramCustomerKey = async (id_user, id_customer) => {
+  const cacheKey = `instagram:${id_user}:${id_customer}`;
+
+  if (cache.has(cacheKey)) {
+    const { expires, data } = cache.get(cacheKey);
+    if (Date.now() < expires) return data;
+    cache.delete(cacheKey);
+  }
+
+  const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
+  if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
+
+  const customerInstagramKeys = await getCustomerInstagramKeys(id_customer);
+
+  const instagramKeys = {
+    page_id: customerInstagramKeys.id_instagram_page,
+    access_token: customerInstagramKeys.access_token_page_instagram
+  };
+
+  cache.set(cacheKey, {
+    data: instagramKeys,
+    expires: Date.now() + 1000 * 60 * 5
+  });
+
+  return instagramKeys;
+};
+
 
 module.exports = {
   getFacebookKeys,
@@ -197,5 +225,6 @@ module.exports = {
   getAllKeys,
   clearCacheForUser,
   refreshKeysForCustomer,
-  getFacebookCustomerKey
+  getFacebookCustomerKey,
+  getInstagramCustomerKey
 };

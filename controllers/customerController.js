@@ -18,8 +18,7 @@ const addCustomer = async (req, res) => {
     const id_user = req.user.id;
     const customer = req.body;
 
-    await createCustomer(id_user, customer.name, customer.company, customer.email, customer.phone, customer.platforms[0].id_facebook_page, customer.platforms[0].access_token)
-
+    await createCustomer(id_user, customer.name, customer.company, customer.email, customer.phone, customer.platforms[0].id_facebook_page, customer.platforms[0].access_token, customer.platforms[1].id_instagram_page, customer.platforms[1].access_token);
     res.status(200).json({ success: true, message: 'Cliente adicionado com sucesso.' });
   } catch (error) {
     console.error(error);

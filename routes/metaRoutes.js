@@ -7,7 +7,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 router.get('/auth', authenticateToken, metaController.startOAuth);
 router.get('/auth/callback', metaController.handleOAuthCallback);
 
-router.get('/pages', authenticateToken, metaController.getFacebookPages);
+router.get('/pages', authenticateToken, metaController.getMetaPages);
 router.get('/status', authenticateToken, metaController.checkMetaStatus);
 
 

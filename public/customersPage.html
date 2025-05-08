@@ -307,14 +307,25 @@
                                             </div>
                                         </div>
                                         <div class="row mb-3">
-                                            <h5 class="card-header">Escolha suas páginas do Facebook</h5>
-                                            <div class="col-md pt-3">
+                                            <h5 class="card-header">Escolha as páginas</h5>
+
+                                            <!-- Facebook -->
+                                            <div class="col-md-6 pt-3">
                                                 <small class="text-light fw-medium">Facebook</small>
                                                 <div id="facebook-pages-list" class="mt-3">
                                                     <!-- Páginas do Facebook serão inseridas aqui pelo JS -->
                                                 </div>
                                             </div>
+
+                                            <!-- Instagram -->
+                                            <div class="col-md-6 pt-3">
+                                                <small class="text-light fw-medium">Instagram</small>
+                                                <div id="instagram-pages-list" class="mt-3">
+                                                    <!-- Páginas do Instagram serão inseridas aqui pelo JS -->
+                                                </div>
+                                            </div>
                                         </div>
+
                                         <div class="row justify-content-end">
                                             <div class="col-sm-10">
                                                 <button type="submit" class="btn btn-primary">Salvar Cliente</button>
@@ -352,18 +363,6 @@
         </div>
     </div>
 
-    <div id="customer-success-toast" class="bs-toast toast toast-placement-ex top-0 end-0 m-2 bg-success" role="alert"
-        aria-live="assertive" aria-atomic="true" data-bs-delay="3000" style="z-index: 9999;">
-        <div class="toast-header">
-            <i class="bx bx-bell me-2"></i>
-            <div class="me-auto fw-medium">Sucesso</div>
-            <small>Agora</small>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            Cliente adicionado com sucesso!
-        </div>
-    </div>
     <div id="customer-error-toast" class="bs-toast toast top-0 end-0 m-2 bg-danger" role="alert" aria-live="assertive"
         aria-atomic="true" data-bs-delay="3000" style="position: fixed; z-index: 9999;">
         <div class="toast-header">
@@ -376,9 +375,6 @@
             Erro ao adicionar cliente. Tente novamente.
         </div>
     </div>
-
-
-
 
     <!-- Core JS -->
     <!-- build:js assets/vendor/js/core.js -->
@@ -409,38 +405,56 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const facebookPagesList = document.getElementById('facebook-pages-list');
+            const instagramPagesList = document.getElementById('instagram-pages-list');
 
             try {
-                // Simulação: API que retorna páginas conectadas do usuário logado
                 const responseCustomers = await fetch('/customer');
                 const { customers } = await responseCustomers.json();
 
-                const registeredPageIds = customers
+                const registeredFacebookIds = customers
                     .map(c => c.id_facebook_page)
+                    .filter(id => id !== null);
+
+                const registeredInstagramIds = customers
+                    .map(c => c.id_instagram_page)
                     .filter(id => id !== null);
 
                 const response = await fetch('/api/meta/pages');
                 const pagesJson = await response.json();
-                const pages = pagesJson;
+                const { facebook, instagram } = pagesJson;
 
-                pages.forEach(page => {
-                    const isRegistered = registeredPageIds.includes(page.id_page);
-                    if (isRegistered) return;
+                // Facebook Pages
+                facebook.forEach(page => {
+                    if (registeredFacebookIds.includes(page.id_page)) return;
 
                     const div = document.createElement('div');
                     div.classList.add('form-check');
-
                     div.innerHTML = `
                         <input class="form-check-input" name="fb-pages" type="radio"
-                            id="fb-page-${page.id_page}" value="${page.id_page}"
-                            data-access-token="${page.access_token}"/>
-                        <label class="form-check-label}"
-                            for="fb-page-${page.id_page}">
-                            ${page.name}
+                        id="fb-page-${page.id_page}" value="${page.id_page}"
+                        data-access-token="${page.access_token}" />
+                        <label class="form-check-label" for="fb-page-${page.id_page}">
+                        ${page.name}
                         </label>
                     `;
-
                     facebookPagesList.appendChild(div);
+                });
+
+                // Instagram Pages
+                instagram.forEach(page => {
+                    if (registeredInstagramIds.includes(page.id_page)) return;
+
+                    const div = document.createElement('div');
+                    div.classList.add('form-check');
+                    div.innerHTML = `
+                        <input class="form-check-input" name="ig-pages" type="radio"
+                        id="ig-page-${page.id_page}" value="${page.id_page}"
+                        data-access-token="${page.access_token}" />
+                        <label class="form-check-label" for="ig-page-${page.id_page}">
+                        ${page.name}
+                        </label>
+                    `;
+                    instagramPagesList.appendChild(div);
                 });
             } catch (error) {
                 console.error('Erro ao carregar páginas do Facebook:', error);
@@ -455,28 +469,33 @@
             const email = document.getElementById('customer-email').value;
             const phone = document.getElementById('customer-phone').value;
 
-            const selectedInput = document.querySelector('input[name="fb-pages"]:checked');
-            const selectedPageId = selectedInput?.value;
-            const accessToken = selectedInput?.dataset.accessToken;
+            const selectedFb = document.querySelector('input[name="fb-pages"]:checked');
+            const selectedIg = document.querySelector('input[name="ig-pages"]:checked');
 
-            if (!selectedInput) {
-                alert('Selecione uma página do Facebook.');
+            const platforms = [];
+
+            if (selectedFb) {
+                platforms.push({
+                    type: 'facebook',
+                    id_facebook_page: selectedFb.value,
+                    access_token: selectedFb.dataset.accessToken
+                });
+            }
+
+            if (selectedIg) {
+                platforms.push({
+                    type: 'instagram',
+                    id_instagram_page: selectedIg.value,
+                    access_token: selectedIg.dataset.accessToken
+                });
+            }
+
+            if (platforms.length === 0) {
+                alert('Selecione ao menos uma página do Facebook ou Instagram.');
                 return;
             }
 
-            const payload = {
-                name,
-                company,
-                email,
-                phone,
-                platforms: [
-                    {
-                        type: 'facebook',
-                        id_facebook_page: selectedPageId,
-                        access_token: accessToken
-                    }
-                ]
-            };
+            const payload = { name, company, email, phone, platforms };
 
             try {
                 const response = await fetch('/customer/add', {
@@ -487,20 +506,18 @@
 
                 if (response.ok) {
                     const toastElSuccess = document.getElementById('customer-success-toast');
-                    const toastSuccess = new bootstrap.Toast(toastElSuccess);
-                    toastSuccess.show();
+                    new bootstrap.Toast(toastElSuccess).show();
                     document.getElementById('add-customer-form').reset();
                 } else {
                     const toastElError = document.getElementById('customer-error-toast');
-                    const toastError = new bootstrap.Toast(toastElError);
-                    toastError.show();
+                    new bootstrap.Toast(toastElError).show();
                 }
             } catch (error) {
                 console.error('Erro ao enviar formulário:', error);
-                alert('Erro ao salvar cliente.');
+                const toastElError = document.getElementById('customer-error-toast');
+                new bootstrap.Toast(toastElError).show();
             }
         });
-
     </script>
 
 </body>
