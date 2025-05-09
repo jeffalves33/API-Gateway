@@ -1,5 +1,6 @@
 // Arquivo: repositories/customerRepository.js
 const { pool } = require('../config/db');
+const { clearFacebookDataCustomer, clearInstagramDataCustomer } = require('../helpers/customerHelpers');
 
 const getCustomersByUserId = async (id_user) => {
   const result = await pool.query(
@@ -31,4 +32,22 @@ const checkCustomerBelongsToUser = async (id_customer, id_user) => {
   return result.rows.length > 0;
 };
 
-module.exports = { getCustomersByUserId, getCustomerKeys, checkCustomerBelongsToUser, createCustomer };
+const removePlatformFromCustomer = async (platform, customer) => {
+  try {
+    const { id_customer } = customer;
+
+    // 1️⃣ Limpa dados da tabela específica
+    if (platform === 'facebook') {
+      await clearFacebookDataCustomer(id_customer);
+    } else if (platform === 'instagram') {
+      await clearInstagramDataCustomer(id_customer);
+    } else {
+      throw new Error(`Plataforma ${platform} não suportada`);
+    }
+  } catch (error) {
+    console.error(`Erro ao limpar dados do cliente ${customer.id_customer}:`, error);
+    throw error;
+  }
+};
+
+module.exports = { getCustomersByUserId, getCustomerKeys, checkCustomerBelongsToUser, createCustomer, removePlatformFromCustomer};

@@ -240,9 +240,8 @@
                                         <div class="dropdown-divider"></div>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="javascript:void(0);" id="log-out">
-                                            <i class="bx bx-power-off me-2"></i>
-                                            <span class="align-middle">Sair</span>
+                                        <i class="bx bx-power-off me-2"></i>
+                                        <span class="align-middle">Sair</span>
                                         </a>
                                     </li>
                                 </ul>
@@ -377,13 +376,39 @@
                 </div>
                 <!-- / Intervalo de busca -->
                 <!-- / Navbar -->
-
+                <!-- Modal 1-->
+                <!-- Modal de Confirmação -->
+                <div class="modal fade" id="modalToggle" aria-labelledby="modalToggleLabel" tabindex="-1"
+                    style="display: none" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalToggleLabel">Desconectar Plataforma</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Tem certeza que deseja desconectar sua conta desta plataforma?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-danger">Desconectar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <!-- / Layout page -->
-        </div>
 
-        <!-- Overlay -->
-        <div class="layout-overlay layout-menu-toggle"></div>
+        </div>
+    </div>
+    <!-- / Layout page -->
+    </div>
+
+    <!-- Container para alertas -->
+    <div id="alert-container"></div>
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
     </div>
     <!-- / Layout wrapper -->
 
@@ -409,11 +434,7 @@
 
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
-
-    <!-- Jeferson: dados do cliente logado -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <!-- Jeferson: dados do cliente logado -->
     <script src="/assets/js/platformsPage.js"></script>
 
 </body>

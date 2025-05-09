@@ -1,5 +1,5 @@
 // Arquivo: controllers/customerController.js
-const { getCustomersByUserId, createCustomer } = require('../repositories/customerRepository');
+const { getCustomersByUserId, createCustomer, deleteCustomerById, removePlatformFromCustomer } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer } = require('../helpers/keyHelper');
 
 const getCustomersByUser = async (req, res) => {
@@ -30,7 +30,7 @@ const refreshCustomerKeys = async (req, res) => {
   try {
     const id_user = req.user.id;
     const { id_customer } = req.body;
-    await refreshKeysForCustomer(id_user, id_customer); 
+    await refreshKeysForCustomer(id_user, id_customer);
     res.status(200).json({ success: true, message: 'Chaves atualizadas em cache' });
   } catch (error) {
     console.error(error);
@@ -38,4 +38,26 @@ const refreshCustomerKeys = async (req, res) => {
   }
 };
 
-module.exports = { getCustomersByUser, refreshCustomerKeys, addCustomer };
+const removePlatformCustomer = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+    const platform = req.params.platform.toLowerCase();
+
+    const customers = await getCustomersByUserId(id_user);
+
+    if (!customers || customers.length === 0) {
+      return res.status(404).json({ success: false, message: 'Nenhum cliente encontrado' });
+    }
+
+    for (const customer of customers) {
+      await removePlatformFromCustomer(platform, customer);
+    }
+
+    res.status(200).json({ success: true, message: 'Plataforma removida dos clientes com sucesso' });
+  } catch (error) {
+    console.error('Erro ao remover plataforma do cliente:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erro ao remover cliente' });
+  }
+};
+
+module.exports = { getCustomersByUser, refreshCustomerKeys, addCustomer, removePlatformCustomer };
