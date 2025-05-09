@@ -22,11 +22,11 @@ const postCustomerFacebook = async (id_customer, id_user, name) => {
 
 const postCustomerFacebookKeys = async (id_customer, id_user, id_page_facebook) => {
   try {
-    const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id_user]);
+    const result = await pool.query('SELECT access_token_facebook FROM user_keys WHERE id_user = $1', [id_user]);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Token do usuário não encontrado' });
     }
-    const access_token = result.rows[0].access_token_meta;
+    const access_token = result.rows[0].access_token_facebook;
 
     const fbRes = await axios.get('https://graph.facebook.com/v22.0/me/accounts', {
       params: { access_token }

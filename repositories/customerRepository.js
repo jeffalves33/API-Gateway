@@ -32,15 +32,14 @@ const checkCustomerBelongsToUser = async (id_customer, id_user) => {
   return result.rows.length > 0;
 };
 
-const removePlatformFromCustomer = async (platform, customer) => {
+const removePlatformFromCustomer = async (platform, customer, id_user) => {
   try {
     const { id_customer } = customer;
 
-    // 1️⃣ Limpa dados da tabela específica
     if (platform === 'facebook') {
-      await clearFacebookDataCustomer(id_customer);
+      await clearFacebookDataCustomer(id_customer, id_user);
     } else if (platform === 'instagram') {
-      await clearInstagramDataCustomer(id_customer);
+      await clearInstagramDataCustomer(id_customer, id_user);
     } else {
       throw new Error(`Plataforma ${platform} não suportada`);
     }

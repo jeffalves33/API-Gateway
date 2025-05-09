@@ -61,10 +61,10 @@ exports.handleOAuthCallback = async (req, res) => {
     const metakUserId = meRes.data.id;
 
     await pool.query(
-      `INSERT INTO user_keys (id_user, id_user_meta, access_token_meta)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (id_user) DO UPDATE SET id_user_meta = $2, access_token_meta = $3`,
-      [id_user, metakUserId, longLivedToken]
+      `INSERT INTO user_keys (id_user, id_user_facebook, access_token_facebook, id_user_instagram, access_token_instagram)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (id_user) DO UPDATE SET id_user_facebook = $2, access_token_facebook = $3, id_user_instagram = $2, access_token_instagram = $3`,
+      [id_user, metakUserId, longLivedToken, metakUserId, longLivedToken]
     );
 
     return res.redirect('/platformsPage.html');
@@ -83,13 +83,13 @@ exports.handleOAuthCallback = async (req, res) => {
 exports.getMetaPages = async (req, res) => {
   try {
     const { id } = req.user;
-
-    const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id]);
+    //access_token_facebook = access_token_instagram
+    const result = await pool.query('SELECT access_token_facebook FROM user_keys WHERE id_user = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Token do usuário não encontrado' });
     }
 
-    const access_token = result.rows[0].access_token_meta;
+    const access_token = result.rows[0].access_token_facebook;
 
     // ================= FACEBOOK =================
     const fbRes = await axios.get('https://graph.facebook.com/v22.0/me/accounts', {
@@ -142,12 +142,18 @@ exports.checkMetaStatus = async (req, res) => {
   const id_user = req.user.id;
 
   try {
-    const result = await pool.query('SELECT access_token_meta FROM user_keys WHERE id_user = $1', [id_user]);
-    const facebookConnected = result.rows.length > 0 && result.rows[0].access_token_meta !== null;
+    const result = await pool.query(
+      'SELECT access_token_facebook, access_token_instagram FROM user_keys WHERE id_user = $1',
+      [id_user]
+    );
 
-    res.json({ facebookConnected });
+    const row = result.rows[0] || {};
+    const facebookConnected = row.access_token_facebook !== null && row.access_token_facebook !== undefined;
+    const instagramConnected = row.access_token_instagram !== null && row.access_token_instagram !== undefined;
+
+    res.json({ facebookConnected, instagramConnected });
   } catch (error) {
-    console.error('Erro ao verificar status do Facebook:', error);
-    res.status(500).json({ facebookConnected: false });
+    console.error('Erro ao verificar status do Meta:', error);
+    res.status(500).json({ facebookConnected: false, instagramConnected: false });
   }
 };

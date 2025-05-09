@@ -105,25 +105,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     (async function () {
         try {
             const res = await fetch('/api/meta/status');
-            const data = await res.json();
+            const { facebookConnected, instagramConnected } = await res.json();
 
-            if (data.facebookConnected) {
-                const switches = document.querySelectorAll('.d-flex');
+            const switches = document.querySelectorAll('.d-flex');
 
-                switches.forEach(div => {
-                    const title = div.querySelector('h6')?.textContent?.trim().toLowerCase();
-                    const checkbox = div.querySelector('input[type="checkbox"]');
+            switches.forEach(div => {
+                const title = div.querySelector('h6')?.textContent?.trim().toLowerCase();
+                const checkbox = div.querySelector('input[type="checkbox"]');
 
-                    if (title === 'facebook' || title === 'instagram') {
-                        checkbox.checked = true;
-                    }
-                });
-            }
+                if (title === 'facebook') {
+                    checkbox.checked = facebookConnected;
+                }
+
+                if (title === 'instagram') {
+                    checkbox.checked = instagramConnected;
+                }
+            });
 
         } catch (error) {
-            console.error('Erro ao verificar status do Facebook:', error);
+            console.error('Erro ao verificar status do Facebook e Instagram:', error);
         }
     })();
+
 
     (function () {
         const plataformsConection = document.getElementById('plataforms-conection');

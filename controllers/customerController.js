@@ -50,7 +50,7 @@ const removePlatformCustomer = async (req, res) => {
     }
 
     for (const customer of customers) {
-      await removePlatformFromCustomer(platform, customer);
+      await removePlatformFromCustomer(platform, customer, id_user);
     }
 
     res.status(200).json({ success: true, message: 'Plataforma removida dos clientes com sucesso' });
