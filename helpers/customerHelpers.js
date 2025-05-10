@@ -15,7 +15,6 @@ const clearFacebookDataCustomer = async (id_customer, id_user) => {
     );
 };
 
-
 const clearInstagramDataCustomer = async (id_customer, id_user) => {
     await pool.query(
         'DELETE FROM instagram WHERE id_customer = $1',

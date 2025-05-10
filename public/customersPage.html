@@ -508,6 +508,9 @@
                     const toastElSuccess = document.getElementById('customer-success-toast');
                     new bootstrap.Toast(toastElSuccess).show();
                     document.getElementById('add-customer-form').reset();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
                 } else {
                     const toastElError = document.getElementById('customer-error-toast');
                     new bootstrap.Toast(toastElError).show();

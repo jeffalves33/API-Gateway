@@ -24,6 +24,21 @@ const createCustomer = async (id_user, name, company, email, phone, id_facebook_
   return result.rows;
 };
 
+const deleteCustomer = async (id_customer) => {
+  await pool.query(
+    'DELETE FROM facebook WHERE id_customer = $1',
+    [id_customer]
+  );
+  await pool.query(
+    'DELETE FROM instagram WHERE id_customer = $1',
+    [id_customer]
+  );
+  await pool.query(
+    'DELETE FROM customer WHERE id_customer = $1',
+    [id_customer]
+  );
+}
+
 const checkCustomerBelongsToUser = async (id_customer, id_user) => {
   const result = await pool.query(
     'SELECT * FROM customer WHERE id_customer = $1 AND id_user = $2',
@@ -49,4 +64,4 @@ const removePlatformFromCustomer = async (platform, customer, id_user) => {
   }
 };
 
-module.exports = { getCustomersByUserId, getCustomerKeys, checkCustomerBelongsToUser, createCustomer, removePlatformFromCustomer};
+module.exports = { getCustomersByUserId, getCustomerKeys, checkCustomerBelongsToUser, createCustomer, removePlatformFromCustomer, deleteCustomer};
