@@ -45,14 +45,25 @@ exports.handleOAuthCallback = async (req, res) => {
         const oauth2 = google.oauth2({ auth: oauth2Client, version: 'v2' });
         const { data: userInfo } = await oauth2.userinfo.get();
 
-        // Aqui você pode salvar os tokens e o userInfo no banco de dados
-        console.log("tokens: ", tokens);
-        console.log("userInfo: ", userInfo);
+        await pool.query(
+            `INSERT INTO user_keys (
+                id_user,
+                id_user_googleAnalytics,
+                access_token_googleAnalytics,
+                refresh_token_googleAnalytics
+            ) VALUES ($1, $2, $3, $4)
+            ON CONFLICT (id_user) DO UPDATE SET
+                id_user_googleAnalytics = EXCLUDED.id_user_googleAnalytics,
+                access_token_googleAnalytics = EXCLUDED.access_token_googleAnalytics,
+                refresh_token_googleAnalytics = EXCLUDED.refresh_token_googleAnalytics`,
+            [id_user, userInfo.id, tokens.access_token, tokens.refresh_token]
+        );
 
         return res.redirect('/platformsPage.html');
     } catch (error) {
-        console.error('Erro ao obter tokens:', error);
+        console.error('Erro ao obter tokens:', error.response?.data || error);
         return res.status(500).send('Erro ao autenticar com o Google');
     }
 };
+
 
