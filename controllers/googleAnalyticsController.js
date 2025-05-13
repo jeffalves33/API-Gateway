@@ -25,7 +25,8 @@ exports.startOAuth = (req, res) => {
     const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: scopes,
-        prompt: 'consent'
+        prompt: 'consent',
+        state: req.user.id
     });
 
     res.redirect(authUrl);
