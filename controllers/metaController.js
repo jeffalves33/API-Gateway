@@ -1,4 +1,4 @@
-// Arquivo: controllers/metaAuthController.js
+// Arquivo: controllers/metaController.js
 const axios = require('axios');
 const querystring = require('querystring');
 const { pool } = require('../config/db');

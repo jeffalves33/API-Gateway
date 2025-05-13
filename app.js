@@ -12,6 +12,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const customerFacebookRoutes = require('./routes/customerFacebookRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const metaRoutes = require('./routes/metaRoutes');
+const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
 
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 
@@ -35,6 +36,7 @@ app.use('/', customerFacebookRoutes);
 app.use('/api/metrics', metricsRoutes);
 
 //Refatorado
+app.use('/api/googleAnalytics', googleAnalyticsRoutes);
 app.use('/api/meta', metaRoutes);
 app.use('/customer', customerRoutes);
 

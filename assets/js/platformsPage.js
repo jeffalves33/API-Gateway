@@ -142,19 +142,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         input.addEventListener('change', function (e) {
             const label = input.closest('.d-flex').querySelector('h6')?.textContent?.trim().toLowerCase();
 
-            if (label === 'facebook' || label === 'instagram') {
+            if (label === 'facebook' || label === 'instagram' || label === 'google') {
                 if (e.target.checked) {
-                    // Redirecionamento para autenticação
-                    window.location.href = '/api/meta/auth';
+                    if (label === 'google') {
+                        window.location.href = '/api/googleAnalytics/auth';
+                    } else {
+                        window.location.href = '/api/meta/auth';
+                    }
                 } else {
-                    // Impedir desmarcar o checkbox imediatamente
                     e.preventDefault();
                     e.target.checked = true;
 
-                    // Armazenar o checkbox atual para referência
                     currentCheckbox = e.target;
 
-                    // Configurar e mostrar o modal de confirmação
                     setupConfirmationModal(label.charAt(0).toUpperCase() + label.slice(1));
                     modal.show();
                 }
