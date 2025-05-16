@@ -1,26 +1,30 @@
-// Arquivo: services/googleAnalyticsService.js
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 const { GoogleAuth } = require('google-auth-library');
-const { formatDate } = require('../utils/dateUtils');
+const { formatDate, getAllDaysBetween } = require('../utils/dateUtils');
 
-exports.getImpressions = async (keys, startDate, endDate) => {
-  const credentials = keys.credentials;
-  const propertyId = keys.property_id;
-
-  const auth = new GoogleAuth({ credentials, scopes: 'https://www.googleapis.com/auth/analytics.readonly' });
-  const client = new BetaAnalyticsDataClient({ auth });
-
+exports.getImpressions = async (google, startDate, endDate) => {
+  const client = new BetaAnalyticsDataClient();
   const allDates = getAllDaysBetween(startDate, endDate);
-  const dateRange = {
-    startDate: formatDate(startDate),
-    endDate: formatDate(endDate)
-  };
+  const propertyId = String(google.property_id).replace(/^properties\//, '');
 
   const [response] = await client.runReport({
     property: `properties/${propertyId}`,
-    dateRanges: [dateRange],
-    dimensions: [{ name: 'date' }],
-    metrics: [{ name: 'sessions' }]
+    dimensions: [
+      {
+        name: 'date'
+      }
+    ],
+    metrics: [
+      {
+        name: 'sessions'
+      }
+    ],
+    dateRanges: [
+      {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+      }
+    ],
   });
 
   const result = {};
@@ -31,42 +35,44 @@ exports.getImpressions = async (keys, startDate, endDate) => {
   return allDates.map(date => result[date] || 0);
 };
 
-exports.getTrafficData = async (keys, startDate, endDate) => {
-  const credentials = keys.credentials;
-  const propertyId = keys.property_id;
-
-  const auth = new GoogleAuth({ credentials, scopes: 'https://www.googleapis.com/auth/analytics.readonly' });
-  const client = new BetaAnalyticsDataClient({ auth });
-
+exports.getTrafficData = async (google, startDate, endDate) => {
+  const client = new BetaAnalyticsDataClient();
   const allDates = getAllDaysBetween(startDate, endDate);
-  const dateRange = {
-    startDate: formatDate(startDate),
-    endDate: formatDate(endDate)
-  };
+  const propertyId = String(google.property_id).replace(/^properties\//, '');
 
   const [response] = await client.runReport({
     property: `properties/${propertyId}`,
-    dateRanges: [dateRange],
     dimensions: [
-      { name: 'sessionDefaultChannelGroup' }, // Canal de origem (Direct, Organic Search, etc.)
-      { name: 'date' }
+      {
+        name: 'sessionDefaultChannelGroup'
+      },
+      {
+        name: 'date'
+      },
     ],
-    metrics: [{ name: 'sessions' }]
+    metrics: [
+      {
+        name: 'sessions'
+      }
+    ],
+    dateRanges: [
+      {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+      }
+    ],
   });
 
   const sessionsPerDay = {};
   const sessionsPerSource = {};
 
   response.rows.forEach(row => {
-    const channelGroup = row.dimensionValues[0].value; // Ex: Organic Search, Direct
+    const source = row.dimensionValues[0].value;
     const date = row.dimensionValues[1].value;
     const sessions = Number(row.metricValues[0].value);
 
-    // Preencher sessões por dia (somando todas as fontes)
     sessionsPerDay[date] = (sessionsPerDay[date] || 0) + sessions;
-
-    // Preencher sessões por fonte (acumulado no período)
-    sessionsPerSource[channelGroup] = (sessionsPerSource[channelGroup] || 0) + sessions;
+    sessionsPerSource[source] = (sessionsPerSource[source] || 0) + sessions;
   });
 
   const sessionsArray = allDates.map(date => sessionsPerDay[date] || 0);
@@ -74,31 +80,36 @@ exports.getTrafficData = async (keys, startDate, endDate) => {
   return {
     labels: allDates,
     sessions: sessionsArray,
-    sources: sessionsPerSource
+    sources: sessionsPerSource,
   };
 };
 
-exports.getSearchVolumeData = async (keys, startDate, endDate) => {
-  const credentials = keys.credentials;
-  const propertyId = keys.property_id;
-
-  const auth = new GoogleAuth({ credentials, scopes: 'https://www.googleapis.com/auth/analytics.readonly' });
-  const client = new BetaAnalyticsDataClient({ auth });
-
+exports.getSearchVolumeData = async (google, startDate, endDate) => {
+  const client = new BetaAnalyticsDataClient();
   const allDates = getAllDaysBetween(startDate, endDate);
-  const dateRange = {
-    startDate: formatDate(startDate),
-    endDate: formatDate(endDate)
-  };
+  const propertyId = String(google.property_id).replace(/^properties\//, '');
 
   const [response] = await client.runReport({
     property: `properties/${propertyId}`,
-    dateRanges: [dateRange],
     dimensions: [
-      { name: 'sessionDefaultChannelGroup' },
-      { name: 'date' }
+      {
+        name: 'sessionDefaultChannelGroup'
+      },
+      {
+        name: 'date'
+      },
     ],
-    metrics: [{ name: 'sessions' }]
+    metrics: [
+      {
+        name: 'sessions'
+      }
+    ],
+    dateRanges: [
+      {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+      }
+    ],
   });
 
   const organicSessionsPerDay = {};
@@ -107,11 +118,11 @@ exports.getSearchVolumeData = async (keys, startDate, endDate) => {
   let totalOtherSources = 0;
 
   response.rows.forEach(row => {
-    const channelGroup = row.dimensionValues[0].value; // Ex: Organic Search, Direct, etc
+    const group = row.dimensionValues[0].value;
     const date = row.dimensionValues[1].value;
     const sessions = Number(row.metricValues[0].value);
 
-    if (channelGroup === 'Organic Search') {
+    if (group === 'Organic Search') {
       organicSessionsPerDay[date] = (organicSessionsPerDay[date] || 0) + sessions;
       totalOrganicSearch += sessions;
     } else {
@@ -122,33 +133,17 @@ exports.getSearchVolumeData = async (keys, startDate, endDate) => {
 
   const organicSessionsArray = allDates.map(date => organicSessionsPerDay[date] || 0);
   const otherSessionsArray = allDates.map(date => otherSessionsPerDay[date] || 0);
-
   const totalSessions = totalOrganicSearch + totalOtherSources;
-  const percentOrganicSearch = totalSessions ? Math.round((totalOrganicSearch / totalSessions) * 100) : 0;
-  const percentOtherSources = totalSessions ? Math.round((totalOtherSources / totalSessions) * 100) : 0;
 
   return {
     labels: allDates,
     organicSessions: organicSessionsArray,
     totalOrganicSearch,
-    percentOrganicSearch,
+    percentOrganicSearch: totalSessions ? Math.round((totalOrganicSearch / totalSessions) * 100) : 0,
     totalOtherSources,
-    percentOtherSources,
-    totalNewLeads: totalOrganicSearch, // Podemos usar o totalOrganicSearch como "leads" por enquanto
+    percentOtherSources: totalSessions ? Math.round((totalOtherSources / totalSessions) * 100) : 0,
+    totalNewLeads: totalOrganicSearch,
     newLeadsPerDay: organicSessionsArray,
-    days: allDates.length
+    days: allDates.length,
   };
 };
-
-function getAllDaysBetween(start, end) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const dates = [];
-
-  while (startDate <= endDate) {
-    dates.push(startDate.toISOString().split('T')[0].replace(/-/g, ''));
-    startDate.setDate(startDate.getDate() + 1);
-  }
-
-  return dates;
-}

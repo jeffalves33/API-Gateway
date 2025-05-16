@@ -41,12 +41,12 @@ exports.getImpressionMetrics = async (req, res) => {
 
     const facebook = await getFacebookCustomerKey(id_user, id_customer);
     const instagram = await getInstagramCustomerKey(id_user, id_customer);
-    //const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
 
     const [facebookData, instagramData, googleData, linkedinData] = await Promise.all([
       facebookService.getImpressions(facebook.page_id, facebook.access_token, startDate, endDate),
       instagramService.getImpressions(instagram.page_id, instagram.access_token, startDate, endDate),
-      [],//googleAnalyticsService.getImpressions(google, startDate, endDate),
+      googleAnalyticsService.getImpressions(google, startDate, endDate),
       []//[0, 0, 0, 0, 0, 0]
     ]);
 
@@ -107,9 +107,7 @@ exports.getTrafficMetrics = async (req, res) => {
   try {
     const id_user = req.user.id;
     const { id_customer, startDate, endDate } = req.body;
-
     const google = await getGoogleAnalyticsKeys(id_user, id_customer);
-
     const googleData = await googleAnalyticsService.getTrafficData(google, startDate, endDate);
 
     res.json({
@@ -127,10 +125,9 @@ exports.getSearchVolumeMetrics = async (req, res) => {
   try {
     const id_user = req.user.id;
     const { id_customer, startDate, endDate } = req.body;
-
     const google = await getGoogleAnalyticsKeys(id_user, id_customer);
-
     const googleData = await googleAnalyticsService.getSearchVolumeData(google, startDate, endDate);
+
     res.json(googleData);
   } catch (err) {
     console.error(err);

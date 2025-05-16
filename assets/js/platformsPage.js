@@ -104,8 +104,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     (async function () {
         try {
-            const res = await fetch('/api/meta/status');
-            const { facebookConnected, instagramConnected } = await res.json();
+            const resMeta = await fetch('/api/meta/status');
+            const { facebookConnected, instagramConnected } = await resMeta.json();
+
+            const resGoogleAnalytics = await fetch('/api/googleAnalytics/status');
+            const { googleAnalyticsConnected } = await resGoogleAnalytics.json();
 
             const switches = document.querySelectorAll('.d-flex');
 
@@ -119,6 +122,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 if (title === 'instagram') {
                     checkbox.checked = instagramConnected;
+                }
+
+                if (title === 'google') {
+                    checkbox.checked = googleAnalyticsConnected;
                 }
             });
 

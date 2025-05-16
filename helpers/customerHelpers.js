@@ -30,5 +30,19 @@ const clearInstagramDataCustomer = async (id_customer, id_user) => {
     );
 };
 
+const clearGoogleAnalyticsDataCustomer = async (id_customer, id_user) => {
+    await pool.query(
+        'DELETE FROM google_analytics WHERE id_customer = $1',
+        [id_customer]
+    );
+    /*await pool.query(
+        'UPDATE customer SET id_facebook_page = $1, access_token_page_facebook = $2 WHERE id_customer = $3',
+        [null, null, id_customer]
+    );*/
+    await pool.query(
+        'UPDATE user_keys SET id_user_googleanalytics = $1, access_token_googleanalytics = $2, refresh_token_googleanalytics = $3 WHERE id_user = $4',
+        [null, null, null, id_user]
+    );
+};
 
-module.exports = { clearFacebookDataCustomer, clearInstagramDataCustomer };
+module.exports = { clearFacebookDataCustomer, clearInstagramDataCustomer, clearGoogleAnalyticsDataCustomer };

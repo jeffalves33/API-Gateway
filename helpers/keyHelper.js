@@ -2,6 +2,7 @@
 const { checkCustomerBelongsToUser } = require('../repositories/customerRepository');
 const { getCustomerFacebookKeys } = require('../repositories/customerFacebookRepository');
 const { getCustomerInstagramKeys } = require('../repositories/customerInstagramRepository');
+const { getCustomerKeys } = require('../repositories/customerRepository');
 const { getUserKeys } = require('../repositories/userRepository');
 
 const cache = new Map();
@@ -10,7 +11,7 @@ const refreshKeysForCustomer = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const customerKeys = await getCustomerFacebookKeys(id_customer);
+  const customerKeys = await getCustomerKeys(id_customer);
   const userKeys = await getUserKeys(id_user);
 
   const composed = {
@@ -24,18 +25,9 @@ const refreshKeysForCustomer = async (id_user, id_customer) => {
     },
     googleAnalytics: {
       property_id: customerKeys.google_property_id,
-      credentials: {
-        type: customerKeys.google_credentials_type,
-        project_id: customerKeys.google_credentials_project_id,
-        private_key_id: customerKeys.google_credentials_private_key_id,
-        private_key: customerKeys.google_credentials_private_key,
-        client_email: customerKeys.google_credentials_client_email,
-        client_id: customerKeys.google_credentials_client_id,
-        auth_uri: customerKeys.google_credentials_auth_uri,
-        token_uri: customerKeys.google_credentials_token_uri,
-        auth_provider_x509_cert_url: customerKeys.google_credentials_auth_provider_x509_cert_url,
-        client_x509_cert_url: customerKeys.google_credentials_client_x509_cert_url
-      }
+      user_id: userKeys.id_user_googleanalytics,
+      access_token: userKeys.access_token_googleanalytics,
+
     }
   };
 
@@ -117,21 +109,12 @@ const getGoogleAnalyticsKeys = async (id_user, id_customer) => {
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
   const customerKeys = await getCustomerKeys(id_customer);
+  const userKeys = await getUserKeys(id_user);
 
   const googleKeys = {
-    property_id: customerKeys.google_property_id,
-    credentials: {
-      type: customerKeys.google_credentials_type,
-      project_id: customerKeys.google_credentials_project_id,
-      private_key_id: customerKeys.google_credentials_private_key_id,
-      private_key: customerKeys.google_credentials_private_key?.replace(/\\n/g, '\n'), // Corrige formatação
-      client_email: customerKeys.google_credentials_client_email,
-      client_id: customerKeys.google_credentials_client_id,
-      auth_uri: customerKeys.google_credentials_auth_uri,
-      token_uri: customerKeys.google_credentials_token_uri,
-      auth_provider_x509_cert_url: customerKeys.google_credentials_auth_provider_x509_cert_url,
-      client_x509_cert_url: customerKeys.google_credentials_client_x509_cert_url
-    }
+    property_id: customerKeys.id_googleanalytics_property,
+    access_token: userKeys.access_token_googleanalytics,
+    id_user: userKeys.id_user_googleanalytics
   };
 
   cache.set(cacheKey, {

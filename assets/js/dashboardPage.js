@@ -726,8 +726,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 await fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate));
                 await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
                 await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
-                //await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
-                //await fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
+                await fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate));
 
                 // Exibe dashboard e esconde instrução
                 if (instructionMessage) instructionMessage.style.display = 'none';

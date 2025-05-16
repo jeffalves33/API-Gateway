@@ -1,6 +1,6 @@
 // Arquivo: repositories/customerRepository.js
 const { pool } = require('../config/db');
-const { clearFacebookDataCustomer, clearInstagramDataCustomer } = require('../helpers/customerHelpers');
+const { clearFacebookDataCustomer, clearInstagramDataCustomer, clearGoogleAnalyticsDataCustomer } = require('../helpers/customerHelpers');
 
 const getCustomersByUserId = async (id_user) => {
   const result = await pool.query(
@@ -16,10 +16,10 @@ const getCustomerKeys = async (id_customer) => {
   return result.rows[0];
 };
 
-const createCustomer = async (id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram) => {
+const createCustomer = async (id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property) => {
   const result = await pool.query(
-    'INSERT INTO customer(id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-    [id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram]
+    'INSERT INTO customer(id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+    [id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property]
   );
   return result.rows;
 };
@@ -51,13 +51,10 @@ const removePlatformFromCustomer = async (platform, customer, id_user) => {
   try {
     const { id_customer } = customer;
 
-    if (platform === 'facebook') {
-      await clearFacebookDataCustomer(id_customer, id_user);
-    } else if (platform === 'instagram') {
-      await clearInstagramDataCustomer(id_customer, id_user);
-    } else {
-      throw new Error(`Plataforma ${platform} não suportada`);
-    }
+    if (platform === 'facebook') await clearFacebookDataCustomer(id_customer, id_user);
+    if (platform === 'instagram') await clearInstagramDataCustomer(id_customer, id_user);
+    if (platform === 'google') await clearGoogleAnalyticsDataCustomer(id_customer, id_user);
+
   } catch (error) {
     console.error(`Erro ao limpar dados do cliente ${customer.id_customer}:`, error);
     throw error;

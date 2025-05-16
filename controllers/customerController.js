@@ -22,6 +22,7 @@ const addCustomer = async (req, res) => {
     let facebookToken = null;
     let instagramPageId = null;
     let instagramToken = null;
+    let googleAnalyticsId = null;
 
     if (Array.isArray(customer.platforms)) {
       for (const platform of customer.platforms) {
@@ -31,6 +32,8 @@ const addCustomer = async (req, res) => {
         } else if (platform.id_instagram_page) {
           instagramPageId = platform.id_instagram_page;
           instagramToken = platform.access_token;
+        } else if (platform.id_googleanalytics_property) {
+          googleAnalyticsId = platform.id_googleanalytics_property;
         }
       }
     }
@@ -44,7 +47,8 @@ const addCustomer = async (req, res) => {
       facebookPageId,
       facebookToken,
       instagramPageId,
-      instagramToken
+      instagramToken,
+      googleAnalyticsId
     );
 
     res.status(200).json({ success: true, message: 'Cliente adicionado com sucesso.' });

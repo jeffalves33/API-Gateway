@@ -137,7 +137,6 @@ exports.getMetaPages = async (req, res) => {
   }
 };
 
-
 exports.checkMetaStatus = async (req, res) => {
   const id_user = req.user.id;
 
