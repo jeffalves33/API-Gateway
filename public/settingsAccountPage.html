@@ -104,7 +104,7 @@
                         <span class="menu-header-text">Plataformas & Clientes</span>
                     </li>
 
-                    <li class="menu-item active">
+                    <li class="menu-item">
                         <a href="/platformsPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-link-45deg"></i>
                             <div data-i18n="Chat">Plataformas</div>
@@ -136,14 +136,14 @@
                         <span class="menu-header-text">Outros</span>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item active open">
                         <a href="javascript:void(0);" class="menu-link menu-toggle">
                             <i class="menu-icon tf-icons bi bi-gear"></i>
                             <div data-i18n="Chat">Configurações</div>
                         </a>
 
                         <ul class="menu-sub">
-                            <li class="menu-item">
+                            <li class="menu-item active">
                                 <a href="/settingsAccountPage.html" class="menu-link">
                                     <div data-i18n="Without menu">Conta</div>
                                 </a>
@@ -155,7 +155,6 @@
                             </li>
                         </ul>
                     </li>
-
                     <li class="menu-item">
                         <a href="#" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-headset"></i>
@@ -254,8 +253,9 @@
                                         <div class="dropdown-divider"></div>
                                     </li>
                                     <li>
-                                        <i class="bx bx-power-off me-2"></i>
-                                        <span class="align-middle">Sair</span>
+                                        <a class="dropdown-item" href="javascript:void(0);" id="log-out">
+                                            <i class="bx bx-power-off me-2"></i>
+                                            <span class="align-middle">Sair</span>
                                         </a>
                                     </li>
                                 </ul>
@@ -265,163 +265,123 @@
                     </div>
                 </nav>
 
-                <div class="container pt-4">
-                    <h4 class="py-2"><span class="text-muted fw-light">Plataformas /</span> Plataformas</h4>
-                    <div class="row">
-                        <div class="col-md-12 col-12 mb-md-0 mb-4">
-                            <div class="card overflow-hidden mb-4" style="height: 500px">
-                                <h5 class="card-header">Plataformas</h5>
-                                <div class="card-body" id="plataforms-conection">
-                                    <p>Conecte suas plataformas aqui</p>
-                                    <!-- Connections -->
-                                    <div class="d-flex mb-3">
-                                        <div class="flex-shrink-0">
-                                            <img src="../assets/img/icons/brands/facebook.png" alt="facebook"
-                                                class="me-3" height="30" />
-                                        </div>
-                                        <div class="flex-grow-1 row">
-                                            <div class="col-9 mb-sm-0 mb-2">
-                                                <h6 class="mb-0">Facebook</h6>
-                                                <small class="text-muted">Paginas</small>
-                                            </div>
-                                            <div class="col-3 text-end">
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input float-end" type="checkbox"
-                                                        role="switch">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-3">
-                                        <div class="flex-shrink-0">
-                                            <img src="../assets/img/icons/brands/instagram.png" alt="instagram"
-                                                class="me-3" height="30" />
-                                        </div>
-                                        <div class="flex-grow-1 row">
-                                            <div class="col-9 mb-sm-0 mb-2">
-                                                <h6 class="mb-0">Instagram</h6>
-                                                <small class="text-muted">Paginas</small>
-                                            </div>
-                                            <div class="col-3 text-end">
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input float-end" type="checkbox"
-                                                        role="switch">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-3">
-                                        <div class="flex-shrink-0">
-                                            <img src="../assets/img/icons/brands/google.png" alt="google" class="me-3"
-                                                height="30" />
-                                        </div>
-                                        <div class="flex-grow-1 row">
-                                            <div class="col-9 mb-sm-0 mb-2">
-                                                <h6 class="mb-0">Google</h6>
-                                                <small class="text-muted">Site</small>
-                                            </div>
-                                            <div class="col-3 text-end">
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input float-end" type="checkbox"
-                                                        role="switch">
-                                                </div>
+                <!-- Content wrapper -->
+                <div class="content-wrapper">
+                    <!-- Content -->
+
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        <h4 class="py-3 mb-4"><span class="text-muted fw-light">Configurações /</span> Conta</h4>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul class="nav nav-pills flex-column flex-md-row mb-3">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" href="javascript:void(0);"><i
+                                                class="bx bx-user me-1"></i> Conta</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="pages-account-settings-notifications.html"><i
+                                                class="bx bx-bell me-1"></i> Notificações</a>
+                                    </li>
+                                </ul>
+                                <div class="card mb-4">
+                                    <h5 class="card-header">Detalhes do perfil</h5>
+                                    <!-- Account -->
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start align-items-sm-center gap-4">
+                                            <img src="../assets/img/avatars/1.png" alt="user-avatar"
+                                                class="d-block rounded" height="100" width="100" id="uploadedAvatar" />
+                                            <div class="button-wrapper">
+                                                <label for="upload" class="btn btn-primary me-2 mb-4" tabindex="0">
+                                                    <span class="d-none d-sm-block">Carregar nova foto</span>
+                                                    <i class="bx bx-upload d-block d-sm-none"></i>
+                                                    <input type="file" id="upload" class="account-file-input" hidden
+                                                        accept="image/png, image/jpeg" />
+                                                </label>
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary account-image-reset mb-4">
+                                                    <i class="bx bx-reset d-block d-sm-none"></i>
+                                                    <span class="d-none d-sm-block">Reiniciar</span>
+                                                </button>
+
+                                                <p class="text-muted mb-0">JPG, GIF ou PNG permitidos. Tamanho máximo de
+                                                    800K</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="d-flex mb-3">
-                                        <div class="flex-shrink-0">
-                                            <img src="../assets/img/icons/brands/linkedin.png" alt="linkedin"
-                                                class="me-3" height="30" />
-                                        </div>
-                                        <div class="flex-grow-1 row">
-                                            <div class="col-9 mb-sm-0 mb-2">
-                                                <h6 class="mb-0">Linkedin</h6>
-                                                <small class="text-muted">Paginas</small>
-                                            </div>
-                                            <div class="col-3 text-end">
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input float-end" type="checkbox"
-                                                        role="switch" disabled>
+                                    <hr class="my-0" />
+                                    <div class="card-body">
+                                        <form id="formAccountSettings" method="POST" onsubmit="return false">
+                                            <div class="row">
+                                                <div class="mb-3 col-md-6">
+                                                    <label for="completName" class="form-label">Nome completo</label>
+                                                    <input class="form-control" type="text" id="completName"
+                                                        name="completName" value="John" autofocus />
+                                                </div>
+                                                <div class="mb-3 col-md-6">
+                                                    <label for="email" class="form-label">E-mail</label>
+                                                    <input class="form-control" type="text" id="email" name="email"
+                                                        value="john.doe@example.com"
+                                                        placeholder="john.doe@example.com" />
+                                                </div>
+                                                <div class="mb-3 col-md-6">
+                                                    <label for="organization" class="form-label">Organização</label>
+                                                    <input type="text" class="form-control" id="organization"
+                                                        name="organization" value="ThemeSelection" />
+                                                </div>
+                                                <div class="mb-3 col-md-6">
+                                                    <label class="form-label" for="phoneNumber">Telefone</label>
+                                                    <div class="input-group input-group-merge">
+                                                        <span class="input-group-text">BR (+55)</span>
+                                                        <input type="text" id="phoneNumber" name="phoneNumber"
+                                                            class="form-control" placeholder="202 555 0111" />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                            <div class="mt-2">
+                                                <button type="submit" class="btn btn-primary me-2">Salvar
+                                                    Alterações</button>
+                                                <button type="reset" class="btn btn-outline-secondary">Cancelar</button>
+                                            </div>
+                                        </form>
                                     </div>
-                                    <div class="d-flex mb-3">
-                                        <div class="flex-shrink-0">
-                                            <img src="../assets/img/icons/brands/tiktok.png" alt="tiktok" class="me-3"
-                                                height="30" />
-                                        </div>
-                                        <div class="flex-grow-1 row">
-                                            <div class="col-9 mb-sm-0 mb-2">
-                                                <h6 class="mb-0">Tiktok</h6>
-                                                <small class="text-muted">Contas</small>
-                                            </div>
-                                            <div class="col-3 text-end">
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input float-end" type="checkbox"
-                                                        role="switch" disabled>
-                                                </div>
+                                    <!-- /Account -->
+                                </div>
+                                <div class="card">
+                                    <h5 class="card-header">Excluir conta</h5>
+                                    <div class="card-body">
+                                        <div class="mb-3 col-12 mb-0">
+                                            <div class="alert alert-warning">
+                                                <h6 class="alert-heading mb-1">Tem certeza de que deseja excluir sua
+                                                    conta?</h6>
+                                                <p class="mb-0">Depois de excluir sua conta, não há como voltar atrás.
+                                                    Por favor, tenha certeza.</p>
                                             </div>
                                         </div>
+                                        <form id="formAccountDeactivation" onsubmit="return false">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" name="accountActivation"
+                                                    id="accountActivation" />
+                                                <label class="form-check-label" for="accountActivation">Confirmo a
+                                                    desativação da minha conta</label>
+                                            </div>
+                                            <button type="submit" class="btn btn-danger deactivate-account">Desativar
+                                                Conta</button>
+                                        </form>
                                     </div>
-                                    <div class="d-flex mb-3">
-                                        <div class="flex-shrink-0">
-                                            <img src="../assets/img/icons/brands/twitter.png" alt="twitter" class="me-3"
-                                                height="30" />
-                                        </div>
-                                        <div class="flex-grow-1 row">
-                                            <div class="col-9 mb-sm-0 mb-2">
-                                                <h6 class="mb-0">Twitter</h6>
-                                                <small class="text-muted">Contas</small>
-                                            </div>
-                                            <div class="col-3 text-end">
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input float-end" type="checkbox"
-                                                        role="switch" disabled>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- /Connections -->
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <!-- / Content -->
                 </div>
-                <!-- / Intervalo de busca -->
-                <!-- / Navbar -->
-                <!-- Modal de Confirmação -->
-                <div class="modal fade" id="modalToggle" aria-labelledby="modalToggleLabel" tabindex="-1"
-                    style="display: none" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalToggleLabel">Desconectar Plataforma</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                Tem certeza que deseja desconectar sua conta desta plataforma?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary"
-                                    data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-danger">Desconectar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- / Content wrapper -->
             </div>
-
+            <!-- / Layout page -->
         </div>
-    </div>
-    <!-- / Layout page -->
-    </div>
 
-    <!-- Container para alertas -->
-    <div id="alert-container"></div>
-    <!-- Overlay -->
-    <div class="layout-overlay layout-menu-toggle"></div>
+        <!-- Overlay -->
+        <div class="layout-overlay layout-menu-toggle"></div>
     </div>
     <!-- / Layout wrapper -->
 
@@ -447,8 +407,16 @@
 
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="/assets/js/platformsPage.js"></script>
+
+    <!-- Lógica para os inputs de data -->
+    <!-- Jeferson: Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Localization para português (opcional) -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <script>
+
+    </script>
+    <script src="/assets/js/settingsPage.js"></script>
 
 </body>
 

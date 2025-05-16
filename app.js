@@ -65,8 +65,8 @@ app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html'));
 });
 
-app.get('/profile.html', authenticatePageAccess, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'profile.html'));
+app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html'));
 });
 
 // === Páginas públicas ===
