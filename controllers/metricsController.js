@@ -1,5 +1,5 @@
 // Arquivo: controllers/metricsController.js
-const { getFacebookKeys, getInstagramKeys, getGoogleAnalyticsKeys, getFacebookCustomerKey, getInstagramCustomerKey } = require('../helpers/keyHelper');
+const { getGoogleAnalyticsKeys, getFacebookCustomerKey, getInstagramCustomerKey } = require('../helpers/keyHelper');
 const facebookService = require('../services/facebookService');
 const instagramService = require('../services/instagramService');
 const googleAnalyticsService = require('../services/googleAnalyticsService');

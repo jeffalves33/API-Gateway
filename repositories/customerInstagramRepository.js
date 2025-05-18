@@ -1,6 +1,5 @@
-// Arquivo: repositories/customerFacebookRepository.js
+// Arquivo: repositories/customerInstagramRepository.js
 const { pool } = require('../config/db');
-const axios = require('axios');
 
 const getCustomerInstagramKeys = async (id_customer) => {
   const result = await pool.query('SELECT * FROM customer WHERE id_customer = $1', [id_customer]);

@@ -9,7 +9,6 @@ const dotenv = require('dotenv');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
-const customerFacebookRoutes = require('./routes/customerFacebookRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
@@ -31,8 +30,6 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // === Rotas da API ===
 app.use('/api', authRoutes); // Não deve ser /api
-app.use('/api/customers/facebook', customerFacebookRoutes); // Refatorar
-app.use('/', customerFacebookRoutes);
 app.use('/api/metrics', metricsRoutes);
 
 //Refatorado

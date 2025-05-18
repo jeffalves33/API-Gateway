@@ -38,7 +38,7 @@ const addCustomer = async (req, res) => {
       }
     }
 
-    await createCustomer(
+    const { id_customer: id_customer } = await createCustomer(
       id_user,
       customer.name,
       customer.company,
@@ -50,6 +50,8 @@ const addCustomer = async (req, res) => {
       instagramToken,
       googleAnalyticsId
     );
+
+    console.log("id_customer: ", id_customer);
 
     res.status(200).json({ success: true, message: 'Cliente adicionado com sucesso.' });
   } catch (error) {

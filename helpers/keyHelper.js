@@ -40,62 +40,6 @@ const refreshKeysForCustomer = async (id_user, id_customer) => {
   return composed;
 };
 
-const getFacebookKeys = async (id_user, id_customer) => {
-  const cacheKey = `facebook:${id_user}:${id_customer}`;
-
-  if (cache.has(cacheKey)) {
-    const { expires, data } = cache.get(cacheKey);
-    if (Date.now() < expires) return data;
-    cache.delete(cacheKey);
-  }
-
-  const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
-  if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
-
-  const customerFacebookKeys = await getCustomerFacebookKeys(id_customer);
-  const userKeys = await getUserKeys(id_user);
-
-  const facebookKeys = {
-    page_id: customerFacebookKeys.id_facebook_page,
-    access_token: userKeys.access_token_page_facebook
-  };
-
-  cache.set(cacheKey, {
-    data: facebookKeys,
-    expires: Date.now() + 1000 * 60 * 5
-  });
-
-  return facebookKeys;
-};
-
-const getInstagramKeys = async (id_user, id_customer) => {
-  const cacheKey = `instagram:${id_user}:${id_customer}`;
-
-  if (cache.has(cacheKey)) {
-    const { expires, data } = cache.get(cacheKey);
-    if (Date.now() < expires) return data;
-    cache.delete(cacheKey);
-  }
-
-  const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
-  if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
-
-  const customerKeys = await getCustomerInstagramKeys(id_customer);
-  const userKeys = await getUserKeys(id_user);
-
-  const instagramKeys = {
-    page_id: customerKeys.instagram_page_id,
-    access_token: userKeys.instagram_access_token
-  };
-
-  cache.set(cacheKey, {
-    data: instagramKeys,
-    expires: Date.now() + 1000 * 60 * 5
-  });
-
-  return instagramKeys;
-};
-
 const getGoogleAnalyticsKeys = async (id_user, id_customer) => {
   const cacheKey = `google:${id_user}:${id_customer}`;
 
@@ -202,8 +146,6 @@ const getInstagramCustomerKey = async (id_user, id_customer) => {
 
 
 module.exports = {
-  getFacebookKeys,
-  getInstagramKeys,
   getGoogleAnalyticsKeys,
   getAllKeys,
   clearCacheForUser,
