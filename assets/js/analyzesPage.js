@@ -169,6 +169,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     document.getElementById('form-busca')?.addEventListener('submit', async function (e) {
+        const id_customer = localStorage.getItem('selectedCustomerId');
+        if (!id_customer) return;
+
         e.preventDefault();
 
         const isValid = await validateForm();
@@ -190,7 +193,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             else if (document.getElementById('googleAnalytics').checked) platform = 'google_analytics';
 
             const requestBody = {
-                client_id: userId,
+                client_id: id_customer,
                 platform: platform,
                 analysis_type: tipoAnalise.replace('descritiva', 'descriptive').replace('prescritiva', 'prescriptive').replace('preditiva', 'predictive'),
                 start_date: formatDateToISO(startDate),
@@ -198,7 +201,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 output_format: formatoRelatorio
             };
 
-            // Aqui realmente chama a API Python
             const response = await fetch('https://analyze-backend-uncs.onrender.com/analyze/', {
                 method: 'POST',
                 headers: {
