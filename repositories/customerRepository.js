@@ -18,10 +18,10 @@ const getCustomerKeys = async (id_customer) => {
 
 const createCustomer = async (id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property) => {
   const result = await pool.query(
-    'INSERT INTO customer(id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+    'INSERT INTO customer(id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_customer',
     [id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property]
   );
-  return result.rows;
+  return result.rows[0]['id_customer'];
 };
 
 const deleteCustomer = async (id_customer) => {

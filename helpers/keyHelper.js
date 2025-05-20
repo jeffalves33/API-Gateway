@@ -4,7 +4,7 @@ const { getCustomerFacebookKeys } = require('../repositories/customerFacebookRep
 const { getCustomerInstagramKeys } = require('../repositories/customerInstagramRepository');
 const { getCustomerKeys } = require('../repositories/customerRepository');
 const { getUserKeys } = require('../repositories/userRepository');
-
+const { getValidAccessToken } = require('./googleAnalyticsHelpers');
 const cache = new Map();
 
 const refreshKeysForCustomer = async (id_user, id_customer) => {
@@ -52,12 +52,13 @@ const getGoogleAnalyticsKeys = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
+  const newAccessToken = await getValidAccessToken(id_user);
   const customerKeys = await getCustomerKeys(id_customer);
   const userKeys = await getUserKeys(id_user);
 
   const googleKeys = {
     property_id: customerKeys.id_googleanalytics_property,
-    access_token: userKeys.access_token_googleanalytics,
+    access_token: newAccessToken,
     id_user: userKeys.id_user_googleanalytics
   };
 

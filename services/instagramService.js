@@ -85,3 +85,19 @@ exports.getFollowers = async (pageId, accessToken, startDate, endDate, period = 
     throw new Error(`Erro Instagram API: ${response.status} - ${response.statusText}`);
   }
 };
+
+exports.getAllMetricsRows = async (id_customer, pageId, accessToken, startDate, endDate) => {
+  const [reach, views, followers] = await Promise.all([
+    exports.getReach(pageId, accessToken, startDate, endDate),
+    exports.getImpressions(pageId, accessToken, startDate, endDate),
+    exports.getFollowers(pageId, accessToken)
+  ]);
+
+  return reach.map((value, idx) => ({
+    id_customer,
+    data: new Date(startDate.getTime() + idx * 86400000),
+    reach: value,
+    views: views[idx] || 0,
+    followers
+  }));
+};

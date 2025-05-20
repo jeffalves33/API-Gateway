@@ -1,6 +1,8 @@
 // Arquivo: controllers/customerController.js
 const { getCustomersByUserId, createCustomer, removePlatformFromCustomer, deleteCustomer } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer } = require('../helpers/keyHelper');
+const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
+const { getGoogleAnalyticsKeys } = require('../helpers/keyHelper');
 
 const getCustomersByUser = async (req, res) => {
   try {
@@ -16,47 +18,25 @@ const getCustomersByUser = async (req, res) => {
 const addCustomer = async (req, res) => {
   try {
     const id_user = req.user.id;
-    const customer = req.body;
+    const { name, company, email, phone, platforms } = req.body;
 
-    let facebookPageId = null;
-    let facebookToken = null;
-    let instagramPageId = null;
-    let instagramToken = null;
-    let googleAnalyticsId = null;
-
-    if (Array.isArray(customer.platforms)) {
-      for (const platform of customer.platforms) {
-        if (platform.id_facebook_page) {
-          facebookPageId = platform.id_facebook_page;
-          facebookToken = platform.access_token;
-        } else if (platform.id_instagram_page) {
-          instagramPageId = platform.id_instagram_page;
-          instagramToken = platform.access_token;
-        } else if (platform.id_googleanalytics_property) {
-          googleAnalyticsId = platform.id_googleanalytics_property;
-        }
-      }
-    }
-
-    const { id_customer: id_customer } = await createCustomer(
-      id_user,
-      customer.name,
-      customer.company,
-      customer.email,
-      customer.phone,
-      facebookPageId,
-      facebookToken,
-      instagramPageId,
-      instagramToken,
-      googleAnalyticsId
+    const id_customer = await createCustomer(
+      id_user, name, company, email, phone,
+      platforms.find(p => p.id_facebook_page)?.id_facebook_page || null,
+      platforms.find(p => p.id_facebook_page)?.access_token || null,
+      platforms.find(p => p.id_instagram_page)?.id_instagram_page || null,
+      platforms.find(p => p.id_instagram_page)?.access_token || null,
+      platforms.find(p => p.id_googleanalytics_property)?.id_googleanalytics_property || null
     );
 
-    console.log("id_customer: ", id_customer);
+    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
 
-    res.status(200).json({ success: true, message: 'Cliente adicionado com sucesso.' });
+    await metricsOrchestrator.processCustomerMetrics(id_user, id_customer, platforms, google);
+
+    return res.status(200).json({ success: true, message: 'Cliente e métricas adicionados com sucesso.' });
   } catch (error) {
     console.error(error);
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

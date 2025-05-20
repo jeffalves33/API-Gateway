@@ -1,5 +1,5 @@
+//Arquivo: services/googleAnalyticsService.js
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
-const { GoogleAuth } = require('google-auth-library');
 const { formatDate, getAllDaysBetween } = require('../utils/dateUtils');
 
 exports.getImpressions = async (google, startDate, endDate) => {
@@ -146,4 +146,34 @@ exports.getSearchVolumeData = async (google, startDate, endDate) => {
     newLeadsPerDay: organicSessionsArray,
     days: allDates.length,
   };
+};
+
+exports.getAllMetricsRows = async (id_customer, google, startDate, endDate) => {
+  const [impressions, trafficData, searchVol] = await Promise.all([
+    exports.getImpressions(google, startDate, endDate),
+    exports.getTrafficData(google, startDate, endDate),
+    exports.getSearchVolumeData(google, startDate, endDate)
+  ]);
+
+  const totalSessions = trafficData.sessions.reduce((a, b) => a + b, 0);
+  const directTotal = trafficData.sources['Direct'] || 0;
+  const socialTotal = trafficData.sources['Organic Social'] || 0;
+
+  return impressions.map((value, idx) => {
+    const daySessions = trafficData.sessions[idx];
+
+    const directRatio = totalSessions > 0 ? (daySessions / totalSessions) : 0;
+    const traffic_direct = Math.round(directTotal * directRatio);
+    const traffic_organic_social = Math.round(socialTotal * directRatio);
+
+    return {
+      id_customer,
+      data: new Date(trafficData.labels[idx].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')),
+      impressions: value,
+      traffic_direct,
+      traffic_organic_search: searchVol.newLeadsPerDay[idx] || 0,
+      traffic_organic_social,
+      search_volume: searchVol.newLeadsPerDay[idx] || 0
+    };
+  });
 };

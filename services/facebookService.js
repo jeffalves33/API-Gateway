@@ -77,3 +77,19 @@ exports.getFollowers = async (pageId, accessToken, startDate, endDate, period = 
 
   return allValues;
 };
+
+exports.getAllMetricsRows = async (id_customer, pageId, accessToken, startDate, endDate ) => {
+  const [impressions, reach, follows] = await Promise.all([
+    exports.getImpressions(pageId, accessToken, startDate, endDate),
+    exports.getReach(pageId, accessToken, startDate, endDate),
+    exports.getFollowers(pageId, accessToken, startDate, endDate)
+  ]);
+
+  return impressions.map((value, index) => ({
+    id_customer,
+    data: new Date(startDate.getTime() + index * 86400000),
+    page_impressions: value,
+    page_impressions_unique: reach[index] || 0,
+    page_follows: follows[index] || 0
+  }));
+};

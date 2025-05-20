@@ -24,3 +24,13 @@ exports.getAllDaysBetween = (start, end) => {
 
   return dates;
 }
+
+exports.buildDates = (qtdDays) => {
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 1);
+    endDate.setHours(0, 0, 0, 0);
+
+    const since = new Date(endDate);
+    since.setDate(since.getDate() - qtdDays);
+    return { since, endDate };
+}
