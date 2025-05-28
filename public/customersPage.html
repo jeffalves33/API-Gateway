@@ -398,6 +398,25 @@
         </div>
     </div>
 
+    <div id="loading-overlay" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: none;
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    ">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2">Carregando dados iniciais...</p>
+    </div>
+
     <!-- Core JS -->
     <!-- build:js assets/vendor/js/core.js -->
 
@@ -434,17 +453,9 @@
                 const responseCustomers = await fetch('/customer');
                 const { customers } = await responseCustomers.json();
 
-                const registeredFacebookIds = customers
-                    .map(c => c.id_facebook_page)
-                    .filter(id => id !== null);
-
-                const registeredInstagramIds = customers
-                    .map(c => c.id_instagram_page)
-                    .filter(id => id !== null);
-
-                const registeredGooglePropertyIds = customers
-                    .map(c => c.id_googleanalytics_property)
-                    .filter(id => id !== null);
+                const registeredFacebookIds = customers.map(c => c.id_facebook_page).filter(id => id !== null);
+                const registeredInstagramIds = customers.map(c => c.id_instagram_page).filter(id => id !== null);
+                const registeredGooglePropertyIds = customers.map(c => c.id_googleanalytics_property).filter(id => id !== null);
 
                 const responseMeta = await fetch('/api/meta/pages');
                 const pagesJsonMeta = await responseMeta.json();
@@ -513,6 +524,9 @@
         document.getElementById('add-customer-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'flex';
+
             const name = document.getElementById('customer-name').value;
             const company = document.getElementById('customer-company').value;
             const email = document.getElementById('customer-email').value;
@@ -563,18 +577,24 @@
 
                 if (response.ok) {
                     const toastElSuccess = document.getElementById('customer-success-toast');
+                    overlay.style.display = 'none';
                     new bootstrap.Toast(toastElSuccess).show();
                     document.getElementById('add-customer-form').reset();
                     setTimeout(() => {
                         location.reload();
-                    }, 1500);
+                    }, 1800);
                 } else {
                     const toastElError = document.getElementById('customer-error-toast');
+                    overlay.style.display = 'none';
                     new bootstrap.Toast(toastElError).show();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1800);
                 }
             } catch (error) {
                 console.error('Erro ao enviar formulário:', error);
                 const toastElError = document.getElementById('customer-error-toast');
+                overlay.style.display = 'none';
                 new bootstrap.Toast(toastElError).show();
             }
         });
