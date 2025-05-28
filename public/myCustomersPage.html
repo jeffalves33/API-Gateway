@@ -353,7 +353,7 @@
             try {
                 const response = await fetch("/customer");
                 const clientes = await response.json();
-
+                console.log("clientes: ", clientes)
                 const badgeClasses = {
                     "Conectado": "bg-label-success",         // Verde forte para indicar sucesso
                     "Pendente": "bg-label-warning",          // Amarelo para algo aguardando
@@ -367,7 +367,7 @@
                 const platformIcons = {
                     facebook: "facebook.png",
                     instagram: "instagram.png",
-                    google: "google.png",
+                    googleanalytics: "google-analytics.png",
                     linkedin: "linkedin.png"
                 };
 
@@ -376,8 +376,9 @@
                     let platformsHTML = '';
 
                     Object.entries(platformIcons).forEach(([platform, icon]) => {
-                        const tokenKey = `access_token_page_${platform}`;
-                        if (cliente[tokenKey]) {
+                        const tokenKeyMeta = `access_token_page_${platform}`;
+                        const tokenKeyGoogleAnalytics = `id_${platform}_property`;
+                        if (cliente[tokenKeyMeta] || cliente[tokenKeyGoogleAnalytics]) {
                             platformsHTML += `
                                 <li data-bs-toggle="tooltip" title="${platform}" class="avatar avatar-xs pull-up">
                                     <img src="../assets/img/icons/brands/${icon}" alt="${platform}" class="rounded-circle" />
