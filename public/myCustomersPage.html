@@ -353,7 +353,6 @@
             try {
                 const response = await fetch("/customer");
                 const clientes = await response.json();
-                console.log("clientes: ", clientes)
                 const badgeClasses = {
                     "Conectado": "bg-label-success",         // Verde forte para indicar sucesso
                     "Pendente": "bg-label-warning",          // Amarelo para algo aguardando
