@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <i class="bi bi-robot"></i>
                 </div>
                 <div class="message-content">
-                    <div class="ai-name">hoko AI</div>
+                    <div class="ai-name">ho.ko AI.nalytics</div>
                     <div class="message-text">
                         <p>${content}</p>
                     </div>
