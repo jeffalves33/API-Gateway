@@ -9,24 +9,24 @@ require('dotenv').config();
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    
+
     // Verificar se o usuário já existe
     const userExists = await pool.query('SELECT * FROM "user" WHERE email = $1', [email]);
-    
+
     if (userExists.rows.length > 0) {
       return res.status(400).json({ success: false, message: 'Email já registrado' });
     }
-    
+
     // Criptografar a senha
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    
+
     // Inserir novo usuário no banco de dados
     const newUser = await pool.query(
       'INSERT INTO "user" (name, email, password) VALUES ($1, $2, $3) RETURNING id_user, name, email',
       [name, email, hashedPassword]
     );
-    
+
     res.status(201).json({
       success: true,
       message: 'Usuário registrado com sucesso!',
@@ -46,37 +46,37 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     // Buscar usuário pelo email
     const result = await pool.query('SELECT * FROM "user" WHERE email = $1', [email]);
-    
+
     if (result.rows.length === 0) {
       return res.status(400).json({ success: false, message: 'Email ou senha incorretos' });
     }
-    
+
     const user = result.rows[0];
-    
+
     // Verificar se a senha está correta
     const validPassword = await bcrypt.compare(password, user.password);
-    
+
     if (!validPassword) {
       return res.status(400).json({ success: false, message: 'Email ou senha incorretos' });
     }
-    
+
     // Criar e atribuir um token JWT
     const token = jwt.sign(
       { id: user.id_user, email: user.email },
       process.env.JWT_SECRET || 'seu_segredo_jwt',
       { expiresIn: '1h' }
     );
-    
+
     // Configurar o cookie
     res.cookie('jwt', token, {
       httpOnly: true,
       maxAge: 3600000, // 1 hora em milissegundos
       // Em produção, adicione: secure: true (para HTTPS apenas)
     });
-    
+
     res.status(200).json({
       success: true,
       message: 'Login realizado com sucesso!',
@@ -97,13 +97,13 @@ const getUserProfile = async (req, res) => {
   try {
     // Buscar dados do usuário no banco
     const result = await pool.query('SELECT id_user, name, email, created_at FROM "user" WHERE id_user = $1', [req.user.id]);
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
     }
-    
+
     const user = result.rows[0];
-    
+
     res.status(200).json({
       success: true,
       message: 'Dados do perfil recuperados com sucesso',
@@ -124,9 +124,53 @@ const logoutUser = (req, res) => {
   res.status(200).json({ success: true, message: 'Logout realizado com sucesso' });
 };
 
+const checkAuthStatus = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(200).json({
+        success: false,
+        authenticated: false,
+        message: 'Usuário não está logado'
+      });
+    }
+
+    // Buscar dados atualizados do usuário no banco
+    const result = await pool.query('SELECT id_user, name, email FROM "user" WHERE id_user = $1', [req.user.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(200).json({
+        success: false,
+        authenticated: false,
+        message: 'Usuário não encontrado'
+      });
+    }
+
+    const user = result.rows[0];
+
+    res.status(200).json({
+      success: true,
+      authenticated: true,
+      message: 'Usuário está logado',
+      user: {
+        id: user.id_user,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao verificar status de autenticação:', error);
+    res.status(500).json({
+      success: false,
+      authenticated: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
-  logoutUser
+  logoutUser,
+  checkAuthStatus
 };

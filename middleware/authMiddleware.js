@@ -36,4 +36,26 @@ const authenticatePageAccess = (req, res, next) => {
   }
 };
 
-module.exports = { authenticateToken, authenticatePageAccess };
+const checkAuthStatus = (req, res, next) => {
+  const token = req.cookies.jwt;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'seu_segredo_jwt');
+      req.user = decoded;
+      req.isLoggedIn = true;
+    } catch (error) {
+      // Token inválido, limpar cookie
+      res.clearCookie('jwt');
+      req.user = null;
+      req.isLoggedIn = false;
+    }
+  } else {
+    req.user = null;
+    req.isLoggedIn = false;
+  }
+
+  next();
+};
+
+module.exports = { authenticateToken, authenticatePageAccess, checkAuthStatus };

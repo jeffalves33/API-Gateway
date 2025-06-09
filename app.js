@@ -1,5 +1,4 @@
 // Arquivo: app.js
-
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -12,6 +11,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
+const institutionalRoutes = require('./routes/institutionalRoutes'); // Nova rota
 
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 
@@ -36,6 +36,9 @@ app.use('/api/metrics', metricsRoutes);
 app.use('/api/googleAnalytics', googleAnalyticsRoutes);
 app.use('/api/meta', metaRoutes);
 app.use('/customer', customerRoutes);
+
+// === Rotas Institucionais ===
+app.use('/', institutionalRoutes);
 
 // === Páginas protegidas ===
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => {
@@ -67,10 +70,6 @@ app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => {
 });
 
 // === Páginas públicas ===
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -85,6 +84,34 @@ app.get('/privacyPolicyPage.html', (req, res) => {
 
 app.get('/termsUse.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'termsUse.html'));
+});
+
+// === Área do usuário com ID ===
+app.get('/:userId', authenticatePageAccess, (req, res, next) => {
+  const userId = req.params.userId;
+
+  // Evita colisão com arquivos .html e rotas inválidas
+  if (!/^\d+$/.test(userId)) {
+    return next(); // pula para o próximo middleware (404 ou outras rotas)
+  }
+
+  // Verificar se o userId corresponde ao usuário logado
+  if (req.user && req.user.id.toString() === userId) {
+    res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html'));
+  } else {
+    res.status(403).json({
+      success: false,
+      message: 'Acesso negado. Você não tem permissão para acessar esta área.'
+    });
+  }
+});
+
+// === Middleware para capturar rotas não encontradas ===
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Página não encontrada'
+  });
 });
 
 // === Inicialização do servidor ===

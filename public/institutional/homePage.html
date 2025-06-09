@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ho.ko AInalytics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #000000 0%, #2068ac 100%);
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #000000 0%, #2068ac 100%);
+            color: white;
+            text-align: center;
+            padding: 8rem 2rem 4rem;
+            margin-top: 60px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        .features {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta {
+            background: #f8f9fa;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .cta h2 {
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .cta p {
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .user-welcome {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 1rem;
+            text-align: center;
+            margin-top: 70px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">ho.ko AInalytics</div>
+            <ul class="nav-links">
+                <li><a href="/">Início</a></li>
+                <li><a href="/features">Funcionalidades</a></li>
+                <li><a href="/pricing">Preços</a></li>
+                <li><a href="/about">Sobre</a></li>
+            </ul>
+            <div class="auth-buttons" id="authButtons">
+                <a href="/login.html" class="btn btn-secondary" id="loginBtn">Entrar</a>
+                <a href="/register.html" class="btn btn-primary" id="registerBtn">Cadastrar</a>
+            </div>
+            <div class="auth-buttons hidden" id="userButtons">
+                <a href="/go-to-app" class="btn btn-primary" id="goToAppBtn">Acessar Minha Área</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="user-welcome hidden" id="userWelcome">
+        <p>👋 Olá! Você já está logado em sua conta. <a href="/go-to-app"
+                style="color: #2e7d32; font-weight: bold;">Clique aqui para acessar sua área</a></p>
+    </div>
+
+    <section class="hero">
+        <h1>Transforme dados em resultados reais.</h1>
+        <p>
+            Gere resultados para seus clientes com análises de um modelo treinado para sua agência. Agora seus clientes
+            conseguem reconhecer os resultados.
+        </p>
+        <div class="hero-buttons">
+            <a href="/register.html" class="btn btn-primary" id="heroRegisterBtn">Começar Gratuitamente</a>
+            <a href="/features" class="btn btn-secondary">Ver Funcionalidades</a>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2>Por que escolher nossa plataforma?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Dashboards Intuitivos</h3>
+                <p>Visualize suas métricas em dashboards personalizados com seu objetivo.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>Múltiplas Integrações</h3>
+                <p>Conecte plataformas automaticamente de forma simples.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3>Análises Avançadas</h3>
+                <p>Relatórios detalhados e insights com um modelo treinado para seu próprio negócio.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Atualizações em Tempo Real</h3>
+                <p>Dados sempre atualizados para tomada de decisões mais rápidas e assertivas.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Segurança Total</h3>
+                <p>Seus dados estão protegidos com sistema em nuvem e com uma autenticação segura.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Gestão de Clientes</h3>
+                <p>Gerencie múltiplos clientes e projetos em uma única plataforma organizada.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <h2>Pronto para centralizar suas métricas?</h2>
+        <p>Junte-se a centenas de profissionais que já otimizaram seus resultados com nossa plataforma.</p>
+        <a href="/register.html" class="btn btn-primary" id="ctaRegisterBtn">Criar Conta Gratuita</a>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 ho.ko AInalytics. Todos os direitos reservados.</p>
+        <p>
+            <a href="/privacyPolicyPage.html" style="color: #ccc; margin: 0 10px;">Política de Privacidade</a>
+            <a href="/termsUse.html" style="color: #ccc; margin: 0 10px;">Termos de Uso</a>
+        </p>
+    </footer>
+
+    <script>
+        // Verificar se o usuário está logado
+        function checkUserAuth() {
+            fetch('/api/auth-status', {
+                method: 'GET',
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.user) {
+                        // Usuário está logado
+                        showLoggedInState(data.user);
+                    } else {
+                        // Usuário não está logado
+                        showLoggedOutState();
+                    }
+                })
+                .catch(() => {
+                    // Erro ou usuário não logado
+                    showLoggedOutState();
+                });
+        }
+
+        function showLoggedInState(user) {
+            // Mostrar botões para usuário logado
+            document.getElementById('authButtons').classList.add('hidden');
+            document.getElementById('userButtons').classList.remove('hidden');
+            document.getElementById('userWelcome').classList.remove('hidden');
+
+            // Alterar botões do hero e CTA
+            document.getElementById('heroRegisterBtn').textContent = 'Acessar Minha Área';
+            document.getElementById('heroRegisterBtn').href = '/go-to-app';
+            document.getElementById('ctaRegisterBtn').textContent = 'Acessar Minha Área';
+            document.getElementById('ctaRegisterBtn').href = '/go-to-app';
+        }
+
+        function showLoggedOutState() {
+            // Mostrar botões para usuário não logado
+            document.getElementById('authButtons').classList.remove('hidden');
+            document.getElementById('userButtons').classList.add('hidden');
+            document.getElementById('userWelcome').classList.add('hidden');
+        }
+
+        // Verificar autenticação quando a página carregar
+        document.addEventListener('DOMContentLoaded', checkUserAuth);
+    </script>
+</body>
+
+</html>
