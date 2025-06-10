@@ -9,8 +9,9 @@ const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
-const metaRoutes = require('./routes/metaRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
+const linkedinRoutes = require('./routes/linkedinRoutes');
+const metaRoutes = require('./routes/metaRoutes');
 const institutionalRoutes = require('./routes/institutionalRoutes'); // Nova rota
 
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
@@ -34,6 +35,7 @@ app.use('/api/metrics', metricsRoutes);
 
 //Refatorado
 app.use('/api/googleAnalytics', googleAnalyticsRoutes);
+app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/meta', metaRoutes);
 app.use('/customer', customerRoutes);
 
