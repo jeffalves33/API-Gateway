@@ -3,7 +3,7 @@ const { pool } = require('../config/db'); // ajuste o path conforme seu projeto
 
 const GOOGLE_CLIENT_ID = '950435540090-5afqh5jkq3b804ru5ej86s5q8g8gap20.apps.googleusercontent.com'
 const GOOGLE_CLIENT_SECRET = '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'
-const GOOGLE_REDIRECT_URI = 'https://api-gateway-9qt5.onrender.com/api/googleAnalytics/auth/callback'
+const GOOGLE_REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/googleAnalytics/auth/callback'
 
 const oauth2Client = new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,
