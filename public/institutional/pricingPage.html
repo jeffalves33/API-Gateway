@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preços - ho.ko AI.nalytics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #000000 0%, #2068ac 100%);
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Pricing Page Styles */
+        .pricing-hero {
+            background: linear-gradient(135deg, #000000 0%, #2068ac 100%);
+            color: white;
+            text-align: center;
+            padding: 8rem 2rem 4rem;
+            margin-top: 60px;
+        }
+
+        .pricing-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        .pricing-hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .pricing-section {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 0;
+            text-align: left;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .pricing-card.featured {
+            border-color: #4CAF50;
+            border-width: 2px;
+            position: relative;
+        }
+
+        .pricing-card.featured::before {
+            content: "Mais Popular";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .card-content {
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .plan-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .plan-features li {
+            margin-bottom: 0.4rem;
+            padding-left: 1.2rem;
+            position: relative;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .plan-features li::before {
+            content: "•";
+            color: #4CAF50;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+
+        .feature-category {
+            font-weight: bold;
+            color: #2068ac;
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem;
+        }
+
+        .feature-category:first-child {
+            margin-top: 0;
+        }
+
+        .card-footer {
+            background: #f8f9fa;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e9ecef;
+            margin-top: auto;
+        }
+
+        .plan-price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .plan-price.contact {
+            font-size: 1rem;
+            color: #2068ac;
+        }
+
+        .card-footer .btn {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 3rem;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #000000 0%, #2068ac 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .check-mark {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .x-mark {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .user-welcome {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 1rem;
+            text-align: center;
+            margin-top: 70px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .pricing-hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-table {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">ho.ko AI.nalytics</div>
+            <ul class="nav-links">
+                <li><a href="/">Início</a></li>
+                <li><a href="/features">Funcionalidades</a></li>
+                <li><a href="/pricing">Preços</a></li>
+            </ul>
+            <div class="auth-buttons" id="authButtons">
+                <a href="/login.html" class="btn btn-secondary" id="loginBtn">Entrar</a>
+                <a href="/register.html" class="btn btn-primary" id="registerBtn">Cadastrar</a>
+            </div>
+            <div class="auth-buttons hidden" id="userButtons">
+                <a href="/go-to-app" class="btn btn-primary" id="goToAppBtn">Acessar Minha Área</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="user-welcome hidden" id="userWelcome">
+        <p>Bem-vindo de volta! Escolha o plano ideal para expandir suas análises.</p>
+    </div>
+
+    <section class="pricing-hero">
+        <h1>Escolha o Plano Ideal</h1>
+        <p>Potencialize suas análises com nossos planos flexíveis e escaláveis</p>
+    </section>
+
+    <section class="pricing-section">
+
+        <div class="pricing-grid">
+            <!-- Plano Gratuito -->
+            <div class="pricing-card">
+                <div class="card-content">
+                    <h3 class="plan-title">Plano Gratuito</h3>
+                    <ul class="plan-features">
+                        <li class="feature-category">Plataformas</li>
+                        <li>Todas Plataformas</li>
+
+                        <li class="feature-category">Clientes</li>
+                        <li>1 cliente gratuito</li>
+                        <li>Ilimitados clientes pagos</li>
+
+                        <li class="feature-category">Dashboard</li>
+                        <li>60 dias de busca</li>
+
+                        <li class="feature-category">Análises</li>
+                        <li>1 descritiva por dia</li>
+
+                        <li class="feature-category">Chat</li>
+                        <li>500 tokens por dia</li>
+
+                        <li class="feature-category">Armazenamento</li>
+                        <li>30 dias</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="plan-price">Free + 9,99 por cliente</div>
+                    <a href="/register.html" class="btn btn-primary">Começar Grátis</a>
+                </div>
+            </div>
+
+            <!-- Plano Premium -->
+            <div class="pricing-card featured">
+                <div class="card-content">
+                    <h3 class="plan-title">Plano Premium</h3>
+                    <ul class="plan-features">
+                        <li class="feature-category">Plataformas</li>
+                        <li>Todas Plataformas</li>
+
+                        <li class="feature-category">Clientes</li>
+                        <li>2 cliente gratuitos</li>
+                        <li>Ilimitados clientes pagos</li>
+
+                        <li class="feature-category">Dashboard</li>
+                        <li>Todo intervalo de busca</li>
+
+                        <li class="feature-category">Análises</li>
+                        <li>descritiva ilimitada</li>
+                        <li>1 preditiva por dia</li>
+                        <li>1 prescritiva por semana</li>
+
+                        <li class="feature-category">Chat</li>
+                        <li>1000 tokens por dia</li>
+
+                        <li class="feature-category">Armazenamento</li>
+                        <li>90 dias</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="plan-price">R$ 29,99 + 9,99 por cliente</div>
+                    <a href="/register.html" class="btn btn-primary">Escolher Premium</a>
+                </div>
+            </div>
+
+            <!-- Plano Plus -->
+            <div class="pricing-card">
+                <div class="card-content">
+                    <h3 class="plan-title">Plano Plus</h3>
+                    <ul class="plan-features">
+                        <li class="feature-category">Plataformas</li>
+                        <li>Todas Plataformas</li>
+
+                        <li class="feature-category">Clientes</li>
+                        <li>3 cliente gratuitos</li>
+                        <li>Ilimitados clientes pagos</li>
+
+                        <li class="feature-category">Dashboard</li>
+                        <li>Todo intervalo de busca</li>
+
+                        <li class="feature-category">Análises</li>
+                        <li>descritiva ilimitada</li>
+                        <li>preditiva ilimitada</li>
+                        <li>prescritiva ilimitada</li>
+
+                        <li class="feature-category">Chat</li>
+                        <li>ilimitado</li>
+
+                        <li class="feature-category">Armazenamento</li>
+                        <li>Todo período</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="plan-price">R$ 49,99 + 9,99 por cliente</div>
+                    <a href="/register.html" class="btn btn-primary">Escolher Plus</a>
+                </div>
+            </div>
+
+            <!-- Plano ho.ko -->
+            <div class="pricing-card">
+                <div class="card-content">
+                    <h3 class="plan-title">Plano ho.ko</h3>
+                    <ul class="plan-features">
+                        <li class="feature-category">Plataformas</li>
+                        <li>Todas Plataformas</li>
+
+                        <li class="feature-category">Clientes</li>
+                        <li>Ilimitados</li>
+
+                        <li class="feature-category">Dashboard</li>
+                        <li>Todo intervalo de busca</li>
+
+                        <li class="feature-category">Análises</li>
+                        <li>Ilimitadas</li>
+
+                        <li class="feature-category">Chat</li>
+                        <li>Ilimitado</li>
+
+                        <li class="feature-category">Armazenamento</li>
+                        <li>Todo período</li>
+
+                        <li class="feature-category">Plano de marca definido</li>
+                        <li>Integração com CRM</li>
+                        <li>Plataforma personalizada pela nossa equipe com um plano de marca</li>
+                        <li>Deixe que nossa equipe faça o controle da sua marca</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="plan-price contact">Contate nossa equipe</div>
+                    <a href="/contact" class="btn btn-primary">Entrar em Contato</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela Comparativa -->
+        <div class="comparison-table">
+            <div class="table-header">
+                <h2>Comparação Detalhada dos Planos</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Recursos</th>
+                        <th>Gratuito</th>
+                        <th>Premium</th>
+                        <th>Plus</th>
+                        <th>ho.ko</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Todas as Plataformas</strong></td>
+                        <td><span class="check-mark">✓</span></td>
+                        <td><span class="check-mark">✓</span></td>
+                        <td><span class="check-mark">✓</span></td>
+                        <td><span class="check-mark">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Clientes Gratuitos</strong></td>
+                        <td>1</td>
+                        <td>2</td>
+                        <td>3</td>
+                        <td>Ilimitados</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Intervalo de Busca</strong></td>
+                        <td>60 dias</td>
+                        <td>Ilimitado</td>
+                        <td>Ilimitado</td>
+                        <td>Ilimitado</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Análise Descritiva</strong></td>
+                        <td>1 por dia</td>
+                        <td>Ilimitada</td>
+                        <td>Ilimitada</td>
+                        <td>Ilimitada</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Análise Preditiva</strong></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td>1 por dia</td>
+                        <td>Ilimitada</td>
+                        <td>Ilimitada</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Análise Prescritiva</strong></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td>1 por semana</td>
+                        <td>Ilimitada</td>
+                        <td>Ilimitada</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tokens de Chat</strong></td>
+                        <td>500 por dia</td>
+                        <td>1000 por dia</td>
+                        <td>Ilimitado</td>
+                        <td>Ilimitado</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Armazenamento</strong></td>
+                        <td>30 dias</td>
+                        <td>90 dias</td>
+                        <td>Todo período</td>
+                        <td>Todo período</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Plano ho.ko</strong></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="check-mark">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Integração CRM</strong></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="check-mark">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Plataforma Personalizada</strong></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="check-mark">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Suporte Dedicado</strong></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="x-mark">✗</span></td>
+                        <td><span class="check-mark">✓</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 ho.ko AI.nalytics. Todos os direitos reservados.</p>
+        <p>
+            <a href="/privacyPolicyPage.html" style="color: #ccc; margin: 0 10px;">Política de Privacidade</a>
+            <a href="/termsUse.html" style="color: #ccc; margin: 0 10px;">Termos de Uso</a>
+        </p>
+    </footer>
+
+    <script>
+        // Verificar se o usuário está logado
+        function checkUserAuth() {
+            fetch('/api/auth-status', {
+                method: 'GET',
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.user) {
+                        // Usuário está logado
+                        showLoggedInState(data.user);
+                    } else {
+                        // Usuário não está logado
+                        showLoggedOutState();
+                    }
+                })
+                .catch(() => {
+                    // Erro ou usuário não logado
+                    showLoggedOutState();
+                });
+        }
+
+        function showLoggedInState(user) {
+            // Mostrar botões para usuário logado
+            document.getElementById('authButtons').classList.add('hidden');
+            document.getElementById('userButtons').classList.remove('hidden');
+            document.getElementById('userWelcome').classList.remove('hidden');
+
+            // Alterar botões dos planos para usuários logados
+            const planButtons = document.querySelectorAll('.pricing-card .btn');
+            planButtons.forEach(button => {
+                if (button.textContent.includes('Começar') || button.textContent.includes('Escolher')) {
+                    button.textContent = 'Fazer Upgrade';
+                    button.href = '/upgrade';
+                }
+            });
+        }
+
+        function showLoggedOutState() {
+            // Mostrar botões para usuário não logado
+            document.getElementById('authButtons').classList.remove('hidden');
+            document.getElementById('userButtons').classList.add('hidden');
+            document.getElementById('userWelcome').classList.add('hidden');
+        }
+
+        // Verificar autenticação quando a página carregar
+        document.addEventListener('DOMContentLoaded', checkUserAuth);
+    </script>
+</body>
+
+</html>
