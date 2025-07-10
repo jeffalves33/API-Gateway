@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 output_format: formatoRelatorio
             };
 
-            const response = await fetch('https://analyze-backend-uncs.onrender.com/analyze/', {
+            const response = await fetch('https://analyze-backend-wrrb.onrender.com/analyze/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
