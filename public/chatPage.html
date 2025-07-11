@@ -60,6 +60,8 @@
         .chat-container {
             height: 100vh;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .chat-header {
@@ -109,10 +111,12 @@
         }
 
         .chat-messages {
-            height: calc(100vh - 72px - 80px);
+            flex: 1;
             overflow-y: auto;
             padding: 1.5rem;
             background-color: #fff;
+            min-height: 0;
+            /* Importante para flexbox */
         }
 
         .message {
@@ -195,7 +199,10 @@
             background-color: #fff;
             border-top: 1px solid var(--border-color);
             padding: 1.25rem 1.5rem;
-            height: 80px;
+            flex-shrink: 0;
+            min-height: 80px;
+            position: relative;
+            z-index: 10;
         }
 
         .customer-dropdown {
@@ -212,15 +219,27 @@
             border-radius: 1.5rem;
             padding: 0.25rem 0.25rem 0.25rem 1.25rem;
             flex-grow: 1;
+            display: flex;
+            align-items: flex-end;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .chat-input-field {
-            border: none;
-            background: transparent;
-            outline: none;
             width: 100%;
-            height: 40px;
-            font-size: 0.95rem;
+            resize: none;
+            border: none;
+            outline: none;
+            padding: 10px;
+            font-size: 16px;
+            background-color: transparent;
+            border-radius: 20px;
+            min-height: 40px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: inherit;
+            line-height: 1.4;
+            box-sizing: border-box;
         }
 
         .send-btn {
@@ -234,6 +253,8 @@
             justify-content: center;
             color: white;
             transition: all 0.2s;
+            margin-left: 8px;
+            flex-shrink: 0;
         }
 
         .send-btn:hover {
@@ -291,6 +312,31 @@
 
         .history-icon:hover {
             color: var(--primary-color);
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .row.g-0 {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .col-md {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
 
         /* Scrollbar styling */
@@ -615,8 +661,8 @@
                                 <div class="chat-input">
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="input-container d-flex align-items-center">
-                                            <input type="text" class="chat-input-field"
-                                                placeholder="Pergunte alguma coisa">
+                                            <textarea class="chat-input-field" placeholder="Pergunte alguma coisa"
+                                                rows="1"></textarea>
                                             <button class="send-btn">
                                                 <i class="bi bi-send-fill"></i>
                                             </button>
@@ -675,8 +721,6 @@
 
     <!-- Jeferson: dados do cliente logado -->
     <script src="/assets/js/chatPage.js"></script>
-
-
 </body>
 
 </html>

@@ -125,11 +125,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    document.getElementById('log-out')?.addEventListener('click', logout);
+    // Função para auto-redimensionar o textarea
+    function autoResize() {
+        // Reset height to auto to get the correct scrollHeight
+        chatInputField.style.height = 'auto';
 
-    restoreSelectedCustomer();
-    await loadUserProfile();
-    await loadCustomers();
+        // Calculate new height
+        const newHeight = Math.min(chatInputField.scrollHeight, 200); // max-height: 200px
+        const minHeight = 40; // min-height: 40px
+
+        // Set the new height
+        chatInputField.style.height = Math.max(newHeight, minHeight) + 'px';
+    }
 
     async function sendMessage() {
         const userMessage = chatInputField.value.trim();
@@ -142,6 +149,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         messageHistory.push({ role: 'user', content: userMessage });
 
         chatInputField.value = '';
+        autoResize(); // Redimensiona após limpar o campo
 
         try {
             //const response = await fetch('http://127.0.0.1:8000/chat/', {
@@ -217,11 +225,34 @@ document.addEventListener('DOMContentLoaded', async function () {
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     }
 
-    sendButton.addEventListener('click', sendMessage);
-    chatInputField.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
+    // Event listeners para o textarea
+    chatInputField.addEventListener('input', autoResize);
+
+    chatInputField.addEventListener('paste', function () {
+        setTimeout(autoResize, 0);
+    });
+
+    chatInputField.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // Enter sozinho: enviar mensagem
             e.preventDefault();
             sendMessage();
         }
+        // Shift+Enter: deixar o comportamento padrão (quebra de linha)
     });
+
+    // Event listeners para o botão de envio
+    sendButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        sendMessage();
+    });
+
+    // Removido o event listener keypress duplicado
+    document.getElementById('log-out')?.addEventListener('click', logout);
+
+    // Inicialização
+    restoreSelectedCustomer();
+    await loadUserProfile();
+    await loadCustomers();
+    autoResize(); // Redimensionamento inicial
 });
