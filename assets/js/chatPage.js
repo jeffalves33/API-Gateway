@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('d-flex', 'message', role === 'user' ? 'user-message' : 'ai-message');
 
+        const htmlContent = marked.parse(content);
         if (role === 'user') {
             messageDiv.innerHTML = `
                 <div class="user-avatar">
@@ -184,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
                 <div class="message-content">
                     <div class="message-text">
-                        <p class="mb-0">${content}</p>
+                        <p class="mb-0">${htmlContent}</p>
                     </div>
                 </div>
             `;
@@ -196,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <div class="message-content">
                     <div class="ai-name">ho.ko AI.nalytics</div>
                     <div class="message-text">
-                        <p>${content}</p>
+                        <p>${htmlContent}</p>
                     </div>
                     <div class="d-flex mt-3">
                         <button class="reaction-btn me-2">

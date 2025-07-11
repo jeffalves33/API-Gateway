@@ -187,10 +187,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             const formatoRelatorio = document.getElementById('formatoRelatorio').value;
 
             // Determina a plataforma (primeira marcada)
-            let platform = null;
-            if (document.getElementById('instagram').checked) platform = 'instagram';
-            else if (document.getElementById('facebook').checked) platform = 'facebook';
-            else if (document.getElementById('googleAnalytics').checked) platform = 'google_analytics';
+            let platform = [];
+            if (document.getElementById('instagram').checked) platform.push('instagram');
+            else if (document.getElementById('facebook').checked) platform.push('facebook');
+            else if (document.getElementById('googleAnalytics').checked) platform.push('google_analytics');
 
             const requestBody = {
                 client_id: id_customer,
