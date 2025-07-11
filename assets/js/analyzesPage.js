@@ -189,8 +189,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             // Determina a plataforma (primeira marcada)
             let platform = [];
             if (document.getElementById('instagram').checked) platform.push('instagram');
-            else if (document.getElementById('facebook').checked) platform.push('facebook');
-            else if (document.getElementById('googleAnalytics').checked) platform.push('google_analytics');
+            if (document.getElementById('facebook').checked) platform.push('facebook');
+            if (document.getElementById('googleAnalytics').checked) platform.push('google_analytics');
 
             const requestBody = {
                 client_id: id_customer,
@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 end_date: formatDateToISO(endDate),
                 output_format: formatoRelatorio
             };
+            console.log("requestBody: ", requestBody);
 
             const response = await fetch('https://analyze-backend-wrrb.onrender.com/analyze/', {
                 method: 'POST',
