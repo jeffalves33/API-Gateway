@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const requestBody = {
                 client_id: id_customer,
-                platform: platform,
+                platforms: platform,
                 analysis_type: tipoAnalise.replace('descritiva', 'descriptive').replace('prescritiva', 'prescriptive').replace('preditiva', 'predictive'),
                 start_date: formatDateToISO(startDate),
                 end_date: formatDateToISO(endDate),
