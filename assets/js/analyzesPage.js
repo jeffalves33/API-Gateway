@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (document.getElementById('googleAnalytics').checked) platform.push('google_analytics');
 
             const requestBody = {
+                agency_id: userId,
                 client_id: id_customer,
                 platforms: platform,
                 analysis_type: tipoAnalise.replace('descritiva', 'descriptive').replace('prescritiva', 'prescriptive').replace('preditiva', 'predictive'),

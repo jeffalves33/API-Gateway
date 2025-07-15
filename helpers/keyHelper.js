@@ -90,7 +90,6 @@ const clearCacheForUser = (id_user) => {
   }
 };
 
-
 const getFacebookCustomerKey = async (id_user, id_customer) => {
   const cacheKey = `facebook:${id_user}:${id_customer}`;
 
