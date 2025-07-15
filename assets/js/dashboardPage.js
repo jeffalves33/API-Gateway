@@ -139,12 +139,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const id_customer = localStorage.getItem('selectedCustomerId');
         if (!id_customer) return;
 
-        const btnBuscarTexto = document.getElementById('btn-buscar-texto');
-        const btnBuscarLoading = document.getElementById('btn-buscar-loading');
-
         reachChartContainer.style.display = 'none';
-        btnBuscarTexto.classList.add('d-none');
-        btnBuscarLoading.classList.remove('d-none');
 
         try {
             const res = await fetch('/api/metrics/reach', {
@@ -157,9 +152,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             reachChartContainer.style.display = 'block';
         } catch (error) {
             console.error('Erro ao buscar dados de alcance:', error);
-        } finally {
-            btnBuscarTexto.classList.remove('d-none');
-            btnBuscarLoading.classList.add('d-none');
         }
     }
 
@@ -170,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         impressionsChartContainer.style.display = 'none';
 
         try {
-            const res = await fetch('/api/metrics/impressions', { 
+            const res = await fetch('/api/metrics/impressions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
@@ -244,321 +236,355 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderReachChart(data) {
-        if (reachChartInstance) reachChartInstance.destroy();
+        return new Promise((resolve) => {
+            if (reachChartInstance) reachChartInstance.destroy();
 
-        reachChartInstance = new ApexCharts(reachChartContainer, {
-            series: [
-                { name: 'Facebook', data: data.facebook },
-                { name: 'Instagram', data: data.instagram }
-            ],
-            chart: {
-                height: 400,
-                type: 'line',
-                toolbar: { show: true },
-                animations: { enabled: true, easing: 'easeinout', speed: 800 },
-                dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 }
-            },
-            colors: ['#0d6efd', '#dc3545'],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 3 },
-            grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
-            markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
-            xaxis: {
-                categories: data.labels,
-                labels: {
-                    formatter: val => new Date(val).toLocaleDateString('pt-BR'),
-                    style: { fontSize: '10px', fontWeight: 500 }
+            reachChartInstance = new ApexCharts(reachChartContainer, {
+                series: [
+                    { name: 'Facebook', data: data.facebook },
+                    { name: 'Instagram', data: data.instagram }
+                ],
+                chart: {
+                    height: 400,
+                    type: 'line',
+                    toolbar: { show: true },
+                    animations: { enabled: true, easing: 'easeinout', speed: 800 },
+                    dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 },
+                    events: {
+                        animationEnd: function () {
+                            resolve(); // Resolve quando a animação terminar
+                        }
+                    }
                 },
-                crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
-            },
-            yaxis: {
-                labels: {
-                    formatter: val => new Intl.NumberFormat('pt-BR').format(val),
-                    style: { fontSize: '12px', fontWeight: 500 }
-                }
-            },
-            legend: {
-                position: 'top',
-                horizontalAlign: 'center',
-                fontSize: '14px',
-                fontWeight: 500,
-                markers: { width: 10, height: 10, radius: 4 },
-                itemMargin: { horizontal: 15, vertical: 5 }
-            },
-            tooltip: {
-                theme: 'light',
-                shared: true,
-                intersect: false,
-                style: { fontSize: '13px' },
-                y: {
-                    formatter: val => new Intl.NumberFormat('pt-BR').format(val)
-                }
-            },
-            responsive: [{
-                breakpoint: 576,
-                options: {
-                    chart: { height: 280 },
-                    markers: { size: 4 },
-                    legend: { position: 'bottom' }
-                }
-            }]
-        });
+                colors: ['#0d6efd', '#dc3545'],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 3 },
+                grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
+                markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
+                xaxis: {
+                    categories: data.labels,
+                    labels: {
+                        formatter: val => new Date(val).toLocaleDateString('pt-BR'),
+                        style: { fontSize: '10px', fontWeight: 500 }
+                    },
+                    crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: val => new Intl.NumberFormat('pt-BR').format(val),
+                        style: { fontSize: '12px', fontWeight: 500 }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'center',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    markers: { width: 10, height: 10, radius: 4 },
+                    itemMargin: { horizontal: 15, vertical: 5 }
+                },
+                tooltip: {
+                    theme: 'light',
+                    shared: true,
+                    intersect: false,
+                    style: { fontSize: '13px' },
+                    y: {
+                        formatter: val => new Intl.NumberFormat('pt-BR').format(val)
+                    }
+                },
+                responsive: [{
+                    breakpoint: 576,
+                    options: {
+                        chart: { height: 280 },
+                        markers: { size: 4 },
+                        legend: { position: 'bottom' }
+                    }
+                }]
+            });
 
-        reachChartInstance.render();
+            reachChartInstance.render();
+        });
     }
 
     function renderImpressionsChart(data) {
-        if (impressionsChartInstance) impressionsChartInstance.destroy();
+        return new Promise((resolve) => {
+            if (impressionsChartInstance) impressionsChartInstance.destroy();
 
-        impressionsChartInstance = new ApexCharts(impressionsChartContainer, {
-            series: [
-                { name: 'Facebook', data: data.facebook },
-                { name: 'Instagram', data: data.instagram },
-                { name: 'Google Analytics', data: data.google },
-                { name: 'Linkedin', data: data.linkedin }
-            ],
-            chart: {
-                height: 400,
-                type: 'line',
-                toolbar: { show: true },
-                animations: { enabled: true, easing: 'easeinout', speed: 800 },
-                dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 }
-            },
-            colors: ['#0d6efd', '#dc3545', '#28a745', '#202020'],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 3 },
-            grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
-            markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
-            xaxis: {
-                categories: data.labels,
-                labels: {
-                    formatter: val => new Date(val).toLocaleDateString('pt-BR'),
-                    style: { fontSize: '10px', fontWeight: 500 }
+            impressionsChartInstance = new ApexCharts(impressionsChartContainer, {
+                series: [
+                    { name: 'Facebook', data: data.facebook },
+                    { name: 'Instagram', data: data.instagram },
+                    { name: 'Google Analytics', data: data.google },
+                    { name: 'Linkedin', data: data.linkedin }
+                ],
+                chart: {
+                    height: 400,
+                    type: 'line',
+                    toolbar: { show: true },
+                    animations: { enabled: true, easing: 'easeinout', speed: 800 },
+                    dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 },
+                    events: {
+                        animationEnd: function () {
+                            resolve();
+                        }
+                    }
                 },
-                crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
-            },
-            yaxis: {
-                labels: {
-                    formatter: val => new Intl.NumberFormat('pt-BR').format(val),
-                    style: { fontSize: '12px', fontWeight: 500 }
-                }
-            },
-            legend: {
-                position: 'top',
-                horizontalAlign: 'center',
-                fontSize: '14px',
-                fontWeight: 500,
-                markers: { width: 10, height: 10, radius: 4 },
-                itemMargin: { horizontal: 15, vertical: 5 }
-            },
-            tooltip: {
-                theme: 'light',
-                shared: true,
-                intersect: false,
-                style: { fontSize: '13px' },
-                y: {
-                    formatter: val => new Intl.NumberFormat('pt-BR').format(val)
-                }
-            },
-            responsive: [{
-                breakpoint: 576,
-                options: {
-                    chart: { height: 280 },
-                    markers: { size: 4 },
-                    legend: { position: 'bottom' }
-                }
-            }]
-        });
+                colors: ['#0d6efd', '#dc3545', '#28a745', '#202020'],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 3 },
+                grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
+                markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
+                xaxis: {
+                    categories: data.labels,
+                    labels: {
+                        formatter: val => new Date(val).toLocaleDateString('pt-BR'),
+                        style: { fontSize: '10px', fontWeight: 500 }
+                    },
+                    crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: val => new Intl.NumberFormat('pt-BR').format(val),
+                        style: { fontSize: '12px', fontWeight: 500 }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'center',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    markers: { width: 10, height: 10, radius: 4 },
+                    itemMargin: { horizontal: 15, vertical: 5 }
+                },
+                tooltip: {
+                    theme: 'light',
+                    shared: true,
+                    intersect: false,
+                    style: { fontSize: '13px' },
+                    y: {
+                        formatter: val => new Intl.NumberFormat('pt-BR').format(val)
+                    }
+                },
+                responsive: [{
+                    breakpoint: 576,
+                    options: {
+                        chart: { height: 280 },
+                        markers: { size: 4 },
+                        legend: { position: 'bottom' }
+                    }
+                }]
+            });
 
-        impressionsChartInstance.render();
+            impressionsChartInstance.render();
+        });
     }
 
     function renderfollowersChart(data) {
-        if (followersChartInstance) followersChartInstance.destroy();
+        return new Promise((resolve) => {
+            if (followersChartInstance) followersChartInstance.destroy();
 
-        followersChartInstance = new ApexCharts(followersChartContainer, {
-            series: [
-                { name: 'Facebook', data: data.facebook }
-            ],
-            chart: {
-                height: 400,
-                type: 'line',
-                toolbar: { show: true },
-                animations: { enabled: true, easing: 'easeinout', speed: 800 },
-                dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 }
-            },
-            colors: ['#0d6efd'],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 3 },
-            grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
-            markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
-            xaxis: {
-                categories: data.labels,
-                labels: {
-                    formatter: val => new Date(val).toLocaleDateString('pt-BR'),
-                    style: { fontSize: '10px', fontWeight: 500 }
+            followersChartInstance = new ApexCharts(followersChartContainer, {
+                series: [
+                    { name: 'Facebook', data: data.facebook }
+                ],
+                chart: {
+                    height: 400,
+                    type: 'line',
+                    toolbar: { show: true },
+                    animations: { enabled: true, easing: 'easeinout', speed: 800 },
+                    dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 },
+                    events: {
+                        animationEnd: function () {
+                            // Atualizar os cards após a animação
+                            document.getElementById('instagram-followers-count').textContent = data.instagram;
+                            document.getElementById('linkedin-followers-count').textContent = data.linkedin;
+                            document.getElementById('youtube-followers-count').textContent = data.youtube;
+                            resolve();
+                        }
+                    }
                 },
-                crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
-            },
-            yaxis: {
-                labels: {
-                    formatter: val => new Intl.NumberFormat('pt-BR').format(val),
-                    style: { fontSize: '12px', fontWeight: 500 }
-                }
-            },
-            legend: {
-                position: 'top',
-                horizontalAlign: 'center',
-                fontSize: '14px',
-                fontWeight: 500,
-                markers: { width: 10, height: 10, radius: 4 },
-                itemMargin: { horizontal: 15, vertical: 5 }
-            },
-            tooltip: {
-                theme: 'light',
-                shared: true,
-                intersect: false,
-                style: { fontSize: '13px' },
-                y: {
-                    formatter: val => new Intl.NumberFormat('pt-BR').format(val)
-                }
-            },
-            responsive: [{
-                breakpoint: 576,
-                options: {
-                    chart: { height: 280 },
-                    markers: { size: 4 },
-                    legend: { position: 'bottom' }
-                }
-            }]
-        });
-        followersChartInstance.render();
+                colors: ['#0d6efd'],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 3 },
+                grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
+                markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
+                xaxis: {
+                    categories: data.labels,
+                    labels: {
+                        formatter: val => new Date(val).toLocaleDateString('pt-BR'),
+                        style: { fontSize: '10px', fontWeight: 500 }
+                    },
+                    crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: val => new Intl.NumberFormat('pt-BR').format(val),
+                        style: { fontSize: '12px', fontWeight: 500 }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'center',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    markers: { width: 10, height: 10, radius: 4 },
+                    itemMargin: { horizontal: 15, vertical: 5 }
+                },
+                tooltip: {
+                    theme: 'light',
+                    shared: true,
+                    intersect: false,
+                    style: { fontSize: '13px' },
+                    y: {
+                        formatter: val => new Intl.NumberFormat('pt-BR').format(val)
+                    }
+                },
+                responsive: [{
+                    breakpoint: 576,
+                    options: {
+                        chart: { height: 280 },
+                        markers: { size: 4 },
+                        legend: { position: 'bottom' }
+                    }
+                }]
+            });
 
-        // Para Instagram, LinkedIn e YouTube → mostrar número em cards
-        document.getElementById('instagram-followers-count').textContent = data.instagram;
-        document.getElementById('linkedin-followers-count').textContent = data.linkedin;
-        document.getElementById('youtube-followers-count').textContent = data.youtube;
+            followersChartInstance.render();
+        });
     }
 
     function renderTrafficLineChart(data) {
-        const trafficChartContainer = document.querySelector('#trafficChart');
+        return new Promise((resolve) => {
+            const trafficChartContainer = document.querySelector('#trafficChart');
 
-        if (trafficChartInstance) trafficChartInstance.destroy();
+            if (trafficChartInstance) trafficChartInstance.destroy();
 
-        const formattedDates = data.labels.map(dateStr => {
-            if (!dateStr) return '';
-            return new Date(
-                dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
-            ).toLocaleDateString('pt-BR');
-        });
+            const formattedDates = data.labels.map(dateStr => {
+                if (!dateStr) return '';
+                return new Date(
+                    dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
+                ).toLocaleDateString('pt-BR');
+            });
 
-        trafficChartInstance = new ApexCharts(trafficChartContainer, {
-            chart: {
-                height: 400,
-                type: 'line',
-                toolbar: { show: true }
-            },
-            series: [
-                {
-                    name: 'Sessões',
-                    data: data.sessions
+            trafficChartInstance = new ApexCharts(trafficChartContainer, {
+                chart: {
+                    height: 400,
+                    type: 'line',
+                    toolbar: { show: true },
+                    events: {
+                        animationEnd: function () {
+                            resolve();
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Sessões',
+                        data: data.sessions
+                    }
+                ],
+                xaxis: {
+                    categories: formattedDates
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                colors: ['#0d6efd'],
+                dataLabels: { enabled: false },
+                markers: {
+                    size: 5
+                },
+                tooltip: {
+                    theme: 'light',
+                    shared: true,
+                    intersect: false,
+                    style: { fontSize: '13px' },
+                    y: {
+                        formatter: val => new Intl.NumberFormat('pt-BR').format(val)
+                    }
                 }
-            ],
-            xaxis: {
-                categories: formattedDates // Já mandar as datas formatadas
-            },
-            stroke: {
-                curve: 'smooth',
-                width: 3
-            },
-            colors: ['#0d6efd'],
-            dataLabels: { enabled: false },
-            markers: {
-                size: 5
-            },
-            tooltip: {
-                theme: 'light',
-                shared: true,
-                intersect: false,
-                style: { fontSize: '13px' },
-                y: {
-                    formatter: val => new Intl.NumberFormat('pt-BR').format(val)
-                }
-            }
-        });
+            });
 
-        trafficChartInstance.render();
+            trafficChartInstance.render();
+        });
     }
 
     function renderTrafficSourcesChart(data) {
-        const pizzaChartContainer = document.querySelector('#orderTrafficPizzaChart');
-        const trafficSourcesList = document.querySelector('#traffic-sources-list');
-        const totalTrafficElement = document.getElementById('total-traffic-period');
+        return new Promise((resolve) => {
+            const pizzaChartContainer = document.querySelector('#orderTrafficPizzaChart');
+            const trafficSourcesList = document.querySelector('#traffic-sources-list');
+            const totalTrafficElement = document.getElementById('total-traffic-period');
 
-        if (trafficSourcesChartInstance) trafficSourcesChartInstance.destroy();
+            if (trafficSourcesChartInstance) trafficSourcesChartInstance.destroy();
 
-        const sources = data.sources || {};
-        const labels = Object.keys(sources);
-        const series = Object.values(sources);
+            const sources = data.sources || {};
+            const labels = Object.keys(sources);
+            const series = Object.values(sources);
 
-        const total = series.reduce((acc, val) => acc + val, 0);
-        totalTrafficElement.textContent = total.toLocaleString('pt-BR');
+            const total = series.reduce((acc, val) => acc + val, 0);
+            totalTrafficElement.textContent = total.toLocaleString('pt-BR');
 
-        trafficSourcesChartInstance = new ApexCharts(pizzaChartContainer, {
-            chart: {
-                height: 165,
-                width: 130,
-                type: 'donut'
-            },
-            labels: labels,
-            series: series,
-            colors: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6610f2'], // Azul, Verde, Amarelo, Vermelho, Ciano, Roxo
-            stroke: {
-                width: 5,
-                colors: ['#fff']
-            },
-            dataLabels: {
-                enabled: false
-            },
-            legend: { show: false },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '75%',
-                        labels: {
-                            show: true,
-                            value: {
-                                fontSize: '1.5rem',
-                                offsetY: -15,
-                                formatter: val => parseInt(val) + '%'
-                            },
-                            name: {
-                                offsetY: 20
-                            },
-                            total: {
+            trafficSourcesChartInstance = new ApexCharts(pizzaChartContainer, {
+                chart: {
+                    height: 165,
+                    width: 130,
+                    type: 'donut',
+                    events: {
+                        animationEnd: function () {
+                            resolve();
+                        }
+                    }
+                },
+                labels: labels,
+                series: series,
+                colors: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6610f2'],
+                stroke: {
+                    width: 5,
+                    colors: ['#fff']
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                legend: { show: false },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '75%',
+                            labels: {
                                 show: true,
-                                label: 'Total',
-                                formatter: function (w) {
-                                    return total;
+                                value: {
+                                    fontSize: '1.5rem',
+                                    offsetY: -15,
+                                    formatter: val => parseInt(val) + '%'
+                                },
+                                name: {
+                                    offsetY: 20
+                                },
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    formatter: function (w) {
+                                        return total;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        trafficSourcesChartInstance.render();
+            trafficSourcesChartInstance.render();
 
-        // Gerar lista dinâmica UL
-        if (trafficSourcesList) {
-            trafficSourcesList.innerHTML = '';
+            // Gerar lista dinâmica UL
+            if (trafficSourcesList) {
+                trafficSourcesList.innerHTML = '';
 
-            labels.forEach((label, index) => {
-                const colorClasses = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'];
-                const colorClass = colorClasses[index % colorClasses.length];
+                labels.forEach((label, index) => {
+                    const colorClasses = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'];
+                    const colorClass = colorClasses[index % colorClasses.length];
 
-                const item = `
+                    const item = `
               <li class="d-flex mb-4 pb-1">
                 <div class="avatar flex-shrink-0 me-3">
                   <span class="avatar-initial rounded bg-label-${colorClass}">
@@ -576,119 +602,134 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
               </li>
             `;
-                trafficSourcesList.innerHTML += item;
-            });
-        }
+                    trafficSourcesList.innerHTML += item;
+                });
+            }
+        });
     }
 
     function renderSearchVolumeLineChart(data) {
-        const searchVolumeChartContainer = document.querySelector('#searchVolumChart');
+        return new Promise((resolve) => {
+            const searchVolumeChartContainer = document.querySelector('#searchVolumChart');
 
-        if (searchVolumeChartInstance) searchVolumeChartInstance.destroy();
+            if (searchVolumeChartInstance) searchVolumeChartInstance.destroy();
 
-        const formattedDates = data.labels.map(dateStr => {
-            if (!dateStr) return '';
-            return new Date(
-                dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
-            ).toLocaleDateString('pt-BR');
-        });
+            const formattedDates = data.labels.map(dateStr => {
+                if (!dateStr) return '';
+                return new Date(
+                    dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
+                ).toLocaleDateString('pt-BR');
+            });
 
-        searchVolumeChartInstance = new ApexCharts(searchVolumeChartContainer, {
-            chart: {
-                height: 400,
-                type: 'line',
-                toolbar: { show: true }
-            },
-            series: [
-                {
-                    name: 'Visitas por busca',
-                    data: data.organicSessions || []
+            searchVolumeChartInstance = new ApexCharts(searchVolumeChartContainer, {
+                chart: {
+                    height: 400,
+                    type: 'line',
+                    toolbar: { show: true },
+                    events: {
+                        animationEnd: function () {
+                            resolve();
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Visitas por busca',
+                        data: data.organicSessions || []
+                    }
+                ],
+                xaxis: {
+                    categories: formattedDates
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                colors: ['#696CFF'],
+                dataLabels: { enabled: false },
+                markers: { size: 5 },
+                tooltip: {
+                    y: {
+                        formatter: val => parseInt(val)
+                    }
                 }
-            ],
-            xaxis: {
-                categories: formattedDates
-            },
-            stroke: {
-                curve: 'smooth',
-                width: 3
-            },
-            colors: ['#696CFF'], // Azul padrão
-            dataLabels: { enabled: false },
-            markers: { size: 5 },
-            tooltip: {
-                y: {
-                    formatter: val => parseInt(val)
-                }
-            }
-        });
+            });
 
-        searchVolumeChartInstance.render();
+            searchVolumeChartInstance.render();
+        });
     }
 
     function renderSearchVolumeCards(data) {
-        // Atualizar quantidade e crescimento Organic Search
-        document.getElementById('organic-search-qtd').textContent = data.totalOrganicSearch;
-        document.getElementById('organic-search-percent').innerHTML = `
+        return new Promise((resolve) => {
+            // Atualizar quantidade e crescimento Organic Search
+            document.getElementById('organic-search-qtd').textContent = data.totalOrganicSearch;
+            document.getElementById('organic-search-percent').innerHTML = `
           <i class="bx ${data.percentOrganicSearch >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
           ${Math.abs(data.percentOrganicSearch)}%
         `;
 
-        // Atualizar quantidade e crescimento Outras Fontes
-        document.getElementById('other-sources-qtd').textContent = data.totalOtherSources;
-        document.getElementById('other-sources-percent').innerHTML = `
+            // Atualizar quantidade e crescimento Outras Fontes
+            document.getElementById('other-sources-qtd').textContent = data.totalOtherSources;
+            document.getElementById('other-sources-percent').innerHTML = `
           <i class="bx ${data.percentOtherSources >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
           ${Math.abs(data.percentOtherSources)}%
         `;
 
-        // Atualizar quantidade de Novos Leads
-        document.getElementById('new-leads-qtd').textContent = data.totalNewLeads;
-        document.getElementById('new-leads-qtd-days').textContent = `${data.days} dias`;
+            // Atualizar quantidade de Novos Leads
+            document.getElementById('new-leads-qtd').textContent = data.totalNewLeads;
+            document.getElementById('new-leads-qtd-days').textContent = `${data.days} dias`;
 
-        // Renderizar o mini gráfico Sparkline
-        const newLeadsChartContainer = document.querySelector('#newLeadsChart');
+            // Renderizar o mini gráfico Sparkline
+            const newLeadsChartContainer = document.querySelector('#newLeadsChart');
 
-        if (newLeadsChartInstance) newLeadsChartInstance.destroy();
+            if (newLeadsChartInstance) newLeadsChartInstance.destroy();
 
-        newLeadsChartInstance = new ApexCharts(newLeadsChartContainer, {
-            chart: {
-                height: 80,
-                type: 'line',
-                toolbar: { show: false },
-                dropShadow: {
-                    enabled: true,
-                    top: 10,
-                    left: 5,
-                    blur: 3,
-                    color: '#FFC107', // Amarelo
-                    opacity: 0.15
+            newLeadsChartInstance = new ApexCharts(newLeadsChartContainer, {
+                chart: {
+                    height: 80,
+                    type: 'line',
+                    toolbar: { show: false },
+                    dropShadow: {
+                        enabled: true,
+                        top: 10,
+                        left: 5,
+                        blur: 3,
+                        color: '#FFC107',
+                        opacity: 0.15
+                    },
+                    sparkline: { enabled: true },
+                    events: {
+                        animationEnd: function () {
+                            resolve();
+                        }
+                    }
                 },
-                sparkline: { enabled: true }
-            },
-            grid: {
-                show: false,
-                padding: { right: 8 }
-            },
-            colors: ['#FFC107'],
-            dataLabels: { enabled: false },
-            stroke: {
-                width: 5,
-                curve: 'smooth'
-            },
-            series: [
-                {
-                    data: data.newLeadsPerDay || []
-                }
-            ],
-            xaxis: {
-                show: false,
-                lines: { show: false },
-                labels: { show: false },
-                axisBorder: { show: false }
-            },
-            yaxis: { show: false }
-        });
+                grid: {
+                    show: false,
+                    padding: { right: 8 }
+                },
+                colors: ['#FFC107'],
+                dataLabels: { enabled: false },
+                stroke: {
+                    width: 5,
+                    curve: 'smooth'
+                },
+                series: [
+                    {
+                        data: data.newLeadsPerDay || []
+                    }
+                ],
+                xaxis: {
+                    show: false,
+                    lines: { show: false },
+                    labels: { show: false },
+                    axisBorder: { show: false }
+                },
+                yaxis: { show: false }
+            });
 
-        newLeadsChartInstance.render();
+            newLeadsChartInstance.render();
+        });
     }
 
     document.getElementById('log-out')?.addEventListener('click', logout);
@@ -721,15 +762,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 // Mostra loading no botão
                 btnBuscarTexto.classList.add('d-none');
                 btnBuscarLoading.classList.remove('d-none');
+                // Executa todas as buscas e aguarda TODAS terminarem completamente
+                await Promise.all([
+                    fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate)),
+                    fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate)),
+                    fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate)),
+                    fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate)),
+                    fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate))
+                ]);
 
-                // Executa todas as buscas
-                await fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate));
-                await fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate));
-                await fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate));
-                await fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate));
-                await fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate));
-
-                // Exibe dashboard e esconde instrução
+                // Exibe dashboard e esconde instrução APENAS após tudo estar renderizado
                 if (instructionMessage) instructionMessage.style.display = 'none';
                 if (contentDashboard) contentDashboard.style.display = 'block';
 
@@ -737,6 +779,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 console.error('Erro ao buscar dados do dashboard:', error);
                 alert('Erro ao buscar dados. Tente novamente.');
             } finally {
+                // Remove loading APENAS após tudo estar completamente renderizado
                 btnBuscarTexto.classList.remove('d-none');
                 btnBuscarLoading.classList.add('d-none');
             }
