@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     const impressionsChartContainer = document.getElementById('impressionsChart');
     const followersChartContainer = document.getElementById('followersChart');
     const instructionMessage = document.getElementById('instruction-message'); // <- Agora existe no HTML
+    const facebookSecoundCardReach = document.getElementById('facebook-secound-card-reach')
+    const instagramSecoundCardReach = document.getElementById('instagram-secound-card-reach')
+    const facebookSecoundCardImpressions = document.getElementById('facebook-secound-card-impressions')
+    const instagramSecoundCardImpressions = document.getElementById('instagram-secound-card-impressions')
+    const googleAnalyticsSecoundCardImpressions = document.getElementById('googleAnalytics-secound-card-impressions')
+    const linkedinSecoundCardImpressions = document.getElementById('linkedin-secound-card-impressions')
+
 
     let reachChartInstance = null;
     let trafficChartInstance = null;
@@ -236,6 +243,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderReachChart(data) {
+        facebookSecoundCardReach.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
+        instagramSecoundCardReach.textContent = data.instagram.reduce((sum, value) => sum + value, 0);
         return new Promise((resolve) => {
             if (reachChartInstance) reachChartInstance.destroy();
 
@@ -260,7 +269,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 3 },
                 grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
-                markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
+                markers: { size: 0 },
                 xaxis: {
                     categories: data.labels,
                     labels: {
@@ -307,6 +316,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderImpressionsChart(data) {
+        facebookSecoundCardImpressions.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
+        instagramSecoundCardImpressions.textContent = data.instagram.reduce((sum, value) => sum + value, 0);
+        googleAnalyticsSecoundCardImpressions.textContent = data.google.reduce((sum, value) => sum +value, 0);
         return new Promise((resolve) => {
             if (impressionsChartInstance) impressionsChartInstance.destroy();
 
@@ -333,7 +345,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 3 },
                 grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
-                markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
+                markers: { size: 0 },
                 xaxis: {
                     categories: data.labels,
                     labels: {
@@ -407,7 +419,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 3 },
                 grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
-                markers: { size: 6, strokeWidth: 3, hover: { size: 8 } },
+                markers: { size: 0 },
                 xaxis: {
                     categories: data.labels,
                     labels: {
@@ -493,7 +505,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 colors: ['#0d6efd'],
                 dataLabels: { enabled: false },
                 markers: {
-                    size: 5
+                    size: 0
                 },
                 tooltip: {
                     theme: 'light',
@@ -647,7 +659,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 },
                 colors: ['#696CFF'],
                 dataLabels: { enabled: false },
-                markers: { size: 5 },
+                markers: { size: 0 },
                 tooltip: {
                     y: {
                         formatter: val => parseInt(val)
