@@ -200,9 +200,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 end_date: formatDateToISO(endDate),
                 output_format: formatoRelatorio
             };
-            console.log("requestBody: ", requestBody);
 
-            const response = await fetch('https://analyze-backend-wrrb.onrender.com/analyze/', {
+            const response = await fetch('https://analyze-backend-5jyg.onrender.com/analyze/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         try {
             //const response = await fetch('http://127.0.0.1:8000/chat/', {
-            const response = await fetch('https://analyze-backend-wrrb.onrender.com/chat/', {
+            const response = await fetch('https://analyze-backend-5jyg.onrender.com/chat/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
