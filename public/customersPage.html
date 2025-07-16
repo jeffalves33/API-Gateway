@@ -334,7 +334,11 @@
                                             <div class="col-md-6 pt-3">
                                                 <small class="text-light fw-medium">Facebook</small>
                                                 <div id="facebook-pages-list" class="mt-3">
-                                                    <!-- Páginas do Facebook serão inseridas aqui pelo JS -->
+                                                    <div class="loading-indicator">
+                                                        <div class="spinner-border spinner-border-sm" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -342,7 +346,11 @@
                                             <div class="col-md-6 pt-3">
                                                 <small class="text-light fw-medium">Instagram</small>
                                                 <div id="instagram-pages-list" class="mt-3">
-                                                    <!-- Páginas do Instagram serão inseridas aqui pelo JS -->
+                                                    <div class="loading-indicator">
+                                                        <div class="spinner-border spinner-border-sm" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -350,7 +358,11 @@
                                             <div class="col-md-6 pt-3">
                                                 <small class="text-light fw-medium">Google Analytics</small>
                                                 <div id="googleAnalytics-pages-list" class="mt-3">
-                                                    <!-- Páginas do Google Analytics serão inseridas aqui pelo JS -->
+                                                    <div class="loading-indicator">
+                                                        <div class="spinner-border spinner-border-sm" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -456,6 +468,13 @@
             const instagramPagesList = document.getElementById('instagram-pages-list');
             const googleAnalyticsPagesList = document.getElementById('googleAnalytics-pages-list');
 
+            function clearLoadingIndicator(container) {
+                const loadingIndicator = container.querySelector('.loading-indicator');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+            }
+
             try {
                 const responseCustomers = await fetch('/customer');
                 const { customers } = await responseCustomers.json();
@@ -473,6 +492,7 @@
                 const { google } = pagesJsonGoogleAnalytics;
 
                 // Facebook Pages
+                clearLoadingIndicator(facebookPagesList);
                 facebook.forEach(page => {
                     if (registeredFacebookIds.includes(page.id_page)) return;
 
@@ -490,6 +510,7 @@
                 });
 
                 // Instagram Pages
+                clearLoadingIndicator(instagramPagesList);
                 instagram.forEach(page => {
                     if (registeredInstagramIds.includes(page.id_page)) return;
 
@@ -507,6 +528,7 @@
                 });
 
                 // Google Analytics Properties
+                clearLoadingIndicator(googleAnalyticsPagesList);
                 google.forEach(property => {
                     if (registeredGooglePropertyIds.includes(property.id_property)) return;
 
