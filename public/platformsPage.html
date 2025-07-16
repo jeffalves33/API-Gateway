@@ -164,7 +164,7 @@
                     </li>
 
                     <li class="menu-item">
-                        <a href="#" class="menu-link">
+                        <a href="#" class="menu-link" data-bs-toggle="modal" data-bs-target="#contactModal">
                             <i class="menu-icon tf-icons bi bi-headset"></i>
                             <div data-i18n="Chat">Fale conosco</div>
                         </a>
@@ -423,6 +423,37 @@
         </div>
     </div>
     <!-- / Layout page -->
+
+    <!-- Modal Fale Conosco -->
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalLabel">
+                        <i class="bi bi-headset me-2"></i>Fale Conosco
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i><strong>Telefone:</strong> +55 19
+                        99714-8221 </p>
+                    <p class="mb-2"><i class="bi bi-envelope me-2 text-danger"></i><strong>Email:</strong>
+                        contato@hokocomunicacao.com.br</p>
+                    <p class="mb-0"><i class="bi bi-geo-alt me-2 text-success"></i><strong>Endereço:</strong> R.
+                        Comendador Tórlogo Dauntre, n.74 Sala 1207
+                        13.025-270
+                        Cambui, Campinas SP</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Container para alertas -->
