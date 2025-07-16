@@ -243,11 +243,94 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         contentDashboard.innerHTML = `
         <div class="card p-4 shadow-sm border-0">
-            <div class="markdown-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Análise Gerada</h4>
+                <button id="download-pdf" class="btn btn-outline-primary">
+                    <i class="bi bi-download me-2"></i>Baixar PDF
+                </button>
+            </div>
+            <div class="markdown-body" id="analysis-content">
                 ${htmlFormatted}
             </div>
         </div>
     `;
+
+        // Adiciona o event listener para o botão de download
+        document.getElementById('download-pdf')?.addEventListener('click', downloadAsPDF);
+    }
+
+    async function downloadAsPDF() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById('analysis-content');
+
+            if (!element) {
+                alert('Conteúdo não encontrado para download.');
+                return;
+            }
+
+            // Mostra loading no botão
+            const downloadBtn = document.getElementById('download-pdf');
+            const originalContent = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Gerando PDF...';
+            downloadBtn.disabled = true;
+
+            // Captura o elemento como imagem
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            // Dimensões da página A4
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            // Calcula as dimensões da imagem
+            const imgWidth = pageWidth - 20; // margem de 10mm de cada lado
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            let heightLeft = imgHeight;
+            let position = 10; // margem superior
+
+            // Adiciona a primeira página
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            heightLeft -= (pageHeight - 20); // subtrai a altura da página menos margens
+
+            // Adiciona páginas adicionais se necessário
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight + 10;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - 20);
+            }
+
+            // Nome do arquivo com data atual
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR').replace(/\//g, '-');
+            const customerName = localStorage.getItem('selectedCustomerName') || 'Cliente';
+            const fileName = `Analise_${customerName}_${dateStr}.pdf`;
+
+            // Faz o download
+            pdf.save(fileName);
+
+            // Restaura o botão
+            downloadBtn.innerHTML = originalContent;
+            downloadBtn.disabled = false;
+
+        } catch (error) {
+            console.error('Erro ao gerar PDF:', error);
+            alert('Erro ao gerar PDF. Tente novamente.');
+
+            // Restaura o botão em caso de erro
+            const downloadBtn = document.getElementById('download-pdf');
+            downloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Baixar PDF';
+            downloadBtn.disabled = false;
+        }
     }
 
 });
