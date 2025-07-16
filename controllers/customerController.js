@@ -1,19 +1,8 @@
 // Arquivo: controllers/customerController.js
-const { getCustomersByUserId, createCustomer, removePlatformFromCustomer, deleteCustomer } = require('../repositories/customerRepository');
+const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, removePlatformFromCustomer, updateCustomer } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 const { getGoogleAnalyticsKeys } = require('../helpers/keyHelper');
-
-const getCustomersByUser = async (req, res) => {
-  try {
-    const idUser = req.user.id;
-    const customers = await getCustomersByUserId(idUser);
-    res.status(200).json({ success: true, customers });
-  } catch (error) {
-    console.error('Erro ao buscar clientes:', error);
-    res.status(500).json({ success: false, message: 'Erro ao buscar clientes' });
-  }
-};
 
 const addCustomer = async (req, res) => {
   try {
@@ -54,6 +43,28 @@ const deleteCustomerById = async (req, res) => {
   }
 };
 
+const getCustomerById = async (req, res) => {
+  try {
+    const id_customer = req.params.id_customer;
+    const customer = await getCustomerByIdCustomer(id_customer);
+    res.status(200).json({ success: true, customer });
+  } catch (error) {
+    console.error('Erro ao buscar ciente:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar cliente' });
+  }
+};
+
+const getCustomersByUser = async (req, res) => {
+  try {
+    const idUser = req.user.id;
+    const customers = await getCustomersByUserId(idUser);
+    res.status(200).json({ success: true, customers });
+  } catch (error) {
+    console.error('Erro ao buscar clientes:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar clientes' });
+  }
+};
+
 const refreshCustomerKeys = async (req, res) => {
   try {
     const id_user = req.user.id;
@@ -88,4 +99,34 @@ const removePlatformCustomer = async (req, res) => {
   }
 };
 
-module.exports = { getCustomersByUser, refreshCustomerKeys, addCustomer, removePlatformCustomer, deleteCustomerById };
+const updateCustomerById = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+    const id_customer = req.params.id_customer;
+    const { name, email } = req.body;
+
+    // Validar se os campos obrigatórios foram enviados
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nome e email são obrigatórios'
+      });
+    }
+
+    // Você precisará criar esta função no repository
+    await updateCustomer(id_customer, name, email);
+
+    res.status(200).json({
+      success: true,
+      message: 'Cliente atualizado com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar cliente:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Erro ao atualizar cliente'
+    });
+  }
+};
+
+module.exports = { addCustomer, deleteCustomerById, getCustomerById, getCustomersByUser, refreshCustomerKeys, removePlatformCustomer, updateCustomerById };

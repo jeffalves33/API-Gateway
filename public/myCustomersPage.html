@@ -275,6 +275,7 @@
 
                 <div class="container pt-4">
                     <h4 class="py-2"><span class="text-muted fw-light">Plataformas & Páginas /</span> Meus Clientes</h4>
+                    <div id="alert-container"></div>
                     <!-- Hoverable Table rows -->
                     <div class="card">
                         <div class="table-responsive text-nowrap">
@@ -320,6 +321,38 @@
                     </div>
                 </div>
 
+                <!-- Modal de Edição de Cliente -->
+                <div class="modal fade" id="modalEditClient" aria-labelledby="modalEditClientLabel" tabindex="-1"
+                    style="display: none" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalEditClientLabel">Editar Cliente</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editClientForm">
+                                    <div class="mb-3">
+                                        <label for="editClientName" class="form-label">Nome</label>
+                                        <input type="text" class="form-control" id="editClientName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editClientEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="editClientEmail" required>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" id="confirmEditClient">Confirmar
+                                    Modificação</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <!-- / Layout page -->
         </div>
@@ -354,8 +387,9 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const modalElement = document.getElementById('modalToggle');
             const modal = new bootstrap.Modal(modalElement);
+            const modalEditElement = document.getElementById('modalEditClient');
+            const modalEdit = new bootstrap.Modal(modalEditElement);
             const tableBody = document.getElementById("clients-table-body");
-            let idClientCont = 1;
 
             try {
                 const response = await fetch("/customer");
@@ -481,8 +515,92 @@
                     setupConfirmationModal(id_customer);
                     modal.show();
                 }
-            });
 
+                if (event.target.closest(".edit_client")) {
+                    event.preventDefault();
+                    const id_customer = event.target.closest(".edit_client").getAttribute("data-id");
+
+                    // Buscar dados do cliente
+                    try {
+                        const response = await fetch(`/customer/get/${id_customer}`);
+                        const cliente = await response.json();
+                        // Preencher o modal com os dados do cliente
+                        document.getElementById('editClientName').value = cliente.customer[0].name;
+                        document.getElementById('editClientEmail').value = cliente.customer[0].email;
+
+                        // Mostrar o modal
+                        modalEdit.show();
+
+                        // Configurar o botão de confirmação
+                        document.getElementById('confirmEditClient').onclick = async function () {
+                            const updatedName = document.getElementById('editClientName').value;
+                            const updatedEmail = document.getElementById('editClientEmail').value;
+
+                            // Verificar se houve mudanças
+                            if (updatedName === cliente.customer[0].name && updatedEmail === cliente.customer[0].email) {
+                                modalEdit.hide();
+
+                                // Mostrar mensagem informativa
+                                const alertContainer = document.getElementById('alert-container');
+                                if (alertContainer) {
+                                    alertContainer.innerHTML = `
+                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                        Nenhuma alteração foi detectada.
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                    </div>
+                                `;
+                                }
+                                return;
+                            }
+
+                            try {
+                                const updateResponse = await fetch(`/customer/edit/${id_customer}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        name: updatedName,
+                                        email: updatedEmail
+                                    })
+                                });
+
+                                if (!updateResponse.ok) {
+                                    const data = await updateResponse.json();
+                                    throw new Error(data.message || 'Erro ao atualizar cliente!');
+                                }
+
+                                modalEdit.hide();
+                                location.reload();
+
+                                // Mostrar mensagem de sucesso
+                                const alertContainer = document.getElementById('alert-container');
+                                if (alertContainer) {
+                                    alertContainer.innerHTML = `
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        Cliente atualizado com sucesso!
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                    </div>
+                                `;
+                                }
+                            } catch (error) {
+                                console.error('Erro ao atualizar cliente:', error);
+
+                                // Mostrar mensagem de erro
+                                const alertContainer = document.getElementById('alert-container');
+                                if (alertContainer) {
+                                    alertContainer.innerHTML = `
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        ${error.message}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                    </div>
+                                `;
+                                }
+                            }
+                        };
+                    } catch (error) {
+                        console.error('Erro ao buscar dados do cliente:', error);
+                    }
+                }
+            });
         });
     </script>
 </body>
