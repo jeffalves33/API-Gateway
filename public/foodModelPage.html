@@ -41,8 +41,6 @@
     <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
 
-    <!-- Page CSS -->
-
     <!-- Helpers -->
     <script src="/assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
@@ -309,9 +307,9 @@
                                                     <span class="input-group-text"><i class="bx bx-layer"></i></span>
                                                     <select class="form-control" id="document-scope" required>
                                                         <option value="">Selecione o escopo</option>
-                                                        <option value="client">Cliente</option>
-                                                        <option value="agency">Agência</option>
-                                                        <!--<option value="global">Global</option>-->
+                                                        <option value="client" selected>Cliente</option>
+                                                        <!--<option value="agency">Agência</option>
+                                                        <option value="global">Global</option>-->
                                                     </select>
                                                 </div>
                                                 <div class="form-text">Se o documento é sobre sua agência ou seu
@@ -327,7 +325,16 @@
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="bx bx-file"></i></span>
                                                     <select class="form-control" id="doc-type" required>
-                                                        <option value="">Selecione o tipo</option>
+                                                        <option value="">Selecione o escopo</option>
+                                                        <option value="identidade">Identidade e posicionamento</option>
+                                                        <option value="estrategia">Estratégia e planejamento</option>
+                                                        <option value="comunicacao">Comunicação e marca</option>
+                                                        <option value="performance">Performance e dados</option>
+                                                        <option value="produtos">Produtos e serviços</option>
+                                                        <option value="vendas">Vendas e crescimento</option>
+                                                        <option value="operacao">Operação e tecnologia</option>
+                                                        <option value="suporte">Suporte e documentação</option>
+                                                        <option value="cases">Cases e referências</option>
                                                     </select>
                                                 </div>
                                                 <div id="doc-type-categorization" class="form-text"></div>
@@ -414,7 +421,7 @@
                                                             </label>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <!--<div class="col-md-4">
                                                         <div class="form-check">
                                                             <input class="form-check-input" type="radio"
                                                                 name="upload-type" id="upload-pdf" value="pdf">
@@ -422,7 +429,7 @@
                                                                 <i class="bx bx-file-blank me-2"></i>Arquivo
                                                             </label>
                                                         </div>
-                                                    </div>
+                                                    </div>-->
                                                 </div>
                                             </div>
 
@@ -434,7 +441,7 @@
                                                     placeholder="Cole ou digite o conteúdo do documento aqui..."></textarea>
                                             </div>
 
-                                            <!-- Upload de Arquivo -->
+                                            <!-- Upload de Arquivo 
                                             <div class="col-12 pt-3" id="file-upload-area" style="display: none;">
                                                 <label class="form-label" for="document-file">Selecionar Arquivo</label>
                                                 <input type="file" class="form-control" id="document-file"
@@ -442,7 +449,7 @@
                                                 <div class="form-text">Formatos aceitos: PDF, DOC, DOCX, TXT, CSV, XLS,
                                                     XLSX
                                                 </div>
-                                            </div>
+                                            </div>-->
                                         </div>
 
                                         <div class="row">
@@ -507,248 +514,18 @@
     <script src="/assets/vendor/js/bootstrap.js"></script>
     <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
     <script src="/assets/vendor/js/menu.js"></script>
-    <!-- Vendors JS -->
-    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
-
-    <!-- Main JS -->
-    <script src="/assets/js/main.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", async function () {
-            const scopeSelect = document.getElementById("document-scope");
-            const docTypeSelect = document.getElementById("doc-type");
-            const docCategorization = document.getElementById("doc-type-categorization");
-            const customerListElement = document.getElementById('dropdown-customer-list');
-            const selectedCustomerNameElement = document.getElementById('selected-customer-name');
-            const userNameElement = document.getElementById('user-name');
-            const sendButton = document.querySelector('.send-btn');
-            const chatInputField = document.querySelector('.chat-input-field');
-            const chatMessagesContainer = document.querySelector('.chat-messages');
-
-            let userId = null;
-            let messageHistory = [];
-
-            function updateSelectedCustomerDisplay(name) {
-                selectedCustomerNameElement.textContent = name || 'Cliente';
-            }
-
-            function saveSelectedCustomer(id, name, facebookPageId) {
-                localStorage.setItem('selectedCustomerId', id);
-                localStorage.setItem('selectedCustomerName', name);
-                localStorage.setItem('selectedCustomerFacebookPageId', facebookPageId || '');
-            }
-
-            function restoreSelectedCustomer() {
-                const savedName = localStorage.getItem('selectedCustomerName');
-                if (savedName) {
-                    updateSelectedCustomerDisplay(savedName);
-                }
-            }
-
-            async function loadUserProfile() {
-                try {
-                    const response = await fetch('/api/profile');
-                    if (!response.ok) {
-                        const data = await response.json();
-                        throw new Error(data.message || 'Erro ao carregar perfil');
-                    }
-                    const data = await response.json();
-                    userNameElement.textContent = data.user.name;
-                    userId = data.user.id_user;
-                } catch (error) {
-                    console.error('Erro ao carregar perfil:', error);
-                }
-            }
-
-            async function loadCustomers() {
-                try {
-                    const response = await fetch('/customer');
-                    if (!response.ok) throw new Error('Erro ao buscar clientes');
-
-                    const { customers } = await response.json();
-                    customerListElement.innerHTML = '';
-
-                    customers.forEach(customer => {
-                        const item = document.createElement('li');
-                        item.innerHTML = `
-                    <a class="dropdown-item dropdown-customer-list-items" href="#" 
-                       data-id="${customer.id_customer}" 
-                       data-name="${customer.name}"
-                       data-facebook-page-id="${customer.id_facebook_page || ''}">
-                      ${customer.name}
-                    </a>`;
-                        customerListElement.appendChild(item);
-                    });
-
-                    customerListElement.innerHTML += `
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/platformsPage.html">Adicionar cliente</a></li>
-            `;
-
-                    document.querySelectorAll('.dropdown-customer-list-items').forEach(item => {
-                        item.addEventListener('click', async function (e) {
-                            e.preventDefault();
-                            const id = this.getAttribute('data-id');
-                            const name = this.getAttribute('data-name');
-                            const facebookPageId = this.getAttribute('data-facebook-page-id');
-
-                            saveSelectedCustomer(id, name, facebookPageId);
-                            updateSelectedCustomerDisplay(name);
-
-                            if (userId && id) {
-                                try {
-                                    const response = await fetch('/customer/cache', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ id_user: userId, id_customer: id })
-                                    });
-
-                                    if (!response.ok) {
-                                        const data = await response.json();
-                                        throw new Error(data.message || 'Erro ao atualizar chaves');
-                                    }
-                                } catch (error) {
-                                    console.error('Erro ao atualizar cache de chaves:', error);
-                                }
-                            }
-                        });
-                    });
-                } catch (error) {
-                    console.error('Erro ao carregar clientes:', error);
-                }
-            }
-
-            async function logout() {
-                try {
-                    const response = await fetch('/api/logout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-
-                    if (!response.ok) {
-                        const data = await response.json();
-                        throw new Error(data.message || 'Erro ao fazer logout');
-                    }
-
-                    localStorage.clear();
-                    window.location.href = '/';
-                } catch (error) {
-                    const alertContainer = document.getElementById('alert-container');
-                    if (alertContainer) {
-                        alertContainer.innerHTML = `
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${error.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                  </div>`;
-                    }
-                }
-            }
-
-            document.getElementById('log-out')?.addEventListener('click', logout);
-
-            restoreSelectedCustomer();
-            await loadUserProfile();
-            await loadCustomers();
-
-            const tiposCliente = [
-                { value: "identidade", label: "Identidade e posicionamento" },
-                { value: "estrategia", label: "Estratégia e planejamento" },
-                { value: "comunicacao", label: "Comunicação e marca" },
-                { value: "performance", label: "Performance e dados" },
-                { value: "produtos", label: "Produtos e serviços" },
-                { value: "vendas", label: "Vendas e crescimento" },
-                { value: "operacao", label: "Operação e tecnologia" },
-                { value: "suporte", label: "Suporte e documentação" },
-                { value: "cases", label: "Cases e referências" }
-            ];
-
-            const tiposAgencia = [
-                { value: "briefing", label: "Briefing de campanha" },
-                { value: "midia", label: "Planejamento de mídia" },
-                { value: "criacao", label: "Criação e design" },
-                { value: "bi", label: "BI e dados" },
-                { value: "documentacao", label: "Documentação interna" }
-            ];
-
-            scopeSelect.addEventListener("change", () => {
-                const escopo = scopeSelect.value;
-                docTypeSelect.innerHTML = '<option value="">Selecione o tipo</option>';
-                docCategorization.textContent = "";
 
 
-                if (escopo === "client") {
-                    tiposCliente.forEach(tipo => {
-                        const option = new Option(tipo.label, tipo.value);
-                        docTypeSelect.add(option);
-                    });
-                } else if (escopo === "agency") {
-                    tiposAgencia.forEach(tipo => {
-                        const option = new Option(tipo.label, tipo.value);
-                        docTypeSelect.add(option);
-                    });
-                } else {
-                    // Se for "global" ou vazio, não preenche opções extras
-                }
-            });
-        });
-        // Controle de visibilidade dos campos baseado no escopo
-        document.getElementById('doc-type').addEventListener('change', function () {
-            const doc_type = this.value;
-            const subtext = document.getElementById('doc-type-categorization');
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
 
-            if (doc_type === 'identidade') {
-                subtext.textContent = "Informações sobre missão, valores, história e como a marca se posiciona no mercado."
-            } else if (doc_type === 'estrategia') {
-                subtext.textContent = "Metas da empresa, público-alvo, KPIs e análises estratégicas como SWOT e benchmarking."
-            } else if (doc_type === 'comunicacao') {
-                subtext.textContent = "Diretrizes de tom de voz, mensagens, canais, campanhas e estratégia de conteúdo."
-            } else if (doc_type === 'performance') {
-                subtext.textContent = "Métricas, funil de vendas, comportamento do cliente e comparativos de mercado."
-            } else if (doc_type === 'produtos') {
-                subtext.textContent = "Portfólio, precificação e estratégias de desenvolvimento de produtos e serviços."
-            } else if (doc_type === 'vendas') {
-                subtext.textContent = "Processos de vendas, metas comerciais e planos de crescimento."
-            } else if (doc_type === 'operacao') {
-                subtext.textContent = "Processos internos, ferramentas, automações e estrutura operacional."
-            } else if (doc_type === 'suporte') {
-                subtext.textContent = "Manuais, fluxos, procedimentos e materiais técnicos da empresa."
-            } else if (doc_type === 'cases') {
-                subtext.textContent = "Exemplos práticos, resultados anteriores e estudos de mercado."
-            }
-        });
+    <!-- Jeferson: dados do cliente logado -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-        // Controle do tipo de upload
-        document.querySelectorAll('input[name="upload-type"]').forEach(function (radio) {
-            radio.addEventListener('change', function () {
-                const textArea = document.getElementById('text-upload-area');
-                const fileArea = document.getElementById('file-upload-area');
-
-                if (this.value === 'text') {
-                    textArea.style.display = 'block';
-                    fileArea.style.display = 'none';
-                } else {
-                    textArea.style.display = 'none';
-                    fileArea.style.display = 'block';
-                }
-            });
-        });
-
-        // Submissão do formulário
-        document.getElementById('upload-document-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            // Aqui você implementaria a lógica de envio
-            const feedbackMessage = document.getElementById('feedback-message');
-            feedbackMessage.className = 'alert alert-success';
-            feedbackMessage.textContent = 'Documento enviado com sucesso!';
-            feedbackMessage.style.display = 'block';
-
-            // Scroll para o topo para mostrar a mensagem
-            window.scrollTo(0, 0);
-        });
-    </script>
+    <!-- Jeferson: dados do cliente logado -->
+    <script src="/assets/js/foodModelPage.js"></script>
 </body>
 
 </html>
