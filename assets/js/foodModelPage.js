@@ -303,7 +303,7 @@ document.getElementById('upload-document-form').addEventListener('submit', async
         window.scrollTo(0, 0);
 
         // MODIFICAÇÃO: Enviar para sua API
-        /*const response = await fetch('https://analyze-backend-5jyg.onrender.com/documents/store', {
+        const response = await fetch('https://analyze-backend-5jyg.onrender.com/documents/store', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -327,7 +327,7 @@ document.getElementById('upload-document-form').addEventListener('submit', async
         document.getElementById('upload-document-form').reset();
         document.getElementById('document-scope').dispatchEvent(new Event('change'));
 
-        window.scrollTo(0, 0);*/
+        window.scrollTo(0, 0);
 
     } catch (error) {
         console.error('Erro ao enviar documento:', error);
