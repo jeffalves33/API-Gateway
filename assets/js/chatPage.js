@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     async function sendMessage() {
         const userMessage = chatInputField.value.trim();
         if (!userMessage) return;
-
+        const customerId = localStorage.getItem("selectedCustomerId")
         // Renderiza a mensagem do usuário no chat
         renderMessage('user', userMessage);
 
@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    customer_id: customerId,
                     client_id: userId,
                     prompt: userMessage,
                     history: messageHistory
