@@ -128,11 +128,8 @@
               <div class="mb-3">
                 <button class="btn btn-primary d-grid w-100" type="submit" id="login-button">
                   <span id="button-text">Entrar</span>
-                  <div id="loading-spinner" class="demo-inline-spacing" style="display: none;">
-                    <div class="spinner-grow text-white" role="status" style="width: 1.3rem; height: 1.3rem;">
-                      <span class="visually-hidden">Loading...</span>
-                    </div>
-                  </div>
+                  <span id="loading-spinner" class="spinner-border spinner-border-sm d-none" role="status"
+                    aria-hidden="true"></span>
                 </button>
               </div>
             </form>
@@ -171,7 +168,8 @@
       const loginButton = document.getElementById('login-button');
 
       buttonText.style.display = 'none';
-      loadingSpinner.style.display = 'flex';
+      loadingSpinner.classList.remove('d-none');
+      //loadingSpinner.style.display = 'flex';
       loginButton.disabled = true;
 
       // Preparar dados para envio
@@ -216,7 +214,8 @@
 
         // Restaura o botão de login ao estado original
         buttonText.style.display = 'block';
-        loadingSpinner.style.display = 'none';
+        loadingSpinner.classList.add('d-none');
+        //loadingSpinner.style.display = 'none';
         loginButton.disabled = false;
       }
     });
