@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     let impressionsChartInstance = null;
     let searchVolumeChartInstance = null;
     let trafficSourcesChartInstance = null;
-
     let userId = null;
 
     function updateSelectedCustomerDisplay(name) {
@@ -37,9 +36,17 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function restoreSelectedCustomer() {
-        const savedName = localStorage.getItem('selectedCustomerName');
-        if (savedName) {
-            updateSelectedCustomerDisplay(savedName);
+        try {
+            const savedName = localStorage.getItem('selectedCustomerName');
+            const savedId = localStorage.getItem('selectedCustomerId');
+
+            if (savedName && savedId && savedName.length < 100 && /^\d+$/.test(savedId)) {
+                updateSelectedCustomerDisplay(savedName);
+            }
+        } catch (error) {
+            console.error('Erro ao restaurar cliente:', error);
+            localStorage.removeItem('selectedCustomerName');
+            localStorage.removeItem('selectedCustomerId');
         }
     }
 
@@ -142,10 +149,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    async function fetchAndRenderReachChart(startDate, endDate) {
-        const id_customer = localStorage.getItem('selectedCustomerId');
-        if (!id_customer) return;
-
+    async function fetchAndRenderReachChart(startDate, endDate, id_customer) {
         reachChartContainer.style.display = 'none';
 
         try {
@@ -154,6 +158,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+            }
             const data = await res.json();
             renderReachChart(data);
             reachChartContainer.style.display = 'block';
@@ -162,10 +169,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    async function fetchAndRenderImpressionsChart(startDate, endDate) {
-        const id_customer = localStorage.getItem('selectedCustomerId');
-        if (!id_customer) return;
-
+    async function fetchAndRenderImpressionsChart(startDate, endDate, id_customer) {
         impressionsChartContainer.style.display = 'none';
 
         try {
@@ -174,7 +178,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+            }
             const data = await res.json();
             renderImpressionsChart(data);
             impressionsChartContainer.style.display = 'block';
@@ -183,10 +189,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    async function fetchAndRenderFollowersChart(startDate, endDate) {
-        const id_customer = localStorage.getItem('selectedCustomerId');
-        if (!id_customer) return;
-
+    async function fetchAndRenderFollowersChart(startDate, endDate, id_customer) {
         followersChartContainer.style.display = 'none';
 
         try {
@@ -195,7 +198,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+            }
             const data = await res.json();
             renderfollowersChart(data);
             followersChartContainer.style.display = 'block';
@@ -204,17 +209,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    async function fetchAndRenderTrafficChart(startDate, endDate) {
-        const id_customer = localStorage.getItem('selectedCustomerId');
-        if (!id_customer) return;
-
+    async function fetchAndRenderTrafficChart(startDate, endDate, id_customer) {
         try {
             const res = await fetch('/api/metrics/traffic', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+            }
             const data = await res.json();
             renderTrafficLineChart(data);    // Gráfico de linha principal
             renderTrafficSourcesChart(data); // Pizza + lista de fontes
@@ -223,17 +227,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    async function fetchAndRenderSearchVolumeChart(startDate, endDate) {
-        const id_customer = localStorage.getItem('selectedCustomerId');
-        if (!id_customer) return;
-
+    async function fetchAndRenderSearchVolumeChart(startDate, endDate, id_customer) {
         try {
             const res = await fetch('/api/metrics/search-volume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+            }
             const data = await res.json();
             renderSearchVolumeLineChart(data);
             renderSearchVolumeCards(data);
@@ -243,6 +246,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderReachChart(data) {
+        if (!data || !data.facebook || !data.instagram || !data.labels) {
+            console.error('Dados inválidos recebidos:', data);
+            showErrorMessage('Dados de alcance indisponíveis para o período selecionado');
+            return;
+        }
         facebookSecoundCardReach.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
         instagramSecoundCardReach.textContent = data.instagram.reduce((sum, value) => sum + value, 0);
         return new Promise((resolve) => {
@@ -301,14 +309,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                         formatter: val => new Intl.NumberFormat('pt-BR').format(val)
                     }
                 },
-                responsive: [{
-                    breakpoint: 576,
-                    options: {
-                        chart: { height: 280 },
-                        markers: { size: 4 },
-                        legend: { position: 'bottom' }
+                responsive: [
+                    {
+                        breakpoint: 768,
+                        options: {
+                            chart: { height: 250 },
+                            legend: { position: 'bottom', horizontalAlign: 'center' }
+                        }
+                    },
+                    {
+                        breakpoint: 576,
+                        options: {
+                            chart: { height: 200 },
+                            xaxis: { labels: { rotate: -45 } }
+                        }
                     }
-                }]
+                ]
             });
 
             reachChartInstance.render();
@@ -316,9 +332,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderImpressionsChart(data) {
+        if (!data || !data.facebook || !data.instagram || !data.google || !data.labels) {
+            console.error('Dados inválidos recebidos:', data);
+            showErrorMessage('Dados de Impressões indisponíveis para o período selecionado');
+            return;
+        }
         facebookSecoundCardImpressions.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
         instagramSecoundCardImpressions.textContent = data.instagram.reduce((sum, value) => sum + value, 0);
-        googleAnalyticsSecoundCardImpressions.textContent = data.google.reduce((sum, value) => sum +value, 0);
+        googleAnalyticsSecoundCardImpressions.textContent = data.google.reduce((sum, value) => sum + value, 0);
         return new Promise((resolve) => {
             if (impressionsChartInstance) impressionsChartInstance.destroy();
 
@@ -377,14 +398,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                         formatter: val => new Intl.NumberFormat('pt-BR').format(val)
                     }
                 },
-                responsive: [{
-                    breakpoint: 576,
-                    options: {
-                        chart: { height: 280 },
-                        markers: { size: 4 },
-                        legend: { position: 'bottom' }
+                responsive: [
+                    {
+                        breakpoint: 768,
+                        options: {
+                            chart: { height: 250 },
+                            legend: { position: 'bottom', horizontalAlign: 'center' }
+                        }
+                    },
+                    {
+                        breakpoint: 576,
+                        options: {
+                            chart: { height: 200 },
+                            xaxis: { labels: { rotate: -45 } }
+                        }
                     }
-                }]
+                ]
             });
 
             impressionsChartInstance.render();
@@ -392,6 +421,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderfollowersChart(data) {
+        if (!data || !data.facebook || !data.instagram || !data.labels) {
+            console.error('Dados inválidos recebidos:', data);
+            showErrorMessage('Dados de seguidores indisponíveis para o período selecionado');
+            return;
+        }
+        document.getElementById('instagram-followers-count').textContent = data.instagram;
+        document.getElementById('linkedin-followers-count').textContent = data.linkedin;
+        document.getElementById('youtube-followers-count').textContent = data.youtube;
         return new Promise((resolve) => {
             if (followersChartInstance) followersChartInstance.destroy();
 
@@ -405,15 +442,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     toolbar: { show: true },
                     animations: { enabled: true, easing: 'easeinout', speed: 800 },
                     dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 },
-                    events: {
-                        animationEnd: function () {
-                            // Atualizar os cards após a animação
-                            document.getElementById('instagram-followers-count').textContent = data.instagram;
-                            document.getElementById('linkedin-followers-count').textContent = data.linkedin;
-                            document.getElementById('youtube-followers-count').textContent = data.youtube;
-                            resolve();
-                        }
-                    }
                 },
                 colors: ['#0d6efd'],
                 dataLabels: { enabled: false },
@@ -451,14 +479,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                         formatter: val => new Intl.NumberFormat('pt-BR').format(val)
                     }
                 },
-                responsive: [{
-                    breakpoint: 576,
-                    options: {
-                        chart: { height: 280 },
-                        markers: { size: 4 },
-                        legend: { position: 'bottom' }
+                responsive: [
+                    {
+                        breakpoint: 768,
+                        options: {
+                            chart: { height: 250 },
+                            legend: { position: 'bottom', horizontalAlign: 'center' }
+                        }
+                    },
+                    {
+                        breakpoint: 576,
+                        options: {
+                            chart: { height: 200 },
+                            xaxis: { labels: { rotate: -45 } }
+                        }
                     }
-                }]
+                ]
             });
 
             followersChartInstance.render();
@@ -466,6 +502,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderTrafficLineChart(data) {
+        if (!data || !data.sessions || !data.labels) {
+            console.error('Dados inválidos recebidos:', data);
+            showErrorMessage('4Dados de tráfego de site indisponíveis para o período selecionado');
+            return;
+        }
         return new Promise((resolve) => {
             const trafficChartContainer = document.querySelector('#trafficChart');
 
@@ -523,6 +564,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderTrafficSourcesChart(data) {
+        if (!data || !data.sessions || !data.labels) {
+            console.error('Dados inválidos recebidos:', data);
+            showErrorMessage('5Dados de tráfego de site indisponíveis para o período selecionado');
+            return;
+        }
         return new Promise((resolve) => {
             const pizzaChartContainer = document.querySelector('#orderTrafficPizzaChart');
             const trafficSourcesList = document.querySelector('#traffic-sources-list');
@@ -621,6 +667,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderSearchVolumeLineChart(data) {
+        if (!data || !data.labels) {
+            console.error('6Dados inválidos recebidos:', data);
+            showErrorMessage('Dados de volume de pesquisa indisponíveis para o período selecionado');
+            return;
+        }
         return new Promise((resolve) => {
             const searchVolumeChartContainer = document.querySelector('#searchVolumChart');
 
@@ -672,20 +723,25 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderSearchVolumeCards(data) {
+        if (!data || !data.labels) {
+            console.error('Dados inválidos recebidos:', data);
+            showErrorMessage('7Dados de volume de pesquisa indisponíveis para o período selecionado');
+            return;
+        }
         return new Promise((resolve) => {
             // Atualizar quantidade e crescimento Organic Search
             document.getElementById('organic-search-qtd').textContent = data.totalOrganicSearch;
-            document.getElementById('organic-search-percent').innerHTML = `
-          <i class="bx ${data.percentOrganicSearch >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
-          ${Math.abs(data.percentOrganicSearch)}%
-        `;
+            /*document.getElementById('organic-search-percent').innerHTML = `
+                <i class="bx ${data.percentOrganicSearch >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
+                ${Math.abs(data.percentOrganicSearch)}%
+            `;*/
 
             // Atualizar quantidade e crescimento Outras Fontes
             document.getElementById('other-sources-qtd').textContent = data.totalOtherSources;
-            document.getElementById('other-sources-percent').innerHTML = `
-          <i class="bx ${data.percentOtherSources >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
-          ${Math.abs(data.percentOtherSources)}%
-        `;
+            /*document.getElementById('other-sources-percent').innerHTML = `
+                <i class="bx ${data.percentOtherSources >= 0 ? 'bx-up-arrow-alt text-success' : 'bx-down-arrow-alt text-danger'}"></i>
+                ${Math.abs(data.percentOtherSources)}%
+            `;*/
 
             // Atualizar quantidade de Novos Leads
             document.getElementById('new-leads-qtd').textContent = data.totalNewLeads;
@@ -744,6 +800,43 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
+    function updateProgressBar(percentage, text) {
+        const loadingBar = document.getElementById('loading-bar');
+        const loadingText = document.getElementById('loading-text');
+        const loadingPercentage = document.getElementById('loading-percentage');
+
+        if (loadingBar) {
+            loadingBar.style.width = `${percentage}%`;
+            loadingBar.setAttribute('aria-valuenow', percentage);
+        }
+
+        if (loadingText && text) {
+            loadingText.textContent = text;
+        }
+
+        if (loadingPercentage) {
+            loadingPercentage.textContent = `${Math.round(percentage)}%`;
+        }
+    }
+
+    // Funções de controle de loading
+    function showProgressBar() {
+        const formDashboard = document.getElementById('form-busca');
+        const loadingProgress = document.getElementById('loading-progress');
+        const instructionMessage = document.getElementById('instruction-message');
+        const contentDashboard = document.getElementById('content-dashboard');
+
+        if (formDashboard) formDashboard.style.display = 'none';
+        if (loadingProgress) loadingProgress.style.display = 'block';
+        if (instructionMessage) instructionMessage.style.display = 'none';
+        if (contentDashboard) contentDashboard.style.display = 'none';
+    }
+
+    function hideProgressBar() {
+        const loadingProgress = document.getElementById('loading-progress');
+        if (loadingProgress) loadingProgress.style.display = 'none';
+    }
+
     document.getElementById('log-out')?.addEventListener('click', logout);
 
     restoreSelectedCustomer();
@@ -751,6 +844,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadCustomers();
 
     const formBusca = document.getElementById('form-busca');
+    const previousState = {
+        dashboardVisible: contentDashboard.style.display !== 'none',
+        instructionVisible: instructionMessage.style.display !== 'none'
+    };
     if (formBusca) {
         formBusca.addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -771,24 +868,41 @@ document.addEventListener('DOMContentLoaded', async function () {
             };
 
             try {
-                // Mostra loading no botão
-                btnBuscarTexto.classList.add('d-none');
-                btnBuscarLoading.classList.remove('d-none');
-                // Executa todas as buscas e aguarda TODAS terminarem completamente
-                await Promise.all([
-                    fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate)),
-                    fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate)),
-                    fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate)),
-                    fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate)),
-                    fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate))
-                ]);
-
-                // Exibe dashboard e esconde instrução APENAS após tudo estar renderizado
-                if (instructionMessage) instructionMessage.style.display = 'none';
-                if (contentDashboard) contentDashboard.style.display = 'block';
-
+                const id_customer = localStorage.getItem('selectedCustomerId');
+                if (!id_customer) {
+                    alert('Por favor, selecione um cliente antes de buscar os dados.');
+                } else {
+                    // Mostra loading no botão
+                    btnBuscarTexto.classList.add('d-none');
+                    btnBuscarLoading.classList.remove('d-none');
+                    showProgressBar();
+                    const loadingSteps = [
+                        { name: 'Carregando alcance...', fn: () => fetchAndRenderReachChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
+                        { name: 'Carregando impressões...', fn: () => fetchAndRenderImpressionsChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
+                        { name: 'Carregando seguidores...', fn: () => fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
+                        { name: 'Carregando tráfego...', fn: () => fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
+                        { name: 'Carregando volume...', fn: () => fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
+                        // etc...
+                    ];
+                    // Executa todas as buscas e aguarda TODAS terminarem completamente
+                    for (let i = 0; i < loadingSteps.length; i++) {
+                        updateProgressBar((i / loadingSteps.length) * 100, loadingSteps[i].name);
+                        await loadingSteps[i].fn();
+                    }
+                    updateProgressBar(100, 'Concluído!');
+                    setTimeout(() => {
+                        hideProgressBar();
+                        // Exibe dashboard e esconde instrução APENAS após tudo estar renderizado
+                        formBusca.style.display = 'block';
+                        if (instructionMessage) instructionMessage.style.display = 'none';
+                        if (contentDashboard) contentDashboard.style.display = 'block';
+                    }, 500);
+                }
             } catch (error) {
                 console.error('Erro ao buscar dados do dashboard:', error);
+                // restaurar estado anterior
+                contentDashboard.style.display = previousState.dashboardVisible ? 'block' : 'none';
+                instructionMessage.style.display = previousState.instructionVisible ? 'block' : 'none';
                 alert('Erro ao buscar dados. Tente novamente.');
             } finally {
                 // Remove loading APENAS após tudo estar completamente renderizado
