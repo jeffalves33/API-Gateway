@@ -54,31 +54,21 @@ exports.getImpressions = async (pageId, accessToken, startDate, endDate, period 
 };
 
 exports.getFollowers = async (pageId, accessToken, startDate, endDate, period = 'day') => {
-  const allValues = [];
-
-  for (const [since, until] of splitDateRange(startDate, endDate, 30)) {
-    const response = await axios.get(`${BASE_URL}/${pageId}/insights`, {
-      params: {
-        metric: 'page_fan_adds_unique',
-        access_token: accessToken,
-        period,
-        since: formatDate(since),
-        until: formatDate(until)
-      }
-    });
-
-    if (response.status === 200) {
-      const values = response.data.data[0]?.values.map(v => v.value) || [];
-      allValues.push(...values);
-    } else {
-      throw new Error(`Erro Facebook API: ${response.status} - ${response.statusText}`);
+  const response = await axios.get(`${BASE_URL}/${pageId}`, {
+    params: {
+      fields: 'fan_count',
+      access_token: accessToken
     }
-  }
+  });
 
-  return allValues;
+  if (response.status === 200) {
+    return response.data.fan_count;
+  } else {
+    throw new Error(`Erro Facebook API: ${response.status} - ${response.statusText}`);
+  }
 };
 
-exports.getAllMetricsRows = async (id_customer, pageId, accessToken, startDate, endDate ) => {
+exports.getAllMetricsRows = async (id_customer, pageId, accessToken, startDate, endDate) => {
   const [impressions, reach, follows] = await Promise.all([
     exports.getImpressions(pageId, accessToken, startDate, endDate),
     exports.getReach(pageId, accessToken, startDate, endDate),

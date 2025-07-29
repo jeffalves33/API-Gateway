@@ -248,7 +248,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderReachChart(data) {
         if (!data || !data.facebook || !data.instagram || !data.labels) {
             console.error('Dados inválidos recebidos:', data);
-            showErrorMessage('Dados de alcance indisponíveis para o período selecionado');
             return;
         }
         facebookSecoundCardReach.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
@@ -334,7 +333,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderImpressionsChart(data) {
         if (!data || !data.facebook || !data.instagram || !data.google || !data.labels) {
             console.error('Dados inválidos recebidos:', data);
-            showErrorMessage('Dados de Impressões indisponíveis para o período selecionado');
             return;
         }
         facebookSecoundCardImpressions.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
@@ -421,45 +419,101 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderfollowersChart(data) {
-        if (!data || !data.facebook || !data.instagram || !data.labels) {
-            console.error('Dados inválidos recebidos:', data);
-            showErrorMessage('Dados de seguidores indisponíveis para o período selecionado');
+        let cardColor, headingColor, axisColor, shadeColor, borderColor;
+
+        cardColor = config.colors.cardColor;
+        headingColor = config.colors.headingColor;
+        axisColor = config.colors.axisColor;
+        borderColor = config.colors.borderColor;
+        if (data.facebook === undefined || data.instagram === undefined ||
+            data.linkedin === undefined || data.youtube === undefined) {
+            console.error('f Dados inválidos recebidos:', data);
             return;
         }
-        document.getElementById('instagram-followers-count').textContent = data.instagram;
-        document.getElementById('linkedin-followers-count').textContent = data.linkedin;
-        document.getElementById('youtube-followers-count').textContent = data.youtube;
         return new Promise((resolve) => {
             if (followersChartInstance) followersChartInstance.destroy();
 
             followersChartInstance = new ApexCharts(followersChartContainer, {
                 series: [
-                    { name: 'Facebook', data: data.facebook }
+                    {
+                        name: 'Atual',
+                        data: [data.facebook, data.instagram, data.linkedin, data.youtube]
+                    }
                 ],
                 chart: {
-                    height: 400,
-                    type: 'line',
-                    toolbar: { show: true },
-                    animations: { enabled: true, easing: 'easeinout', speed: 800 },
-                    dropShadow: { enabled: true, top: 3, left: 2, blur: 4, opacity: 0.1 },
+                    height: 300,
+                    stacked: false,
+                    type: 'bar',
+                    toolbar: { show: false }
                 },
-                colors: ['#0d6efd'],
-                dataLabels: { enabled: false },
-                stroke: { curve: 'smooth', width: 3 },
-                grid: { borderColor: '#e0e0e0', strokeDashArray: 5 },
-                markers: { size: 0 },
-                xaxis: {
-                    categories: data.labels,
-                    labels: {
-                        formatter: val => new Date(val).toLocaleDateString('pt-BR'),
-                        style: { fontSize: '10px', fontWeight: 500 }
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '33%',
+                        borderRadius: 12,
+                        startingShape: 'rounded',
+                        endingShape: 'rounded',
+                        distributed: true //permite cores para colunas diferentes
+                    }
+                },
+                colors: ['#0D6EFD', '#DC3545', '#1300D6', '#E52D27'],
+                //colors: [config.colors.primary, config.colors.info],
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 6,
+                    lineCap: 'round',
+                    colors: [cardColor]
+                },
+                legend: {
+                    show: true,
+                    horizontalAlign: 'left',
+                    position: 'top',
+                    markers: {
+                        height: 8,
+                        width: 8,
+                        radius: 12,
+                        offsetX: -3
                     },
-                    crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
+                    labels: {
+                        colors: axisColor
+                    },
+                    itemMargin: {
+                        horizontal: 10
+                    }
+                },
+                grid: {
+                    borderColor: borderColor,
+                    padding: {
+                        top: 0,
+                        bottom: -8,
+                        left: 20,
+                        right: 20
+                    }
+                },
+                xaxis: {
+                    categories: ['Facebook', 'Instagram', 'Linkedin', 'Youtube'],
+                    labels: {
+                        style: {
+                            fontSize: '13px',
+                            colors: axisColor
+                        }
+                    },
+                    axisTicks: {
+                        show: false
+                    },
+                    axisBorder: {
+                        show: false
+                    }
                 },
                 yaxis: {
                     labels: {
-                        formatter: val => new Intl.NumberFormat('pt-BR').format(val),
-                        style: { fontSize: '12px', fontWeight: 500 }
+                        style: {
+                            fontSize: '13px',
+                            colors: axisColor
+                        }
                     }
                 },
                 legend: {
@@ -469,15 +523,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     fontWeight: 500,
                     markers: { width: 10, height: 10, radius: 4 },
                     itemMargin: { horizontal: 15, vertical: 5 }
-                },
-                tooltip: {
-                    theme: 'light',
-                    shared: true,
-                    intersect: false,
-                    style: { fontSize: '13px' },
-                    y: {
-                        formatter: val => new Intl.NumberFormat('pt-BR').format(val)
-                    }
                 },
                 responsive: [
                     {
@@ -494,7 +539,19 @@ document.addEventListener('DOMContentLoaded', async function () {
                             xaxis: { labels: { rotate: -45 } }
                         }
                     }
-                ]
+                ],
+                states: {
+                    hover: {
+                        filter: {
+                            type: 'none'
+                        }
+                    },
+                    active: {
+                        filter: {
+                            type: 'none'
+                        }
+                    }
+                }
             });
 
             followersChartInstance.render();
@@ -504,7 +561,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderTrafficLineChart(data) {
         if (!data || !data.sessions || !data.labels) {
             console.error('Dados inválidos recebidos:', data);
-            showErrorMessage('4Dados de tráfego de site indisponíveis para o período selecionado');
             return;
         }
         return new Promise((resolve) => {
@@ -566,7 +622,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderTrafficSourcesChart(data) {
         if (!data || !data.sessions || !data.labels) {
             console.error('Dados inválidos recebidos:', data);
-            showErrorMessage('5Dados de tráfego de site indisponíveis para o período selecionado');
             return;
         }
         return new Promise((resolve) => {
@@ -669,7 +724,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderSearchVolumeLineChart(data) {
         if (!data || !data.labels) {
             console.error('6Dados inválidos recebidos:', data);
-            showErrorMessage('Dados de volume de pesquisa indisponíveis para o período selecionado');
             return;
         }
         return new Promise((resolve) => {
@@ -725,7 +779,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderSearchVolumeCards(data) {
         if (!data || !data.labels) {
             console.error('Dados inválidos recebidos:', data);
-            showErrorMessage('7Dados de volume de pesquisa indisponíveis para o período selecionado');
             return;
         }
         return new Promise((resolve) => {

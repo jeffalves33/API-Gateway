@@ -84,14 +84,7 @@ exports.getfollowersMetrics = async (req, res) => {
       0
     ]);
 
-    const labels = facebookData.map((_, i) => {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      return date.toISOString().split('T')[0];
-    });
-
     res.json({
-      labels,
       facebook: facebookData,
       instagram: instagramData,
       linkedin: linkedinData,
