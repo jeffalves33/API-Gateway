@@ -634,6 +634,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             const sources = data.sources || {};
             const labels = Object.keys(sources);
             const series = Object.values(sources);
+            const translationMap = {
+                'Unassigned': 'Não Atribuído',
+                'Direct': 'Direto',
+                'Organic Search': 'Busca Orgânica',
+                'Organic Social': 'Social Orgânico'
+            };
 
             const total = series.reduce((acc, val) => acc + val, 0);
             totalTrafficElement.textContent = total.toLocaleString('pt-BR');
@@ -649,7 +655,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         }
                     }
                 },
-                labels: labels,
+                labels: labels.map(label => translationMap[label] || label),
                 series: series,
                 colors: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6610f2'],
                 stroke: {
@@ -698,23 +704,23 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const colorClass = colorClasses[index % colorClasses.length];
 
                     const item = `
-              <li class="d-flex mb-4 pb-1">
-                <div class="avatar flex-shrink-0 me-3">
-                  <span class="avatar-initial rounded bg-label-${colorClass}">
-                    <i class="bx bx-globe"></i>
-                  </span>
-                </div>
-                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                  <div class="me-2">
-                    <h6 class="mb-0">${label}</h6>
-                    <small class="text-muted">Fonte de Tráfego</small>
-                  </div>
-                  <div class="user-progress">
-                    <small class="fw-medium">${sources[label]}</small>
-                  </div>
-                </div>
-              </li>
-            `;
+                    <li class="d-flex mb-4 pb-1">
+                        <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-${colorClass}">
+                            <i class="bx bx-globe"></i>
+                        </span>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="me-2">
+                            <h6 class="mb-0">${translationMap[label] || label}</h6>
+                            <small class="text-muted">Fonte de Tráfego</small>
+                        </div>
+                        <div class="user-progress">
+                            <small class="fw-medium">${sources[label]}</small>
+                        </div>
+                        </div>
+                    </li>
+                    `;
                     trafficSourcesList.innerHTML += item;
                 });
             }

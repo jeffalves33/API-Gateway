@@ -7,8 +7,75 @@ document.addEventListener('DOMContentLoaded', async function () {
     const customerListElement = document.getElementById('dropdown-customer-list');
     const selectedCustomerNameElement = document.getElementById('selected-customer-name');
     const userNameElement = document.getElementById('user-name');
+    const loadingProgressElement = document.getElementById('loading-progress');
+    const loadingTextElement = document.getElementById('loading-text');
+    const loadingPercentageElement = document.getElementById('loading-percentage');
+    const loadingBarElement = document.getElementById('loading-bar');
 
     let userId = null;
+
+    function showError(message, duration = 5000) {
+        const alertContainer = document.getElementById('alert-container');
+        if (alertContainer) {
+            const alertId = 'alert-' + Date.now();
+            alertContainer.innerHTML = `
+            <div id="${alertId}" class="alert alert-danger alert-dismissible fade show position-fixed" 
+                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>`;
+
+            // Auto-hide após duração especificada
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) {
+                    alert.remove();
+                }
+            }, duration);
+        }
+    }
+
+    function showSuccess(message, duration = 3000) {
+        const alertContainer = document.getElementById('alert-container');
+        if (alertContainer) {
+            const alertId = 'alert-' + Date.now();
+            alertContainer.innerHTML = `
+            <div id="${alertId}" class="alert alert-success alert-dismissible fade show position-fixed" 
+                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>`;
+
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) {
+                    alert.remove();
+                }
+            }, duration);
+        }
+    }
+
+    function updateProgressBar(percentage, text) {
+        if (loadingPercentageElement) loadingPercentageElement.textContent = `${percentage}%`;
+        if (loadingTextElement) loadingTextElement.textContent = text;
+        if (loadingBarElement) loadingBarElement.style.width = `${percentage}%`;
+    }
+
+    function showLoadingProgress() {
+        if (loadingProgressElement) {
+
+            loadingProgressElement.style.display = 'block';
+            document.getElementById("form-busca").style.display = 'none';
+            updateProgressBar(0, 'Preparando dados...');
+        }
+    }
+
+    function hideLoadingProgress() {
+        if (loadingProgressElement) {
+            loadingProgressElement.style.display = 'none';
+            document.getElementById("form-busca").style.display = 'block';
+        }
+    }
 
     function updateSelectedCustomerDisplay(name) {
         selectedCustomerNameElement.textContent = name || 'Cliente';
@@ -31,33 +98,67 @@ document.addEventListener('DOMContentLoaded', async function () {
         try {
             const response = await fetch('/api/profile');
             if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Erro ao carregar perfil');
+                const data = await response.json().catch(() => ({ message: 'Erro de comunicação com o servidor' }));
+                throw new Error(data.message || `Erro ${response.status}: ${response.statusText}`);
             }
             const data = await response.json();
+
+            if (!data.user || !data.user.name) {
+                throw new Error('Dados do usuário inválidos');
+            }
+
             userNameElement.textContent = data.user.name;
             userId = data.user.id_user;
+
+            if (!userId) {
+                throw new Error('ID do usuário não encontrado');
+            }
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);
+            showError(`Erro ao carregar perfil: ${error.message}`);
+            // Redireciona para login se houver erro de autenticação
+            if (error.message.includes('401') || error.message.includes('não autorizado')) {
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }
         }
     }
 
     async function loadCustomers() {
         try {
             const response = await fetch('/customer');
-            if (!response.ok) throw new Error('Erro ao buscar clientes');
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: Falha ao buscar clientes`);
+            }
 
-            const { customers } = await response.json();
+            const responseData = await response.json();
+            const customers = responseData.customers || [];
+
             customerListElement.innerHTML = '';
 
+            if (customers.length === 0) {
+                customerListElement.innerHTML = `
+                    <li><span class="dropdown-item-text text-muted">Nenhum cliente encontrado</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/platformsPage.html">Adicionar cliente</a></li>
+                `;
+                return;
+            }
+
             customers.forEach(customer => {
+                if (!customer.id_customer || !customer.name) {
+                    console.warn('Cliente com dados inválidos:', customer);
+                    return;
+                }
+
                 const item = document.createElement('li');
                 item.innerHTML = `
                     <a class="dropdown-item dropdown-customer-list-items" href="#" 
-                       data-id="${customer.id_customer}" 
-                       data-name="${customer.name}"
-                       data-facebook-page-id="${customer.id_facebook_page || ''}">
-                      ${customer.name}
+                        data-id="${customer.id_customer}" 
+                        data-name="${customer.name}"
+                        data-facebook-page-id="${customer.id_facebook_page || ''}">
+                        ${customer.name}
                     </a>`;
                 customerListElement.appendChild(item);
             });
@@ -67,18 +168,24 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <li><a class="dropdown-item" href="/platformsPage.html">Adicionar cliente</a></li>
             `;
 
+            // Adicionar event listeners com tratamento de erro
             document.querySelectorAll('.dropdown-customer-list-items').forEach(item => {
                 item.addEventListener('click', async function (e) {
                     e.preventDefault();
-                    const id = this.getAttribute('data-id');
-                    const name = this.getAttribute('data-name');
-                    const facebookPageId = this.getAttribute('data-facebook-page-id');
 
-                    saveSelectedCustomer(id, name, facebookPageId);
-                    updateSelectedCustomerDisplay(name);
+                    try {
+                        const id = this.getAttribute('data-id');
+                        const name = this.getAttribute('data-name');
+                        const facebookPageId = this.getAttribute('data-facebook-page-id');
 
-                    if (userId && id) {
-                        try {
+                        if (!id || !name) {
+                            throw new Error('Dados do cliente inválidos');
+                        }
+
+                        saveSelectedCustomer(id, name, facebookPageId);
+                        updateSelectedCustomerDisplay(name);
+
+                        if (userId && id) {
                             const response = await fetch('/customer/cache', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -86,17 +193,29 @@ document.addEventListener('DOMContentLoaded', async function () {
                             });
 
                             if (!response.ok) {
-                                const data = await response.json();
-                                throw new Error(data.message || 'Erro ao atualizar chaves');
+                                const data = await response.json().catch(() => ({ message: 'Erro de comunicação' }));
+                                throw new Error(data.message || 'Erro ao atualizar cache de chaves');
                             }
-                        } catch (error) {
-                            console.error('Erro ao atualizar cache de chaves:', error);
+
+                            showSuccess(`Cliente "${name}" selecionado com sucesso!`);
                         }
+                    } catch (error) {
+                        console.error('Erro ao selecionar cliente:', error);
+                        showError(`Erro ao selecionar cliente: ${error.message}`);
                     }
                 });
             });
+
         } catch (error) {
             console.error('Erro ao carregar clientes:', error);
+            showError(`Erro ao carregar clientes: ${error.message}`);
+
+            // Fallback: mostrar apenas opção de adicionar cliente
+            customerListElement.innerHTML = `
+                <li><span class="dropdown-item-text text-danger">Erro ao carregar clientes</span></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/platformsPage.html">Adicionar cliente</a></li>
+            `;
         }
     }
 
@@ -108,21 +227,23 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Erro ao fazer logout');
+                const data = await response.json().catch(() => ({ message: 'Erro de comunicação' }));
+                console.warn('Erro no logout:', data.message);
+                // Mesmo com erro, limpa os dados locais e redireciona
             }
 
+            // Sempre limpa o localStorage e redireciona, mesmo se houver erro no servidor
+            localStorage.clear();
+            showSuccess('Logout realizado com sucesso!');
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+            // Mesmo com erro, força o logout local
             localStorage.clear();
             window.location.href = '/';
-        } catch (error) {
-            const alertContainer = document.getElementById('alert-container');
-            if (alertContainer) {
-                alertContainer.innerHTML = `
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${error.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                  </div>`;
-            }
         }
     }
 
@@ -133,64 +254,110 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadCustomers();
 
     async function validateForm() {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        const facebook = document.getElementById('facebook').checked;
-        const instagram = document.getElementById('instagram').checked;
-        const googleAnalytics = document.getElementById('googleAnalytics').checked;
-        const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked');
-        const formatoRelatorio = document.getElementById('formatoRelatorio').value;
+        try {
+            const startDate = document.getElementById('startDate')?.value;
+            const endDate = document.getElementById('endDate')?.value;
+            const facebook = document.getElementById('facebook')?.checked;
+            const instagram = document.getElementById('instagram')?.checked;
+            const googleAnalytics = document.getElementById('googleAnalytics')?.checked;
+            const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked');
+            const formatoRelatorio = document.getElementById('formatoRelatorio')?.value;
 
-        if (!userId) {
+            if (!userId) {
+                throw new Error('Usuário não identificado. Faça login novamente.');
+            }
+
+            if (!startDate || !endDate) {
+                throw new Error('Por favor, selecione a data inicial e final.');
+            }
+
+            // Validar formato das datas
+            const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+            if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+                throw new Error('Formato de data inválido. Use DD/MM/AAAA.');
+            }
+
+            // Validar se data inicial é anterior à final
+            const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
+            const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
+            const startDateObj = new Date(startYear, startMonth - 1, startDay);
+            const endDateObj = new Date(endYear, endMonth - 1, endDay);
+
+            if (startDateObj > endDateObj) {
+                throw new Error('A data inicial deve ser anterior à data final.');
+            }
+
+            // Validar se não é muito no futuro
+            const today = new Date();
+            if (endDateObj > today) {
+                throw new Error('A data final não pode ser no futuro.');
+            }
+
+            if (!facebook && !instagram && !googleAnalytics) {
+                throw new Error('Por favor, selecione pelo menos uma plataforma.');
+            }
+
+            if (!tipoAnalise) {
+                throw new Error('Por favor, selecione o tipo de análise.');
+            }
+
+            if (!formatoRelatorio || formatoRelatorio === 'Selecione' || formatoRelatorio === '') {
+                throw new Error('Por favor, selecione o formato do relatório.');
+            }
+
+            const selectedCustomerId = localStorage.getItem('selectedCustomerId');
+            if (!selectedCustomerId) {
+                throw new Error('Por favor, selecione um cliente.');
+            }
+
+            return true;
+        } catch (error) {
+            showError(error.message);
             return false;
         }
-
-        if (!startDate || !endDate) {
-            alert('Por favor, selecione a data inicial e final.');
-            return false;
-        }
-
-        if (!facebook && !instagram && !googleAnalytics) {
-            alert('Por favor, selecione pelo menos uma plataforma.');
-            return false;
-        }
-
-        if (!tipoAnalise) {
-            alert('Por favor, selecione o tipo de análise.');
-            return false;
-        }
-
-        if (formatoRelatorio === 'Selecione' || formatoRelatorio === '' || formatoRelatorio === null) {
-            alert('Por favor, selecione o formato do relatório.');
-            return false;
-        }
-
-        return true;
     }
 
     document.getElementById('form-busca')?.addEventListener('submit', async function (e) {
-        const id_customer = localStorage.getItem('selectedCustomerId');
-        if (!id_customer) return;
-
         e.preventDefault();
 
-        const isValid = await validateForm();
-        if (!isValid) return;
+        const id_customer = localStorage.getItem('selectedCustomerId');
+        if (!id_customer) {
+            showError('Nenhum cliente selecionado');
+            return;
+        }
 
         try {
+            // Validar formulário
+            const isValid = await validateForm();
+            if (!isValid) return;
+
+            // Mostrar barra de progresso e ocultar botão
+            showLoadingProgress();
             btnBuscarTexto.classList.add('d-none');
             btnBuscarLoading.classList.remove('d-none');
+
+            // Simular progresso enquanto prepara os dados
+            updateProgressBar(10, 'Validando dados...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            setTimeout(function () {
+                updateProgressBar(25, 'Coletando informações...');
+            }, 500);
 
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked').id;
             const formatoRelatorio = document.getElementById('formatoRelatorio').value;
 
-            // Determina a plataforma (primeira marcada)
+            // Determina a plataforma
             let platform = [];
             if (document.getElementById('instagram').checked) platform.push('instagram');
             if (document.getElementById('facebook').checked) platform.push('facebook');
             if (document.getElementById('googleAnalytics').checked) platform.push('google_analytics');
+
+            setTimeout(function () {
+                updateProgressBar(40, 'Preparando solicitação...');
+            }, 300);
 
             const requestBody = {
                 agency_id: String(userId),
@@ -202,6 +369,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 output_format: formatoRelatorio
             };
 
+            updateProgressBar(60, 'Enviando para análise...');
+
             const response = await fetch('https://analyze-backend-5jyg.onrender.com/analyze/', {
                 method: 'POST',
                 headers: {
@@ -209,23 +378,41 @@ document.addEventListener('DOMContentLoaded', async function () {
                 },
                 body: JSON.stringify(requestBody)
             });
+            console.log("response: ", response)
+
+            updateProgressBar(80, 'Processando resposta...');
 
             if (!response.ok) {
-                throw new Error('Erro ao gerar análise');
+                const errorData = await response.json().catch(() => ({ message: 'Erro de comunicação com o servidor' }));
+                throw new Error(errorData.message || `Erro ${response.status}: Falha ao gerar análise`);
             }
 
             const result = await response.json();
 
+            if (!result || !result.result) {
+                throw new Error('Resposta inválida do servidor');
+            }
+
+            updateProgressBar(95, 'Finalizando...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            updateProgressBar(100, 'Concluído!');
+
+            // Ocultar mensagem de instrução e mostrar resultado
             if (instructionMessage) instructionMessage.style.display = 'none';
             if (contentDashboard) {
                 renderAnalyzeResult(result);
                 contentDashboard.style.display = 'block';
             }
 
+            showSuccess('Análise gerada com sucesso!');
+
         } catch (error) {
             console.error('Erro ao gerar análise:', error);
-            alert('Erro ao gerar análise. Tente novamente.');
+            showError(`Erro ao gerar análise: ${error.message}`);
         } finally {
+            // Sempre restaurar o estado original
+            hideLoadingProgress();
             btnBuscarTexto.classList.remove('d-none');
             btnBuscarLoading.classList.add('d-none');
         }
@@ -260,28 +447,48 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     async function downloadAsPDF() {
+        const downloadBtn = document.getElementById('download-pdf');
+        const originalContent = downloadBtn?.innerHTML;
+
         try {
+            if (!window.jspdf) {
+                throw new Error('Biblioteca de PDF não carregada. Recarregue a página e tente novamente.');
+            }
+
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('analysis-content');
 
             if (!element) {
-                alert('Conteúdo não encontrado para download.');
-                return;
+                throw new Error('Conteúdo da análise não encontrado.');
             }
 
-            // Mostra loading no botão
-            const downloadBtn = document.getElementById('download-pdf');
-            const originalContent = downloadBtn.innerHTML;
-            downloadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Gerando PDF...';
-            downloadBtn.disabled = true;
+            if (!element.innerHTML.trim()) {
+                throw new Error('Não há conteúdo para exportar.');
+            }
+
+            // Mostrar loading no botão
+            if (downloadBtn) {
+                downloadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Gerando PDF...';
+                downloadBtn.disabled = true;
+            }
+
+            // Verificar se html2canvas está disponível
+            if (!window.html2canvas) {
+                throw new Error('Biblioteca de captura não carregada. Recarregue a página e tente novamente.');
+            }
 
             // Captura o elemento como imagem
             const canvas = await html2canvas(element, {
                 scale: 2,
                 useCORS: true,
                 allowTaint: true,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                logging: false
             });
+
+            if (!canvas) {
+                throw new Error('Falha ao capturar o conteúdo.');
+            }
 
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
@@ -313,24 +520,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             const now = new Date();
             const dateStr = now.toLocaleDateString('pt-BR').replace(/\//g, '-');
             const customerName = localStorage.getItem('selectedCustomerName') || 'Cliente';
-            const fileName = `Analise_${customerName}_${dateStr}.pdf`;
+            const fileName = `Analise_${customerName.replace(/[^a-zA-Z0-9]/g, '_')}_${dateStr}.pdf`;
 
             // Faz o download
             pdf.save(fileName);
-
-            // Restaura o botão
-            downloadBtn.innerHTML = originalContent;
-            downloadBtn.disabled = false;
+            showSuccess('PDF baixado com sucesso!');
 
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
-            alert('Erro ao gerar PDF. Tente novamente.');
-
-            // Restaura o botão em caso de erro
-            const downloadBtn = document.getElementById('download-pdf');
-            downloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Baixar PDF';
-            downloadBtn.disabled = false;
+            showError(`Erro ao gerar PDF: ${error.message}`);
+        } finally {
+            // Sempre restaurar o botão
+            if (downloadBtn && originalContent) {
+                downloadBtn.innerHTML = originalContent;
+                downloadBtn.disabled = false;
+            }
         }
     }
-
 });
