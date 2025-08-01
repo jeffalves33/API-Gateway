@@ -12,22 +12,43 @@ exports.getReachMetrics = async (req, res) => {
     const facebook = await getFacebookCustomerKey(id_user, id_customer);
     const instagram = await getInstagramCustomerKey(id_user, id_customer);
 
-    const [facebookData, instagramData] = await Promise.all([
-      facebookService.getReach(facebook.page_id, facebook.access_token, startDate, endDate),
-      instagramService.getReach(instagram.page_id, instagram.access_token, startDate, endDate)
-    ]);
+    const promises = [];
 
-    const labels = facebookData.map((_, i) => {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      return date.toISOString().split('T')[0];
-    });
+    // Facebook
+    if (facebook && facebook.page_id && facebook.access_token) {
+      promises.push(facebookService.getReach(facebook.page_id, facebook.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve([]));
+    }
 
-    res.json({
-      labels,
-      facebook: facebookData,
-      instagram: instagramData
-    });
+    // Instagram
+    if (instagram && instagram.page_id && instagram.access_token) {
+      promises.push(instagramService.getReach(instagram.page_id, instagram.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve([]));
+    }
+
+    const [facebookData, instagramData] = await Promise.allSettled(promises);
+
+    // Extrair valores ou usar array vazio se rejeitado
+    const results = {
+      labels: [],
+      facebook: facebookData.status === 'fulfilled' ? facebookData.value : [],
+      instagram: instagramData.status === 'fulfilled' ? instagramData.value : []
+    };
+
+    // Gerar labels baseado no maior array de dados disponível
+    const maxLength = Math.max(results.facebook.length, results.instagram.length);
+
+    if (maxLength > 0) {
+      results.labels = Array.from({ length: maxLength }, (_, i) => {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        return date.toISOString().split('T')[0];
+      });
+    }
+
+    res.json(results);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erro ao buscar dados de alcance' });
@@ -43,26 +64,59 @@ exports.getImpressionMetrics = async (req, res) => {
     const instagram = await getInstagramCustomerKey(id_user, id_customer);
     const google = await getGoogleAnalyticsKeys(id_user, id_customer);
 
-    const [facebookData, instagramData, googleData, linkedinData] = await Promise.all([
-      facebookService.getImpressions(facebook.page_id, facebook.access_token, startDate, endDate),
-      instagramService.getImpressions(instagram.page_id, instagram.access_token, startDate, endDate),
-      googleAnalyticsService.getImpressions(google, startDate, endDate),
-      []//[0, 0, 0, 0, 0, 0]
-    ]);
+    const promises = [];
 
-    const labels = facebookData.map((_, i) => {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      return date.toISOString().split('T')[0];
-    });
+    // Facebook
+    if (facebook && facebook.page_id && facebook.access_token) {
+      promises.push(facebookService.getImpressions(facebook.page_id, facebook.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve([]));
+    }
 
-    res.json({
-      labels,
-      facebook: facebookData,
-      instagram: instagramData,
-      google: googleData,
-      linkedin: linkedinData
-    });
+    // Instagram
+    if (instagram && instagram.page_id && instagram.access_token) {
+      promises.push(instagramService.getImpressions(instagram.page_id, instagram.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve([]));
+    }
+
+    // Google Analytics
+    if (google && google.property_id && google.access_token) {
+      promises.push(googleAnalyticsService.getImpressions(google, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve([]));
+    }
+
+    // LinkedIn (sempre vazio por enquanto)
+    promises.push(Promise.resolve([]));
+
+    const [facebookData, instagramData, googleData, linkedinData] = await Promise.allSettled(promises);
+
+    // Extrair valores ou usar array vazio se rejeitado
+    const results = {
+      labels: [],
+      facebook: facebookData.status === 'fulfilled' ? facebookData.value : [],
+      instagram: instagramData.status === 'fulfilled' ? instagramData.value : [],
+      google: googleData.status === 'fulfilled' ? googleData.value : [],
+      linkedin: linkedinData.status === 'fulfilled' ? linkedinData.value : []
+    };
+
+    // Gerar labels baseado no maior array de dados disponível
+    const maxLength = Math.max(
+      results.facebook.length,
+      results.instagram.length,
+      results.google.length
+    );
+
+    if (maxLength > 0) {
+      results.labels = Array.from({ length: maxLength }, (_, i) => {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        return date.toISOString().split('T')[0];
+      });
+    }
+
+    res.json(results);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erro ao buscar dados de impressões' });
@@ -77,18 +131,33 @@ exports.getfollowersMetrics = async (req, res) => {
     const facebook = await getFacebookCustomerKey(id_user, id_customer);
     const instagram = await getInstagramCustomerKey(id_user, id_customer);
 
-    const [facebookData, instagramData, linkedinData, youtubeData] = await Promise.all([
-      facebookService.getFollowers(facebook.page_id, facebook.access_token, startDate, endDate),
-      instagramService.getFollowers(instagram.page_id, instagram.access_token, startDate, endDate),
-      0,
-      0
-    ]);
+    const promises = [];
+
+    // Facebook
+    if (facebook && facebook.page_id && facebook.access_token) {
+      promises.push(facebookService.getFollowers(facebook.page_id, facebook.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve(0));
+    }
+
+    // Instagram
+    if (instagram && instagram.page_id && instagram.access_token) {
+      promises.push(instagramService.getFollowers(instagram.page_id, instagram.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve(0));
+    }
+
+    // LinkedIn e YouTube (sempre 0 por enquanto)
+    promises.push(Promise.resolve(0));
+    promises.push(Promise.resolve(0));
+
+    const [facebookData, instagramData, linkedinData, youtubeData] = await Promise.allSettled(promises);
 
     res.json({
-      facebook: facebookData,
-      instagram: instagramData,
-      linkedin: linkedinData,
-      youtube: youtubeData
+      facebook: facebookData.status === 'fulfilled' ? facebookData.value : 0,
+      instagram: instagramData.status === 'fulfilled' ? instagramData.value : 0,
+      linkedin: linkedinData.status === 'fulfilled' ? linkedinData.value : 0,
+      youtube: youtubeData.status === 'fulfilled' ? youtubeData.value : 0
     });
   } catch (err) {
     console.error(err);
@@ -100,14 +169,32 @@ exports.getTrafficMetrics = async (req, res) => {
   try {
     const id_user = req.user.id;
     const { id_customer, startDate, endDate } = req.body;
-    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
-    const googleData = await googleAnalyticsService.getTrafficData(google, startDate, endDate);
 
-    res.json({
-      labels: googleData.labels,
-      sessions: googleData.sessions,
-      sources: googleData.sources
-    });
+    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+
+    if (!google || !google.property_id || !google.access_token) {
+      return res.json({
+        labels: [],
+        sessions: [],
+        sources: {}
+      });
+    }
+
+    try {
+      const googleData = await googleAnalyticsService.getTrafficData(google, startDate, endDate);
+      res.json({
+        labels: googleData.labels || [],
+        sessions: googleData.sessions || [],
+        sources: googleData.sources || {}
+      });
+    } catch (error) {
+      console.error('Erro ao buscar dados do Google Analytics:', error);
+      res.json({
+        labels: [],
+        sessions: [],
+        sources: {}
+      });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erro ao buscar dados de tráfego' });
@@ -118,10 +205,36 @@ exports.getSearchVolumeMetrics = async (req, res) => {
   try {
     const id_user = req.user.id;
     const { id_customer, startDate, endDate } = req.body;
-    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
-    const googleData = await googleAnalyticsService.getSearchVolumeData(google, startDate, endDate);
 
-    res.json(googleData);
+    const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+
+    if (!google || !google.property_id || !google.access_token) {
+      return res.json({
+        labels: [],
+        organicSessions: [],
+        totalOrganicSearch: 0,
+        totalOtherSources: 0,
+        totalNewLeads: 0,
+        days: 0,
+        newLeadsPerDay: []
+      });
+    }
+
+    try {
+      const googleData = await googleAnalyticsService.getSearchVolumeData(google, startDate, endDate);
+      res.json(googleData);
+    } catch (error) {
+      console.error('Erro ao buscar dados do Google Analytics:', error);
+      res.json({
+        labels: [],
+        organicSessions: [],
+        totalOrganicSearch: 0,
+        totalOtherSources: 0,
+        totalNewLeads: 0,
+        days: 0,
+        newLeadsPerDay: []
+      });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erro ao buscar dados de volume de pesquisa' });

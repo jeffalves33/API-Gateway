@@ -11,33 +11,52 @@ const refreshKeysForCustomer = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const customerKeys = await getCustomerKeys(id_customer);
-  const userKeys = await getUserKeys(id_user);
+  try {
+    const customerKeys = await getCustomerKeys(id_customer);
+    const userKeys = await getUserKeys(id_user);
 
-  const composed = {
-    facebook: {
-      page_id: customerKeys.id_facebook_page,
-      access_token: customerKeys.access_token_page_facebook
-    },
-    instagram: {
-      page_id: customerKeys.instagram_page_id,
-      access_token: userKeys.instagram_access_token
-    },
-    googleAnalytics: {
-      property_id: customerKeys.google_property_id,
-      user_id: userKeys.id_user_googleanalytics,
-      access_token: userKeys.access_token_googleanalytics,
+    const composed = {
+      facebook: null,
+      instagram: null,
+      googleAnalytics: null
+    };
 
+    // Facebook
+    if (customerKeys && customerKeys.id_facebook_page && customerKeys.access_token_page_facebook) {
+      composed.facebook = {
+        page_id: customerKeys.id_facebook_page,
+        access_token: customerKeys.access_token_page_facebook
+      };
     }
-  };
 
-  const cacheKey = `${id_user}:${id_customer}`;
-  cache.set(cacheKey, {
-    data: composed,
-    expires: Date.now() + 1000 * 60 * 5
-  });
+    // Instagram
+    if (customerKeys && customerKeys.instagram_page_id && userKeys && userKeys.instagram_access_token) {
+      composed.instagram = {
+        page_id: customerKeys.instagram_page_id,
+        access_token: userKeys.instagram_access_token
+      };
+    }
 
-  return composed;
+    // Google Analytics
+    if (customerKeys && customerKeys.google_property_id && userKeys && userKeys.access_token_googleanalytics && userKeys.id_user_googleanalytics) {
+      composed.googleAnalytics = {
+        property_id: customerKeys.google_property_id,
+        user_id: userKeys.id_user_googleanalytics,
+        access_token: userKeys.access_token_googleanalytics
+      };
+    }
+
+    const cacheKey = `${id_user}:${id_customer}`;
+    cache.set(cacheKey, {
+      data: composed,
+      expires: Date.now() + 1000 * 60 * 5
+    });
+
+    return composed;
+  } catch (error) {
+    console.error('Erro ao atualizar chaves do cliente:', error);
+    throw error;
+  }
 };
 
 const getGoogleAnalyticsKeys = async (id_user, id_customer) => {
@@ -52,35 +71,63 @@ const getGoogleAnalyticsKeys = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const newAccessToken = await getValidAccessToken(id_user);
-  const customerKeys = await getCustomerKeys(id_customer);
-  const userKeys = await getUserKeys(id_user);
+  try {
+    const customerKeys = await getCustomerKeys(id_customer);
+    const userKeys = await getUserKeys(id_user);
 
-  const googleKeys = {
-    property_id: customerKeys.id_googleanalytics_property,
-    access_token: newAccessToken,
-    id_user: userKeys.id_user_googleanalytics
-  };
+    if (!customerKeys || !userKeys ||
+      !customerKeys.id_googleanalytics_property ||
+      !userKeys.id_user_googleanalytics) {
+      return null;
+    }
 
-  cache.set(cacheKey, {
-    data: googleKeys,
-    expires: Date.now() + 1000 * 60 * 5
-  });
+    const newAccessToken = await getValidAccessToken(id_user);
 
-  return googleKeys;
-};
+    if (!newAccessToken) {
+      return null;
+    }
+
+    const googleKeys = {
+      property_id: customerKeys.id_googleanalytics_property,
+      access_token: newAccessToken,
+      id_user: userKeys.id_user_googleanalytics
+    };
+
+    cache.set(cacheKey, {
+      data: googleKeys,
+      expires: Date.now() + 1000 * 60 * 5
+    });
+
+    return googleKeys;
+  } catch (error) {
+    console.error('Erro ao buscar chaves do Google Analytics:', error);
+    return null;
+  }
+}
 
 // Função opcional para pegar todas as plataformas de uma vez (se necessário)
 const getAllKeys = async (id_user, id_customer) => {
-  const [facebook, instagram, google] = await Promise.all([
-    getFacebookKeys(id_user, id_customer),
-    getInstagramKeys(id_user, id_customer),
-    getGoogleAnalyticsKeys(id_user, id_customer)
-  ]);
+  try {
+    const [facebook, instagram, google] = await Promise.allSettled([
+      getFacebookCustomerKey(id_user, id_customer),
+      getInstagramCustomerKey(id_user, id_customer),
+      getGoogleAnalyticsKeys(id_user, id_customer)
+    ]);
 
-  return { facebook, instagram, google };
+    return {
+      facebook: facebook.status === 'fulfilled' ? facebook.value : null,
+      instagram: instagram.status === 'fulfilled' ? instagram.value : null,
+      google: google.status === 'fulfilled' ? google.value : null
+    };
+  } catch (error) {
+    console.error('Erro ao buscar todas as chaves:', error);
+    return {
+      facebook: null,
+      instagram: null,
+      google: null
+    };
+  }
 };
-
 // Limpar cache de um usuário
 const clearCacheForUser = (id_user) => {
   for (const key of cache.keys()) {
@@ -102,19 +149,28 @@ const getFacebookCustomerKey = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const customerFacebookKeys = await getCustomerFacebookKeys(id_customer);
+  try {
+    const customerFacebookKeys = await getCustomerFacebookKeys(id_customer);
 
-  const facebookKeys = {
-    page_id: customerFacebookKeys.id_facebook_page,
-    access_token: customerFacebookKeys.access_token_page_facebook
-  };
+    if (!customerFacebookKeys || !customerFacebookKeys.id_facebook_page || !customerFacebookKeys.access_token_page_facebook) {
+      return null;
+    }
 
-  cache.set(cacheKey, {
-    data: facebookKeys,
-    expires: Date.now() + 1000 * 60 * 5
-  });
+    const facebookKeys = {
+      page_id: customerFacebookKeys.id_facebook_page,
+      access_token: customerFacebookKeys.access_token_page_facebook
+    };
 
-  return facebookKeys;
+    cache.set(cacheKey, {
+      data: facebookKeys,
+      expires: Date.now() + 1000 * 60 * 5
+    });
+
+    return facebookKeys;
+  } catch (error) {
+    console.error('Erro ao buscar chaves do Facebook:', error);
+    return null;
+  }
 };
 
 const getInstagramCustomerKey = async (id_user, id_customer) => {
@@ -129,19 +185,28 @@ const getInstagramCustomerKey = async (id_user, id_customer) => {
   const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
-  const customerInstagramKeys = await getCustomerInstagramKeys(id_customer);
+  try {
+    const customerInstagramKeys = await getCustomerInstagramKeys(id_customer);
 
-  const instagramKeys = {
-    page_id: customerInstagramKeys.id_instagram_page,
-    access_token: customerInstagramKeys.access_token_page_instagram
-  };
+    if (!customerInstagramKeys || !customerInstagramKeys.id_instagram_page || !customerInstagramKeys.access_token_page_instagram) {
+      return null;
+    }
 
-  cache.set(cacheKey, {
-    data: instagramKeys,
-    expires: Date.now() + 1000 * 60 * 5
-  });
+    const instagramKeys = {
+      page_id: customerInstagramKeys.id_instagram_page,
+      access_token: customerInstagramKeys.access_token_page_instagram
+    };
 
-  return instagramKeys;
+    cache.set(cacheKey, {
+      data: instagramKeys,
+      expires: Date.now() + 1000 * 60 * 5
+    });
+
+    return instagramKeys;
+  } catch (error) {
+    console.error('Erro ao buscar chaves do Instagram:', error);
+    return null;
+  }
 };
 
 
