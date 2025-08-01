@@ -102,8 +102,8 @@
             <form id="login-form" class="mb-3">
               <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="text" class="form-control" id="email" name="email" placeholder="Entre com seu email"
-                  autofocus />
+                <input type="email" class="form-control" id="email" name="email" placeholder="Entre com seu email"
+                  autocomplete="email" required maxlength="255" autofocus />
               </div>
               <div class="mb-3 form-password-toggle">
                 <div class="d-flex justify-content-between">
@@ -115,6 +115,7 @@
                 <div class="input-group input-group-merge">
                   <input type="password" id="password" class="form-control" name="password"
                     placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                    autocomplete="current-password" required minlength="6" maxlength="128"
                     aria-describedby="password" />
                   <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
                 </div>
@@ -162,26 +163,50 @@
     document.getElementById('login-form').addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      // Exibe o spinner e oculta o texto do botão
+      // Validação de campos obrigatórios
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const alertContainer = document.getElementById('alert-container');
+
+      // Limpar alertas anteriores
+      alertContainer.innerHTML = '';
+
+      // Validações básicas
+      if (!email) {
+        showAlert('Por favor, informe seu email.', 'danger');
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        showAlert('Por favor, informe um email válido.', 'danger');
+        return;
+      }
+
+      if (!password) {
+        showAlert('Por favor, informe sua senha.', 'danger');
+        return;
+      }
+
+      if (password.length < 6) {
+        showAlert('A senha deve ter pelo menos 6 caracteres.', 'danger');
+        return;
+      }
+
+      // Controles do botão
       const buttonText = document.getElementById('button-text');
       const loadingSpinner = document.getElementById('loading-spinner');
       const loginButton = document.getElementById('login-button');
 
-      buttonText.style.display = 'none';
-      loadingSpinner.classList.remove('d-none');
-      //loadingSpinner.style.display = 'flex';
-      loginButton.disabled = true;
-
-      // Preparar dados para envio
-      const formData = {
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value
-      };
-
-      const alertContainer = document.getElementById('alert-container');
-      alertContainer.innerHTML = '';
+      // Estado de loading
+      setLoadingState(true, buttonText, loadingSpinner, loginButton);
 
       try {
+        // Preparar dados para envio
+        const formData = {
+          email: email,
+          password: password
+        };
+
         // Enviar requisição para o servidor
         const response = await fetch('/api/login', {
           method: 'POST',
@@ -191,34 +216,92 @@
           body: JSON.stringify(formData)
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Erro ao fazer login');
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          throw new Error('Erro de comunicação com o servidor. Tente novamente.');
         }
 
-        // Redirecionar para a página de perfil após 1 segundo
+        if (!response.ok) {
+          // Tratamento específico por código de erro
+          let errorMessage;
+          switch (response.status) {
+            case 400:
+              errorMessage = data.message || 'Dados inválidos. Verifique os campos informados.';
+              break;
+            case 401:
+              errorMessage = 'Email ou senha incorretos.';
+              break;
+            case 403:
+              errorMessage = 'Acesso negado. Conta pode estar bloqueada.';
+              break;
+            case 404:
+              errorMessage = 'Usuário não encontrado.';
+              break;
+            case 429:
+              errorMessage = 'Muitas tentativas de login. Tente novamente em alguns minutos.';
+              break;
+            case 500:
+              errorMessage = 'Erro interno do servidor. Tente novamente mais tarde.';
+              break;
+            default:
+              errorMessage = data.message || 'Erro inesperado. Tente novamente.';
+          }
+          throw new Error(errorMessage);
+        }
+
+        // Login bem-sucedido
+        showAlert('Login realizado com sucesso! Redirecionando...', 'success');
+
+        // Limpar localStorage antes do redirecionamento
+        localStorage.clear();
+
+        // Redirecionar após delay
         setTimeout(() => {
           window.location.href = '/dashboardPage.html';
-          localStorage.clear();
-        }, 1000);
+        }, 1500);
 
       } catch (error) {
         // Exibir mensagem de erro
-        alertContainer.innerHTML = `
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            ${error.message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-          </div>
-        `;
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          showAlert('Erro de conexão. Verifique sua internet e tente novamente.', 'danger');
+        } else {
+          showAlert(error.message, 'danger');
+        }
 
-        // Restaura o botão de login ao estado original
-        buttonText.style.display = 'block';
-        loadingSpinner.classList.add('d-none');
-        //loadingSpinner.style.display = 'none';
-        loginButton.disabled = false;
+        // Restaurar estado do botão
+        setLoadingState(false, buttonText, loadingSpinner, loginButton);
       }
     });
+
+    // Funções auxiliares
+    function showAlert(message, type) {
+      const alertContainer = document.getElementById('alert-container');
+      alertContainer.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+      `;
+    }
+
+    function setLoadingState(isLoading, buttonText, loadingSpinner, loginButton) {
+      if (isLoading) {
+        buttonText.style.display = 'none';
+        loadingSpinner.classList.remove('d-none');
+        loginButton.disabled = true;
+      } else {
+        buttonText.style.display = 'block';
+        loadingSpinner.classList.add('d-none');
+        loginButton.disabled = false;
+      }
+    }
+
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
   </script>
 
   <script src="/assets/js/main.js"></script>
