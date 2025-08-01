@@ -71,7 +71,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <i class="bi bi-robot"></i>
             </div>
             <div class="message-content">
-                <div class="ai-name">ho.ko AI.nalytics</div>
                 <div class="message-text">
                     <div class="d-flex align-items-center">
                         <div class="loading-dots">
@@ -415,14 +414,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <div class="message-content">
                         <div class="message-text">
                             <p>${htmlContent}</p>
-                        </div>
-                        <div class="d-flex mt-3">
-                            <button class="reaction-btn me-2">
-                                <i class="bi bi-hand-thumbs-up"></i>
-                            </button>
-                            <button class="reaction-btn">
-                                <i class="bi bi-hand-thumbs-down"></i>
-                            </button>
                         </div>
                     </div>
                 `;
