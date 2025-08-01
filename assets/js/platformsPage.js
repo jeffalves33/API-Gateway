@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async function () {
     const userNameElement = document.getElementById('user-name');
     const modalElement = document.getElementById('modalToggle');
+    const userProfileAvatarElements = document.querySelectorAll('.user-profile-avatar');
     const modal = new bootstrap.Modal(modalElement);
     let currentCheckbox = null;
     let userId = null;
@@ -15,6 +16,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             const data = await response.json();
             userNameElement.textContent = data.user.name;
             userId = data.user.id_user;
+            userProfileAvatarElements.forEach(element => {
+                element.src = data.user.foto_perfil || defaultAvatar;
+            });
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);
         }

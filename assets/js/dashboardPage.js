@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const instagramSecoundCardImpressions = document.getElementById('instagram-secound-card-impressions')
     const googleAnalyticsSecoundCardImpressions = document.getElementById('googleAnalytics-secound-card-impressions')
     const linkedinSecoundCardImpressions = document.getElementById('linkedin-secound-card-impressions')
+    const userProfileAvatarElements = document.querySelectorAll('.user-profile-avatar');
 
 
     let reachChartInstance = null;
@@ -60,6 +61,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             const data = await response.json();
             userNameElement.textContent = data.user.name;
             userId = data.user.id_user;
+            userProfileAvatarElements.forEach(element => {
+                element.src = data.user.foto_perfil || defaultAvatar;
+            });
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);
         }

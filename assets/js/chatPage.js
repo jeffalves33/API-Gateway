@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const sendButton = document.querySelector('.send-btn');
     const chatInputField = document.querySelector('.chat-input-field');
     const chatMessagesContainer = document.querySelector('.chat-messages');
+    const userProfileAvatarElements = document.querySelectorAll('.user-profile-avatar');
 
     let userId = null;
     let messageHistory = [];
@@ -135,6 +136,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 userNameElement.textContent = data.user.name;
             }
             userId = data.user.id_user;
+            userProfileAvatarElements.forEach(element => {
+                element.src = data.user.foto_perfil || defaultAvatar;
+            });
 
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);

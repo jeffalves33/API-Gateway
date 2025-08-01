@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const loadingTextElement = document.getElementById('loading-text');
     const loadingPercentageElement = document.getElementById('loading-percentage');
     const loadingBarElement = document.getElementById('loading-bar');
+    const userProfileAvatarElements = document.querySelectorAll('.user-profile-avatar');
 
     let userId = null;
 
@@ -109,6 +110,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             userNameElement.textContent = data.user.name;
             userId = data.user.id_user;
+            userProfileAvatarElements.forEach(element => {
+                element.src = data.user.foto_perfil || defaultAvatar;
+            });
 
             if (!userId) {
                 throw new Error('ID do usuário não encontrado');
