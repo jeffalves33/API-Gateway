@@ -301,6 +301,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         const customerId = localStorage.getItem("selectedCustomerId");
+        const customerName = localStorage.getItem("selectedCustomerName");
 
         // Verificar se userId está disponível
         if (!userId) {
@@ -333,6 +334,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 },
                 body: JSON.stringify({
                     customer_id: customerId,
+                    customer_name: customerName,
                     client_id: userId,
                     prompt: userMessage,
                     history: messageHistory
