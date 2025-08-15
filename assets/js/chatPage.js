@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 },
                 body: JSON.stringify({
                     customer_id: customerId,
-                    customer_name: customerName,
+                    client_name: customerName,
                     client_id: userId,
                     prompt: userMessage,
                     history: messageHistory
