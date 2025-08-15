@@ -10,12 +10,14 @@ const REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/meta/auth/callback';
 
 exports.startOAuth = (req, res) => {
   const scopes = [
-    'pages_show_list',
-    'pages_read_engagement',
-    'instagram_basic',
-    'pages_read_user_content',
     'ads_management',
-    'business_management'
+    'business_management',
+    'instagram_basic',
+    'instagram_manage_insights',
+    'read_insights',
+    'pages_read_engagement',
+    'pages_read_user_content',
+    'pages_show_list',
   ];
 
   const authUrl = `https://www.facebook.com/v22.0/dialog/oauth?${querystring.stringify({
