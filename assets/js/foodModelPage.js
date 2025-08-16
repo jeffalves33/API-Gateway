@@ -280,6 +280,7 @@ async function captureAndValidateForm() {
 
     // Validar tags (pelo menos 5)
     const tags = document.getElementById('document-tags').value;
+    const tagsRaw = (document.getElementById('document-tags').value || '').trim();
     let tagArray = '';
     if (tags.trim()) {
         tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
@@ -295,16 +296,16 @@ async function captureAndValidateForm() {
         documentScope: document.getElementById('document-scope').value,
         docType: document.getElementById('doc-type').value,
         confidentiality: document.getElementById('confidentiality').value,
-        documentAuthor: document.getElementById('document-author').value,
+        documentAuthor: document.getElementById('document-author').value || '',
         documentSetor: document.getElementById('document-setor').value,
-        documentTags: document.getElementById('document-tags').value,
-        tags_list: tagArray,
-        uploadType: uploadType,
-        agency_id: userId.toString(),
-        client_id: selectedCustomerId || '',
-        customerName: selectedCustomerName || '',
-        subcategory: "",
-        mainCategory: descriptions[document.getElementById('doc-type').value]
+        documentTags: tagsRaw,
+        uploadType: document.querySelector('input[name="upload-type"]:checked').value,
+        agency_id: String(userId || ''),
+        documentText: document.getElementById('document-text').value,
+        client_id: String(selectedCustomerId),
+        customerName: selectedCustomerName,
+        mainCategory: descriptions[document.getElementById('doc-type').value] || '',
+        subcategory: ''
     };
 
     // Adicionar conteúdo baseado no tipo de upload
