@@ -297,7 +297,7 @@ async function captureAndValidateForm() {
         documentAuthor: document.getElementById('document-author').value,
         documentSetor: document.getElementById('document-setor').value,
         documentTags: document.getElementById('document-tags').value,
-        tags_list: tagsArray,
+        tags_list: tagArray,
         uploadType: uploadType,
         agency_id: userId.toString(),
         client_id: selectedCustomerId || '',
