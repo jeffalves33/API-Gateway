@@ -194,8 +194,24 @@ document.addEventListener("DOMContentLoaded", async function () {
     });*/
 });
 
+async function readPdfText(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    let fullText = '';
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const content = await page.getTextContent();
+        const strings = content.items.map(item => item.str);
+        // Junte o texto da página; use \n\n entre páginas para preservar alguma separação
+        fullText += strings.join(' ') + '\n\n';
+    }
+
+    return fullText.trim();
+}
+
 // Função para capturar e validar o formulário
-function captureAndValidateForm() {
+async function captureAndValidateForm() {
     // Validação dos campos obrigatórios
     const requiredFields = [
         { id: 'document-scope', name: 'Escopo' },
@@ -228,6 +244,38 @@ function captureAndValidateForm() {
         if (!fileInput.files || fileInput.files.length === 0) {
             throw new Error('Arquivo é obrigatório');
         }
+
+        const file = fileInput.files[0];
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'pdf') {
+            const extractedText = await readPdfText(file);
+            if (!extractedText || extractedText.length < 10) {
+                throw new Error(
+                    'Não conseguimos ler o conteúdo deste PDF. ' +
+                    'Isso acontece quando o arquivo é apenas imagem (scan/arte). ' +
+                    'Por favor, envie um PDF com texto ou um arquivo TXT/CSV.'
+                );
+            }
+            document.getElementById('document-text').value = extractedText;
+
+        } else if (ext === 'txt' || ext === 'csv') {
+            // leitura simples como texto
+            const text = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Erro ao ler o arquivo.'));
+                reader.readAsText(file, 'utf-8');
+            });
+
+            if (!text.trim()) {
+                throw new Error('O arquivo está vazio ou não pôde ser lido.');
+            }
+            document.getElementById('document-text').value = text;
+
+        } else {
+            throw new Error('Tipo de arquivo não suportado. Use PDF, TXT ou CSV.');
+        }
     }
 
     // Validar tags (pelo menos 5)
@@ -257,12 +305,10 @@ function captureAndValidateForm() {
     };
 
     // Adicionar conteúdo baseado no tipo de upload
-    if (uploadType === 'text') {
+    if (uploadType === 'text' || uploadType === 'pdf') {
         documentData.documentText = document.getElementById('document-text').value;
-    } else if (uploadType === 'pdf') {
-        // Para PDF, você precisará implementar a extração de texto
-        throw new Error('Upload de PDF ainda não implementado. Use texto por enquanto.');
     }
+
 
     return documentData;
 }
@@ -297,8 +343,7 @@ document.getElementById('upload-document-form').addEventListener('submit', async
     const feedbackMessage = document.getElementById('feedback-message');
 
     try {
-        const documentData = captureAndValidateForm();
-        console.log(documentData)
+        const documentData = await captureAndValidateForm();
 
         // Mostrar loading
         feedbackMessage.className = 'alert alert-info';

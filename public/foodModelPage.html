@@ -46,6 +46,18 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="/assets/js/config.js"></script>
+
+    <!-- ADICIONE este bloco como módulo -->
+    <script type="module">
+        import * as pdfjs from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.min.mjs";
+        // o worker também é módulo na v4
+        pdfjs.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs";
+
+        // expõe no global para o resto do seu código que usa pdfjsLib
+        window.pdfjsLib = pdfjs;
+    </script>
+
 </head>
 
 <body>
@@ -418,7 +430,7 @@
                                                             </label>
                                                         </div>
                                                     </div>
-                                                    <!--<div class="col-md-4">
+                                                    <div class="col-md-4">
                                                         <div class="form-check">
                                                             <input class="form-check-input" type="radio"
                                                                 name="upload-type" id="upload-pdf" value="pdf">
@@ -426,7 +438,7 @@
                                                                 <i class="bx bx-file-blank me-2"></i>Arquivo
                                                             </label>
                                                         </div>
-                                                    </div>-->
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -438,15 +450,12 @@
                                                     placeholder="Cole ou digite o conteúdo do documento aqui..."></textarea>
                                             </div>
 
-                                            <!-- Upload de Arquivo 
                                             <div class="col-12 pt-3" id="file-upload-area" style="display: none;">
                                                 <label class="form-label" for="document-file">Selecionar Arquivo</label>
                                                 <input type="file" class="form-control" id="document-file"
-                                                    accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls">
-                                                <div class="form-text">Formatos aceitos: PDF, DOC, DOCX, TXT, CSV, XLS,
-                                                    XLSX
-                                                </div>
-                                            </div>-->
+                                                    accept=".pdf,.txt,.csv">
+                                                <div class="form-text">Formatos aceitos: PDF, TXT, CSV</div>
+                                            </div>
                                         </div>
 
                                         <div class="row">
