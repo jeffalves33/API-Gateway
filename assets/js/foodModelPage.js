@@ -280,8 +280,9 @@ async function captureAndValidateForm() {
 
     // Validar tags (pelo menos 5)
     const tags = document.getElementById('document-tags').value;
+    let tagArray = '';
     if (tags.trim()) {
-        const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
         if (tagArray.length < 5) {
             throw new Error('Insira pelo menos 5 tags separadas por vírgula');
         }
