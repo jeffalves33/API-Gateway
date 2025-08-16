@@ -297,10 +297,12 @@ async function captureAndValidateForm() {
         documentAuthor: document.getElementById('document-author').value,
         documentSetor: document.getElementById('document-setor').value,
         documentTags: document.getElementById('document-tags').value,
+        tags_list: tagsArray,
         uploadType: uploadType,
         agency_id: userId.toString(),
         client_id: selectedCustomerId || '',
         customerName: selectedCustomerName || '',
+        subcategory: "",
         mainCategory: descriptions[document.getElementById('doc-type').value]
     };
 
@@ -344,6 +346,7 @@ document.getElementById('upload-document-form').addEventListener('submit', async
 
     try {
         const documentData = await captureAndValidateForm();
+        console.log("documentData: ", documentData)
 
         // Mostrar loading
         feedbackMessage.className = 'alert alert-info';
