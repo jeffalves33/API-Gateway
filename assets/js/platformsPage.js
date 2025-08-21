@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const modal = new bootstrap.Modal(modalElement);
     let currentCheckbox = null;
     let userId = null;
+    const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
     async function loadUserProfile() {
         try {

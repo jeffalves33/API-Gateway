@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const userProfileAvatarElements = document.querySelectorAll('.user-profile-avatar');
 
     let userId = null;
+    const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
     function showError(message, duration = 5000) {
         const alertContainer = document.getElementById('alert-container');

@@ -1,4 +1,5 @@
 let userId = null;
+const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
 const descriptions = {
     'identidade': "Informações sobre missão, valores, história e como a marca se posiciona no mercado.",
@@ -374,7 +375,7 @@ document.getElementById('upload-document-form').addEventListener('submit', async
 
         // Sucesso
         feedbackMessage.className = 'alert alert-success';
-        feedbackMessage.textContent = 'Documento armazenado com sucesso no banco vetorial!';
+        feedbackMessage.textContent = 'Documento armazenado com sucesso!';
         feedbackMessage.style.display = 'block';
 
         // Limpar formulário após sucesso

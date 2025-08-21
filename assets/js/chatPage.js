@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let messageHistory = [];
     let isLoading = false;
     let currentLoadingMessage = null;
+    const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
     // Função para mostrar erro
     function showError(message, isRetryable = false, retryCallback = null) {

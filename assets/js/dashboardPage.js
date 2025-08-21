@@ -1,5 +1,6 @@
 // Arquivo: public/js/dashboardPage.js
 document.addEventListener('DOMContentLoaded', async function () {
+    const defaultAvatar = '/assets/img/avatars/default-avatar.png';
     const customerListElement = document.getElementById('dropdown-customer-list');
     const selectedCustomerNameElement = document.getElementById('selected-customer-name');
     const userNameElement = document.getElementById('user-name');

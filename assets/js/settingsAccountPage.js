@@ -1,4 +1,4 @@
-// Arquivo: public/js/settingsAccountPage.js
+// Arquivo: assets/js/settingsAccountPage.js
 document.addEventListener('DOMContentLoaded', async function () {
     // Elementos do DOM
     const formDelet = document.getElementById('formAccountDeactivation');
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Declarar essas variáveis no escopo principal para serem acessíveis
     let fileInput, avatarImg;
     let isSubmitting = false; // Prevenir múltiplos submits
-    const defaultAvatar = '/images/default-avatar.png';
+    const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
     // Função para exibir alertas ao usuário
     function showAlert(message, type = 'danger', duration = 5000) {
