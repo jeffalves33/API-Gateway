@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 agency_id: String(userId),
                 client_id: id_customer,
                 platforms: platform,
-                analysis_type: tipoAnalise.replace('descritiva', 'descriptive').replace('prescritiva', 'prescriptive').replace('preditiva', 'predictive'),
+                analysis_type: tipoAnalise.replace('descritiva', 'descriptive').replace('prescritiva', 'prescriptive').replace('preditiva', 'predictive').replace('geral', 'general'),
                 start_date: formatDateToISO(startDate),
                 end_date: formatDateToISO(endDate),
                 output_format: formatoRelatorio
