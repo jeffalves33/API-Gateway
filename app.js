@@ -12,7 +12,8 @@ const metricsRoutes = require('./routes/metricsRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
-const institutionalRoutes = require('./routes/institutionalRoutes'); // Nova rota
+const youtubeRoutes = require('./routes/youtubeRoutes');
+const institutionalRoutes = require('./routes/institutionalRoutes');
 
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 
@@ -37,6 +38,7 @@ app.use('/api/metrics', metricsRoutes);
 app.use('/api/googleAnalytics', googleAnalyticsRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/meta', metaRoutes);
+app.use('/api/youtube', youtubeRoutes);
 app.use('/customer', customerRoutes);
 
 // === Rotas Institucionais ===

@@ -115,6 +115,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             const resGoogleAnalytics = await fetch('/api/googleAnalytics/status');
             const { googleAnalyticsConnected } = await resGoogleAnalytics.json();
 
+            const resYoutube = await fetch('/api/youtube/status');
+            const { youtubeConnected } = await resYoutube.json();
+
             const switches = document.querySelectorAll('.d-flex');
 
             switches.forEach(div => {
@@ -125,12 +128,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                     checkbox.checked = facebookConnected;
                 }
 
+                if (title === 'google') {
+                    checkbox.checked = googleAnalyticsConnected;
+                }
+
                 if (title === 'instagram') {
                     checkbox.checked = instagramConnected;
                 }
 
-                if (title === 'google') {
-                    checkbox.checked = googleAnalyticsConnected;
+                if (title === 'youtube') {
+                    checkbox.checked = youtubeConnected;
                 }
             });
 
@@ -153,15 +160,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.querySelectorAll('.form-check-input').forEach(input => {
         input.addEventListener('change', function (e) {
             const label = input.closest('.d-flex').querySelector('h6')?.textContent?.trim().toLowerCase();
+            const authRoutes = {
+                facebook: '/api/meta/auth',
+                instagram: '/api/meta/auth',
+                google: '/api/googleAnalytics/auth',
+                youtube: '/api/youtube/auth',
+            };
 
-            if (label === 'facebook' || label === 'instagram' || label === 'google') {
-                if (e.target.checked) {
-                    if (label === 'google') {
-                        window.location.href = '/api/googleAnalytics/auth';
-                    } else {
-                        window.location.href = '/api/meta/auth';
-                    }
-                } else {
+            if (authRoutes[label]) {
+                if (e.target.checked) window.location.href = authRoutes[label];
+                else {
                     e.preventDefault();
                     e.target.checked = true;
 

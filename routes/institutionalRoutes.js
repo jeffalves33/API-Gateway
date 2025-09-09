@@ -7,8 +7,6 @@ const institutionalController = require('../controllers/institutionalController'
 
 // Página inicial institucional
 router.get('/', checkAuthStatus, institutionalController.getHomePage);
-
-// Páginas institucionais
 router.get('/about', checkAuthStatus, institutionalController.getAboutPage);
 router.get('/pricing', checkAuthStatus, institutionalController.getPricingPage);
 router.get('/features', checkAuthStatus, institutionalController.getFeaturesPage);
