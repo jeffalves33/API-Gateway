@@ -195,7 +195,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     async function fetchAndRenderFollowersChart(startDate, endDate, id_customer) {
-        followersChartContainer.style.display = 'none';
+        // não vamos exibir gráfico; manter container oculto
+        if (followersChartContainer) followersChartContainer.style.display = 'none';
 
         try {
             const res = await fetch('/api/metrics/followers', {
@@ -203,16 +204,33 @@ document.addEventListener('DOMContentLoaded', async function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-            if (!res.ok) {
-                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
-            }
+            if (!res.ok) throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+
             const data = await res.json();
-            renderfollowersChart(data);
-            followersChartContainer.style.display = 'block';
+            // data esperado: { facebook: number, instagram: number, linkedin: number, youtube: number }
+            const vals = {
+                facebook: Number(data?.facebook || 0),
+                instagram: Number(data?.instagram || 0),
+                linkedin: Number(data?.linkedin || 0),
+                youtube: Number(data?.youtube || 0),
+            };
+
+            const ids = {
+                facebook: 'followers-facebook-total',
+                instagram: 'followers-instagram-total',
+                linkedin: 'followers-linkedin-total',
+                youtube: 'followers-youtube-total'
+            };
+
+            Object.entries(ids).forEach(([key, elId]) => {
+                const el = document.getElementById(elId);
+                if (el) el.textContent = new Intl.NumberFormat('pt-BR').format(vals[key]);
+            });
         } catch (error) {
             console.error('Erro ao buscar dados de seguidores:', error);
         }
     }
+
 
     async function fetchAndRenderTrafficChart(startDate, endDate, id_customer) {
         try {
