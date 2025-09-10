@@ -144,7 +144,7 @@ exports.checkMetaStatus = async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT access_token_facebook, access_token_instagram FROM user_keys WHERE id_user = $1',
+      'SELECT access_token_facebook, access_token_instagram, expires_at_facebook FROM user_keys WHERE id_user = $1',
       [id_user]
     );
 
@@ -152,7 +152,15 @@ exports.checkMetaStatus = async (req, res) => {
     const facebookConnected = row.access_token_facebook !== null && row.access_token_facebook !== undefined;
     const instagramConnected = row.access_token_instagram !== null && row.access_token_instagram !== undefined;
 
-    res.json({ facebookConnected, instagramConnected });
+    let metaDaysLeft = null;
+    let needsReauthMeta = false;
+    if (row.expires_at_facebook) {
+      const diff = new Date(row.expires_at_facebook) - Date.now();
+      metaDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      needsReauthMeta = metaDaysLeft <= 7;
+    }
+
+    res.json({ facebookConnected, instagramConnected, metaDaysLeft, needsReauthMeta });
   } catch (error) {
     console.error('Erro ao verificar status do Meta:', error);
     res.status(500).json({ facebookConnected: false, instagramConnected: false });

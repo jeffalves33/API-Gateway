@@ -81,14 +81,22 @@ exports.checkStatus = async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT access_token_googleanalytics, id_user_googleanalytics, refresh_token_googleanalytics FROM user_keys WHERE id_user = $1',
+            'SELECT access_token_googleanalytics, id_user_googleanalytics, refresh_token_googleanalytics, expires_at FROM user_keys WHERE id_user = $1',
             [id_user]
         );
 
         const row = result.rows[0] || {};
         const googleAnalyticsConnected = (row.access_token_googleanalytics !== null && row.access_token_googleanalytics !== undefined) && (row.id_user_googleanalytics !== null && row.id_user_googleanalytics !== undefined) && (row.refresh_token_googleanalytics !== null && row.refresh_token_googleanalytics !== undefined);
 
-        res.json({ googleAnalyticsConnected });
+        let gaDaysLeft = null;
+        let needsReauthGA = false;
+        if (row.expires_at) {
+            const diff = new Date(row.expires_at) - Date.now();
+            gaDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            needsReauthGA = gaDaysLeft <= 7;
+        }
+
+        res.json({ googleAnalyticsConnected, gaDaysLeft, needsReauthGA });
     } catch (error) {
         console.error('Erro ao verificar status do Google Analyticss:', error);
         res.status(500).json({ googleAnalyticsConnected: false });

@@ -107,13 +107,56 @@ document.addEventListener('DOMContentLoaded', async function () {
         };
     }
 
+    // helper: acha o bloco visual pela legenda (facebook/google/instagram/youtube)
+    function findPlatformRow(label) {
+        return Array.from(document.querySelectorAll('.d-flex')).find(div => {
+            const title = div.querySelector('h6')?.textContent?.trim().toLowerCase();
+            return title === label;
+        });
+    }
+
+    // helper: rota de auth por label (mesmo mapeamento do listener)
+    function getAuthRoute(label) {
+        const map = {
+            facebook: '/api/meta/auth',
+            instagram: '/api/meta/auth',
+            google: '/api/googleAnalytics/auth',
+            youtube: '/api/youtube/auth'
+        };
+        return map[label];
+    }
+
+    // cria e injeta o botão "Atualizar" com tooltip de dias restantes
+    function injectUpdateButton(label, daysLeft) {
+        const row = findPlatformRow(label);
+        if (!row) return;
+
+        // evita duplicar
+        if (row.querySelector('.hk-refresh-btn')) return;
+
+        const rightCol = row.querySelector('.col-3.text-end');
+        rightCol.classList.add('d-flex', 'align-items-center', 'justify-content-end', 'gap-2');
+        const switchEl = rightCol.querySelector('.form-check, .form-switch');
+        if (switchEl) switchEl.classList.add('mb-0');
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-warning btn-sm hk-refresh-btn';
+        btn.title = daysLeft != null ? `Faltam ${daysLeft} dias` : 'Atualizar conexão';
+        btn.innerText = 'Atualizar';
+        btn.addEventListener('click', () => {
+            window.location.href = getAuthRoute(label);
+        });
+
+        rightCol.appendChild(btn);
+        rightCol.insertBefore(btn, switchEl || rightCol.firstChild);
+    }
+
     (async function () {
         try {
             const resMeta = await fetch('/api/meta/status');
-            const { facebookConnected, instagramConnected } = await resMeta.json();
+            const { facebookConnected, instagramConnected, metaDaysLeft, needsReauthMeta } = await resMeta.json();
 
             const resGoogleAnalytics = await fetch('/api/googleAnalytics/status');
-            const { googleAnalyticsConnected } = await resGoogleAnalytics.json();
+            const { googleAnalyticsConnected, gaDaysLeft, needsReauthGA } = await resGoogleAnalytics.json();
 
             const resYoutube = await fetch('/api/youtube/status');
             const { youtubeConnected } = await resYoutube.json();
@@ -124,22 +167,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const title = div.querySelector('h6')?.textContent?.trim().toLowerCase();
                 const checkbox = div.querySelector('input[type="checkbox"]');
 
-                if (title === 'facebook') {
-                    checkbox.checked = facebookConnected;
-                }
-
-                if (title === 'google') {
-                    checkbox.checked = googleAnalyticsConnected;
-                }
-
-                if (title === 'instagram') {
-                    checkbox.checked = instagramConnected;
-                }
-
-                if (title === 'youtube') {
-                    checkbox.checked = youtubeConnected;
-                }
+                if (title === 'facebook') checkbox.checked = facebookConnected;
+                if (title === 'google') checkbox.checked = googleAnalyticsConnected;
+                if (title === 'instagram') checkbox.checked = instagramConnected;
+                if (title === 'youtube') checkbox.checked = youtubeConnected;
             });
+
+            if (facebookConnected && needsReauthMeta) injectUpdateButton('facebook', metaDaysLeft);
+            if (instagramConnected && needsReauthMeta) injectUpdateButton('instagram', metaDaysLeft);
+            if (googleAnalyticsConnected && needsReauthGA) injectUpdateButton('google', gaDaysLeft);
 
         } catch (error) {
             console.error('Erro ao verificar status do Facebook e Instagram:', error);
