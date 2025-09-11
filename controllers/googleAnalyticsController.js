@@ -1,7 +1,6 @@
 // Arquivo: controllers/googleAnalyticsController.js
 const { google } = require('googleapis')
 const axios = require('axios');
-const querystring = require('querystring');
 const { pool } = require('../config/db');
 const { getValidAccessToken } = require('../helpers/googleAnalyticsHelpers');
 require('dotenv').config();

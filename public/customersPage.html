@@ -389,6 +389,28 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <!-- Youtube -->
+                                            <div class="col-md-6 pt-3">
+                                                <div class="card">
+                                                    <div class="card-header d-flex align-items-center">
+                                                        <i class="bx bxl-youtube text-danger me-2"></i>
+                                                        <small class="fw-medium">Youtube</small>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="youtube-pages-list">
+                                                            <div class="loading-indicator text-center">
+                                                                <div class="spinner-border spinner-border-sm"
+                                                                    role="status">
+                                                                    <span class="visually-hidden">Carregando...</span>
+                                                                </div>
+                                                                <small class="d-block mt-2 text-muted">Carregando
+                                                                    canais...</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="row justify-content-end">
@@ -523,6 +545,7 @@
             const facebookPagesList = document.getElementById('facebook-pages-list');
             const instagramPagesList = document.getElementById('instagram-pages-list');
             const googleAnalyticsPagesList = document.getElementById('googleAnalytics-pages-list');
+            const youtubeChannelsList = document.getElementById('youtube-pages-list');
 
             function clearLoadingIndicator(container) {
                 const loadingIndicator = container.querySelector('.loading-indicator');
@@ -541,6 +564,7 @@
                 const registeredFacebookIds = customers.map(c => c.id_facebook_page).filter(id => id !== null);
                 const registeredInstagramIds = customers.map(c => c.id_instagram_page).filter(id => id !== null);
                 const registeredGooglePropertyIds = customers.map(c => c.id_googleanalytics_property).filter(id => id !== null);
+                const registeredYoutubePropertyIds = customers.map(c => c.id_youtube_property).filter(id => id !== null);
 
                 const responseMeta = await fetch('/api/meta/pages');
                 if (!responseMeta.ok) {
@@ -604,16 +628,44 @@
                         const div = document.createElement('div');
                         div.classList.add('form-check');
                         div.innerHTML = `
-                        <input class="form-check-input" name="ga-pages" type="radio"
-                        id="ga-property-${property.propertyIdNumber || property.id_property}" 
-                        value="${property.id_property}" />
-                        <label class="form-check-label" for="ga-property-${property.propertyIdNumber || property.id_property}">
-                        ${property.displayName}
-                        </label>
-                    `;
+                            <input class="form-check-input" name="ga-pages" type="radio"
+                            id="ga-property-${property.propertyIdNumber || property.id_property}" 
+                            value="${property.id_property}" />
+                            <label class="form-check-label" for="ga-property-${property.propertyIdNumber || property.id_property}">
+                            ${property.displayName}
+                            </label>
+                        `;
                         googleAnalyticsPagesList.appendChild(div);
                     });
                 }
+
+                const responseYouTube = await fetch('/api/youtube/channels');
+                if (!responseYouTube.ok) {
+                    clearLoadingIndicator(youtubeChannelsList);
+                    youtubeChannelsList.innerHTML = '<div class="alert alert-danger">Erro ao carregar canais do YouTube</div>';
+                } else {
+                    const pagesJsonYouTube = await responseYouTube.json();
+                    const { youtube } = pagesJsonYouTube;
+
+                    clearLoadingIndicator(youtubeChannelsList);
+                    youtube.forEach(ch => {
+                        // se quiser evitar repetir canais já registrados:
+                        // if (registeredYouTubeChannelIds.includes(ch.id_channel)) return;
+
+                        const div = document.createElement('div');
+                        div.classList.add('form-check');
+                        div.innerHTML = `
+                            <input class="form-check-input" name="yt-channels" type="radio"
+                                    id="yt-channel-${ch.id_channel}" value="${ch.id_channel}" />
+                            <label class="form-check-label" for="yt-channel-${ch.id_channel}">
+                                ${ch.title} ${ch.customUrl ? `(${ch.customUrl})` : ''} 
+                                ${ch.subscriberCount ? ` — ${ch.subscriberCount} inscritos` : ''}
+                            </label>
+                        `;
+                        youtubeChannelsList.appendChild(div);
+                    });
+                }
+
             } catch (error) {
                 console.error("Erro no fluxo de buscas API's:", error);
                 clearLoadingIndicator(facebookPagesList);

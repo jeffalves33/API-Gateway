@@ -40,6 +40,7 @@ async function getValidAccessToken(userId) {
         const newExpiresAt = new Date(Date.now() + credentials.expiry_date - Date.now());
 
         // Atualizar no banco
+        console.log("atualizou expires_at do Google Analytics")
         await pool.query(
             `UPDATE user_keys
              SET access_token_googleanalytics = $1,

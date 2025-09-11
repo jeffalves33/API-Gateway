@@ -1,6 +1,7 @@
 // Arquivo: controllers/youtubeController.js
 const { google } = require('googleapis')
 const { pool } = require('../config/db');
+const { getValidYouTubeClient } = require('../helpers/youtubeHelpers');
 require('dotenv').config();
 
 const GOOGLE_CLIENT_ID = '950435540090-5afqh5jkq3b804ru5ej86s5q8g8gap20.apps.googleusercontent.com'
@@ -17,7 +18,8 @@ exports.startOAuth = (req, res) => {
     const scopes = [
         'https://www.googleapis.com/auth/youtube.readonly',
         'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/yt-analytics.readonly' //verificar se foi adicionado essa extensão no google cloude
     ];
 
     const authUrl = oauth2Client.generateAuthUrl({
@@ -86,5 +88,38 @@ exports.checkStatus = async (req, res) => {
     } catch (error) {
         console.error('Erro ao verificar status do Youtube:', error);
         res.status(500).json({ youtubeConnected: false });
+    }
+};
+
+
+exports.getChannels = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log("antes")
+        const auth = await getValidYouTubeClient(userId);
+        console.log("auth: ", auth)
+        const yt = google.youtube({ version: 'v3', auth });
+        const { data } = await yt.channels.list({
+            part: ['snippet', 'statistics'],
+            mine: true,
+            maxResults: 50
+        });
+
+        const channels = (data.items || []).map(ch => ({
+            id_channel: ch.id,
+            title: ch.snippet?.title,
+            customUrl: ch.snippet?.customUrl || null,
+            thumbnail: ch.snippet?.thumbnails?.default?.url || null,
+            subscriberCount: ch.statistics?.subscriberCount ? Number(ch.statistics.subscriberCount) : null,
+            viewCount: ch.statistics?.viewCount ? Number(ch.statistics.viewCount) : null,
+            videoCount: ch.statistics?.videoCount ? Number(ch.statistics.videoCount) : null
+        }));
+
+        return res.json({ youtube: channels });
+    } catch (error) {
+        console.error('Erro ao listar canais do YouTube:', error.response?.data || error.message);
+        const status = error.status || error.response?.status || 500;
+        const message = error.response?.data?.error?.message || error.message || 'Erro ao listar canais do YouTube';
+        return res.status(status).json({ message });
     }
 };
