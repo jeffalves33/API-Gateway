@@ -1,5 +1,5 @@
 // Arquivo: controllers/customerController.js
-const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, removePlatformFromCustomer, updateCustomer } = require('../repositories/customerRepository');
+const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 const { getGoogleAnalyticsKeys } = require('../helpers/keyHelper');
@@ -83,19 +83,24 @@ const removePlatformCustomer = async (req, res) => {
     const platform = req.params.platform.toLowerCase();
 
     const customers = await getCustomersByUserId(id_user);
+    const hasCustomers = Array.isArray(customers) && customers.length > 0;
 
-    if (!customers || customers.length === 0) {
-      return res.status(404).json({ success: false, message: 'Nenhum cliente encontrado' });
+    if (hasCustomers) {
+      for (const customer of customers) {
+        await removePlatformFromCustomer(platform, customer, id_user);
+      }
     }
 
-    for (const customer of customers) {
-      await removePlatformFromCustomer(platform, customer, id_user);
-    }
+    await removePlatformFromUser(platform, id_user);
 
-    res.status(200).json({ success: true, message: 'Plataforma removida dos clientes com sucesso' });
+    const msg = hasCustomers
+      ? 'Plataforma removida dos clientes e desconectada do usuário com sucesso'
+      : 'Plataforma desconectada do usuário com sucesso';
+
+    return res.status(200).json({ success: true, message: msg });
   } catch (error) {
-    console.error('Erro ao remover plataforma do cliente:', error);
-    res.status(500).json({ success: false, message: error.message || 'Erro ao remover cliente' });
+    console.error('Erro ao remover plataforma do cliente/usuário:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Erro ao remover plataforma' });
   }
 };
 

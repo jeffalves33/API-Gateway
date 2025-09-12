@@ -1,6 +1,6 @@
 // Arquivo: repositories/customerRepository.js
 const { pool } = require('../config/db');
-const { clearFacebookDataCustomer, clearInstagramDataCustomer, clearGoogleAnalyticsDataCustomer } = require('../helpers/customerHelpers');
+const { clearFacebookDataCustomer, clearFacebookDataUser, clearInstagramDataCustomer, clearInstagramDataUser, clearGoogleAnalyticsDataCustomer, clearGoogleAnalyticsDataUser } = require('../helpers/customerHelpers');
 
 const checkCustomerBelongsToUser = async (id_customer, id_user) => {
   const result = await pool.query(
@@ -66,6 +66,19 @@ const removePlatformFromCustomer = async (platform, customer, id_user) => {
   }
 };
 
+const removePlatformFromUser = async (platform, id_user) => {
+  try {
+    if (platform === 'facebook') return clearFacebookDataUser(id_user);
+    if (platform === 'instagram') return clearInstagramDataUser(id_user);
+    if (platform === 'google') return clearGoogleAnalyticsDataUser(id_user);
+
+    return;
+  } catch (error) {
+    console.error(`Erro ao limpar dados de usuário para plataforma ${platform}:`, error);
+    throw error;
+  }
+};
+
 const updateCustomer = async (id_customer, name, email) => {
   const result = await pool.query(
     'UPDATE customer SET name = $1, email = $2 WHERE id_customer = $3 RETURNING *',
@@ -79,4 +92,4 @@ const updateCustomer = async (id_customer, name, email) => {
   return result.rows[0];
 };
 
-module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, removePlatformFromCustomer, updateCustomer };
+module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer };
