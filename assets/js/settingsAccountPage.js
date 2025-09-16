@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            </div>`;
+            </div>
+        `;
 
         alertContainer.innerHTML = alertHtml;
 
@@ -101,22 +102,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const data = await response.json();
 
-            if (!data || !data.user) {
-                throw new Error('Dados do usuário não encontrados');
-            }
+            if (!data || !data.user) throw new Error('Dados do usuário não encontrados');
 
             // Atualizar elementos da interface com verificação de existência
-            if (userNameElement) {
-                userNameElement.textContent = data.user.name || 'Usuário';
-            }
-
-            if (userCompletNameForm) {
-                userCompletNameForm.value = data.user.name || '';
-            }
-
-            if (userEmailForm) {
-                userEmailForm.value = data.user.email || '';
-            }
+            if (userNameElement) userNameElement.textContent = data.user.name || 'Usuário';
+            if (userCompletNameForm) userCompletNameForm.value = data.user.name || '';
+            if (userEmailForm) userEmailForm.value = data.user.email || '';
 
             // Atualizar avatares com tratamento de erro de imagem
             const avatarUrl = data.user.foto_perfil || defaultAvatar;
@@ -185,14 +176,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     // Validar tipo de arquivo
                     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                    if (!allowedTypes.includes(file.type)) {
-                        throw new Error('Tipo de arquivo não permitido. Use apenas JPEG, PNG ou GIF.');
-                    }
+                    if (!allowedTypes.includes(file.type)) throw new Error('Tipo de arquivo não permitido. Use apenas JPEG, PNG ou GIF.');
 
                     // Validar tamanho (5MB máximo)
-                    if (file.size > 5 * 1024 * 1024) {
-                        throw new Error('Arquivo muito grande. Tamanho máximo: 5MB.');
-                    }
+                    if (file.size > 5 * 1024 * 1024) throw new Error('Arquivo muito grande. Tamanho máximo: 5MB.');
 
                     const formData = new FormData();
                     formData.append('avatar', file);
@@ -283,16 +270,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (!checkbox.checked) {
                 showAlert('Por favor, confirme a desativação da sua conta marcando a caixa de seleção.', 'warning');
                 checkbox.focus();
-                return;
-            }
-
-            // Confirmar a ação
-            if (!confirm('Tem certeza absoluta de que deseja deletar sua conta? Esta ação não pode ser desfeita.')) {
-                return;
-            }
-
-            // Segunda confirmação para ações críticas
-            if (!confirm('ÚLTIMA CONFIRMAÇÃO: Todos os seus dados serão perdidos permanentemente. Continuar?')) {
                 return;
             }
 

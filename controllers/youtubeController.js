@@ -68,7 +68,7 @@ exports.handleOAuthCallback = async (req, res) => {
         return res.redirect('/platformsPage.html');
     } catch (error) {
         console.error('Erro ao obter tokens:', error.response?.data || error);
-        return res.status(500).send('Erro ao autenticar com o Google');
+        return res.status(500).send('Erro ao autenticar com o Youtube');
     }
 };
 
@@ -95,7 +95,6 @@ exports.checkStatus = async (req, res) => {
 exports.getChannels = async (req, res) => {
     try {
         const userId = req.user.id;
-        console.log("antes")
         const auth = await getValidYouTubeClient(userId);
         console.log("auth: ", auth)
         const yt = google.youtube({ version: 'v3', auth });
