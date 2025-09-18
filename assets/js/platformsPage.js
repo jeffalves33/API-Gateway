@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     (async function () {
         try {
             const resMeta = await fetch('/api/meta/status');
-            const { facebookConnected, instagramConnected, metaDaysLeft, needsReauthMeta } = await resMeta.json();
+            const { facebookConnected, instagramConnected, facebookDaysLeft, needsReauthFacebook, instagramDaysLeft, needsReauthInstagram } = await resMeta.json();
 
             const resGoogleAnalytics = await fetch('/api/googleAnalytics/status');
             const { googleAnalyticsConnected, gaDaysLeft, needsReauthGA } = await resGoogleAnalytics.json();
@@ -173,8 +173,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (title === 'youtube') checkbox.checked = youtubeConnected;
             });
 
-            if (facebookConnected && needsReauthMeta) injectUpdateButton('facebook', metaDaysLeft);
-            if (instagramConnected && needsReauthMeta) injectUpdateButton('instagram', metaDaysLeft);
+            if (facebookConnected && needsReauthFacebook) injectUpdateButton('facebook', facebookDaysLeft);
+            if (instagramConnected && needsReauthInstagram) injectUpdateButton('instagram', instagramDaysLeft);
             if (googleAnalyticsConnected && needsReauthGA) injectUpdateButton('google', gaDaysLeft);
 
         } catch (error) {

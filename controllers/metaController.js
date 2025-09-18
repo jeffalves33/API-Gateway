@@ -55,6 +55,8 @@ exports.handleOAuthCallback = async (req, res) => {
     });
 
     const longLivedToken = longTokenRes.data.access_token;
+    const llExpiresIn = longTokenRes.data.expires_in;
+    const metaExpiresAt = llExpiresIn ? new Date(Date.now() + llExpiresIn * 1000) : null;
 
     const meRes = await axios.get('https://graph.facebook.com/v22.0/me', {
       params: { access_token: longLivedToken }
@@ -63,12 +65,20 @@ exports.handleOAuthCallback = async (req, res) => {
     const metakUserId = meRes.data.id;
 
     await pool.query(
-      `INSERT INTO user_keys (id_user, id_user_facebook, access_token_facebook, id_user_instagram, access_token_instagram)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (id_user) DO UPDATE SET id_user_facebook = $2, access_token_facebook = $3, id_user_instagram = $2, access_token_instagram = $3`,
-      [id_user, metakUserId, longLivedToken, metakUserId, longLivedToken]
+      `INSERT INTO user_keys (
+         id_user, id_user_facebook, access_token_facebook,
+         id_user_instagram, access_token_instagram,
+         expires_at_facebook, expires_at_instagram
+       ) VALUES ($1,$2,$3,$4,$5,$6,$6)
+       ON CONFLICT (id_user) DO UPDATE SET
+         id_user_facebook       = EXCLUDED.id_user_facebook,
+         access_token_facebook  = EXCLUDED.access_token_facebook,
+         id_user_instagram      = EXCLUDED.id_user_instagram,
+         access_token_instagram = EXCLUDED.access_token_instagram,
+         expires_at_facebook    = EXCLUDED.expires_at_facebook,
+         expires_at_instagram   = EXCLUDED.expires_at_instagram`,
+      [id_user, metakUserId, longLivedToken, metakUserId, longLivedToken, metaExpiresAt]
     );
-
     return res.redirect('/platformsPage.html');
   } catch (error) {
     if (error.response) {
@@ -144,7 +154,7 @@ exports.checkMetaStatus = async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT access_token_facebook, access_token_instagram, expires_at_facebook FROM user_keys WHERE id_user = $1',
+      `SELECT access_token_facebook, access_token_instagram, expires_at_facebook, expires_at_instagram FROM user_keys WHERE id_user = $1`,
       [id_user]
     );
 
@@ -152,15 +162,26 @@ exports.checkMetaStatus = async (req, res) => {
     const facebookConnected = row.access_token_facebook !== null && row.access_token_facebook !== undefined;
     const instagramConnected = row.access_token_instagram !== null && row.access_token_instagram !== undefined;
 
-    let metaDaysLeft = null;
-    let needsReauthMeta = false;
+    let facebookDaysLeft = null, needsReauthFacebook = false;
     if (row.expires_at_facebook) {
       const diff = new Date(row.expires_at_facebook) - Date.now();
-      metaDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
-      needsReauthMeta = metaDaysLeft <= 7;
+      facebookDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      needsReauthFacebook = facebookDaysLeft <= 7;
     }
 
-    res.json({ facebookConnected, instagramConnected, metaDaysLeft, needsReauthMeta });
+    let instagramDaysLeft = null, needsReauthInstagram = false;
+    if (row.expires_at_instagram) {
+      const diffIG = new Date(row.expires_at_instagram) - Date.now();
+      instagramDaysLeft = Math.ceil(diffIG / (1000 * 60 * 60 * 24));
+      needsReauthInstagram = instagramDaysLeft <= 7;
+    }
+
+    res.json({
+      facebookConnected, instagramConnected,
+      facebookDaysLeft, needsReauthFacebook,
+      instagramDaysLeft, needsReauthInstagram
+    });
+
   } catch (error) {
     console.error('Erro ao verificar status do Meta:', error);
     res.status(500).json({ facebookConnected: false, instagramConnected: false });

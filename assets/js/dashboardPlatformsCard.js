@@ -9,18 +9,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             fetch('/api/youtube/status')
         ]);
 
-        const { facebookConnected, instagramConnected, metaDaysLeft, needsReauthMeta } = await metaR.json();
+        const { facebookConnected, instagramConnected, facebookDaysLeft, needsReauthFacebook, instagramDaysLeft, needsReauthInstagram } = await metaR.json();
         const { googleAnalyticsConnected, gaDaysLeft, needsReauthGA } = await gaR.json();
         const { youtubeConnected } = await ytR.json();
 
-        const total = [facebookConnected, instagramConnected, googleAnalyticsConnected, youtubeConnected]
-            .filter(Boolean).length;
+        const total = [facebookConnected, instagramConnected, googleAnalyticsConnected, youtubeConnected].filter(Boolean).length;
 
-        if (total === 0) return; // não renderiza se o usuário não tem nada conectado
+        if (total === 0) return;
 
         const warnings = [];
-        if (facebookConnected && needsReauthMeta) warnings.push(`Facebook (≤${metaDaysLeft}d)`);
-        if (instagramConnected && needsReauthMeta) warnings.push(`Instagram (≤${metaDaysLeft}d)`);
+        if (facebookConnected && needsReauthFacebook) warnings.push(`Facebook (≤${facebookDaysLeft}d)`);
+        if (instagramConnected && needsReauthInstagram) warnings.push(`Instagram (≤${instagramDaysLeft}d)`);
         if (googleAnalyticsConnected && needsReauthGA) warnings.push(`Google (≤${gaDaysLeft}d)`);
 
         if (warnings.length == 0) return;
