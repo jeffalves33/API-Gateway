@@ -110,15 +110,17 @@ exports.getProperties = async (req, res) => {
         );
 
         const properties = [];
-        gaRes.data.accountSummaries.forEach(account => {
-            account.propertySummaries.forEach(property => {
+        const summaries = Array.isArray(gaRes.data.accountSummaries) ? gaRes.data.accountSummaries : [];
+        for (const account of summaries) {
+            const props = Array.isArray(account.propertySummaries) ? account.propertySummaries : [];
+            for (const property of props) {
                 properties.push({
                     id_property: property.property,
                     propertyIdNumber: property.property.split('/')[1],
                     displayName: property.displayName
                 });
-            });
-        });
+            }
+        }
 
         res.json({ google: properties });
     } catch (error) {
