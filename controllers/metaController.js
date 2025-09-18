@@ -42,7 +42,6 @@ exports.handleOAuthCallback = async (req, res) => {
         code
       }
     });
-
     const shortLivedToken = tokenRes.data.access_token;
 
     const longTokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
@@ -53,15 +52,32 @@ exports.handleOAuthCallback = async (req, res) => {
         fb_exchange_token: shortLivedToken
       }
     });
-
     const longLivedToken = longTokenRes.data.access_token;
-    const llExpiresIn = longTokenRes.data.expires_in;
-    const metaExpiresAt = llExpiresIn ? new Date(Date.now() + llExpiresIn * 1000) : null;
+    const llExpiresIn = Number(longTokenRes.data.expires_in);
+
+    let metaExpiresAt = null;
+    try {
+      const dbg = await axios.get('https://graph.facebook.com/v22.0/debug_token', {
+        params: {
+          input_token: longLivedToken,
+          access_token: `${META_APP_ID}|${META_APP_SECRET}`
+        }
+      });
+      const d = dbg.data?.data || {};
+      if (d.expires_at) {
+        metaExpiresAt = new Date(d.expires_at * 1000);
+      } else if (!Number.isNaN(llExpiresIn) && llExpiresIn > 0) {
+        metaExpiresAt = new Date(Date.now() + llExpiresIn * 1000);
+      }
+    } catch (_) {
+      if (!Number.isNaN(llExpiresIn) && llExpiresIn > 0) {
+        metaExpiresAt = new Date(Date.now() + llExpiresIn * 1000);
+      }
+    }
 
     const meRes = await axios.get('https://graph.facebook.com/v22.0/me', {
       params: { access_token: longLivedToken }
     });
-
     const metakUserId = meRes.data.id;
 
     await pool.query(
@@ -75,10 +91,11 @@ exports.handleOAuthCallback = async (req, res) => {
          access_token_facebook  = EXCLUDED.access_token_facebook,
          id_user_instagram      = EXCLUDED.id_user_instagram,
          access_token_instagram = EXCLUDED.access_token_instagram,
-         expires_at_facebook    = EXCLUDED.expires_at_facebook,
-         expires_at_instagram   = EXCLUDED.expires_at_instagram`,
+         expires_at_facebook    = COALESCE(EXCLUDED.expires_at_facebook, user_keys.expires_at_facebook),
+         expires_at_instagram   = COALESCE(EXCLUDED.expires_at_instagram, user_keys.expires_at_instagram)`,
       [id_user, metakUserId, longLivedToken, metakUserId, longLivedToken, metaExpiresAt]
     );
+
     return res.redirect('/platformsPage.html');
   } catch (error) {
     if (error.response) {
