@@ -12,7 +12,7 @@ const LINKEDIN_REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/linkedin/au
 // 1) Início do OAuth
 exports.startOAuth = (req, res) => {
     const scopes = [
-        'r_organization_social', 'rw_organization_admin'
+        'r_organization_social', 'rw_organization_admin', 'r_basicprofile'
     ];
 
     const authUrl = `https://www.linkedin.com/oauth/v2/authorization?` + querystring.stringify({
