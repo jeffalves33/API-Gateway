@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const map = {
             facebook: '/api/meta/auth',
             instagram: '/api/meta/auth',
+            linkedin: '/api/linkedin/auth',
             google: '/api/googleAnalytics/auth',
             youtube: '/api/youtube/auth'
         };
@@ -158,6 +159,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             const resGoogleAnalytics = await fetch('/api/googleAnalytics/status');
             const { googleAnalyticsConnected, gaDaysLeft, needsReauthGA } = await resGoogleAnalytics.json();
 
+            const resLinkedIn = await fetch('/api/linkedin/status');
+            const { linkedinConnected, linkedinDaysLeft, needsReauthLinkedIn } = await resLinkedIn.json();
+
             const resYoutube = await fetch('/api/youtube/status');
             const { youtubeConnected } = await resYoutube.json();
 
@@ -170,12 +174,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (title === 'facebook') checkbox.checked = facebookConnected;
                 if (title === 'google') checkbox.checked = googleAnalyticsConnected;
                 if (title === 'instagram') checkbox.checked = instagramConnected;
+                if (title === 'linkedin') checkbox.checked = linkedinConnected;
                 if (title === 'youtube') checkbox.checked = youtubeConnected;
             });
 
             if (facebookConnected && needsReauthFacebook) injectUpdateButton('facebook', facebookDaysLeft);
-            if (instagramConnected && needsReauthInstagram) injectUpdateButton('instagram', instagramDaysLeft);
             if (googleAnalyticsConnected && needsReauthGA) injectUpdateButton('google', gaDaysLeft);
+            if (instagramConnected && needsReauthInstagram) injectUpdateButton('instagram', instagramDaysLeft);
+            if (linkedinConnected && needsReauthLinkedIn) injectUpdateButton('linkedin', linkedinDaysLeft);
 
         } catch (error) {
             console.error('Erro ao verificar status do Facebook e Instagram:', error);
@@ -199,6 +205,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const authRoutes = {
                 facebook: '/api/meta/auth',
                 instagram: '/api/meta/auth',
+                linkedin: '/api/linkedin/auth',
                 google: '/api/googleAnalytics/auth',
                 youtube: '/api/youtube/auth',
             };

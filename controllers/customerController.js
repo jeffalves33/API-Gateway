@@ -1,8 +1,7 @@
 // Arquivo: controllers/customerController.js
 const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer } = require('../repositories/customerRepository');
-const { refreshKeysForCustomer } = require('../helpers/keyHelper');
+const { refreshKeysForCustomer, getGoogleAnalyticsKeys } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
-const { getGoogleAnalyticsKeys } = require('../helpers/keyHelper');
 
 const addCustomer = async (req, res) => {
   try {
