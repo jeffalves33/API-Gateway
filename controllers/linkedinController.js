@@ -29,15 +29,23 @@ exports.startOAuth = (req, res) => {
 // 2) Callback do OAuth
 exports.handleOAuthCallback = async (req, res) => {
     const { code, state, error, error_description } = req.query;
+    console.log('[LinkedIn][OAuth Callback] Início da função', {
+        code: code ? 'recebido' : 'NULO',
+        state,
+        error,
+        error_description
+    });
+
     if (error) {
-        console.error('LinkedIn OAuth error:', error, error_description);
-        // Redirecione com uma flag para a sua UI tratar (toast/modal)
+        console.error('[LinkedIn][OAuth Callback] Erro recebido do LinkedIn:', error, error_description);
         return res.redirect(`/platformsPage.html?li_error=${encodeURIComponent(error_description || error)}`);
     }
 
     try {
-        // troca o code pelo access_token + refresh_token
-        const tokenRes = await axios.post('https://www.linkedin.com/oauth/v2/accessToken',
+        console.log('[LinkedIn][OAuth Callback] Solicitando troca de code por tokens...');
+
+        const tokenRes = await axios.post(
+            'https://www.linkedin.com/oauth/v2/accessToken',
             querystring.stringify({
                 grant_type: 'authorization_code',
                 code,
@@ -48,6 +56,8 @@ exports.handleOAuthCallback = async (req, res) => {
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         );
 
+        console.log('[LinkedIn][OAuth Callback] Resposta da troca de tokens:', tokenRes.status, tokenRes.data);
+
         const access_token = tokenRes.data.access_token;
         const expires_in = Number(tokenRes.data.expires_in || 0);
         const refresh_token = tokenRes.data.refresh_token || null;
@@ -56,14 +66,22 @@ exports.handleOAuthCallback = async (req, res) => {
         const expires_at = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
         const refresh_token_expires_at = rt_expires_in ? new Date(Date.now() + rt_expires_in * 1000) : null;
 
-        // pega o id do membro (para reference)
-        const meRes = await axios.get('https://api.linkedin.com/rest/me', {
-            headers: {
-                ...liHeaders(access_token)
-            }
+        console.log('[LinkedIn][OAuth Callback] Tokens processados:', {
+            has_access_token: !!access_token,
+            has_refresh_token: !!refresh_token,
+            expires_at,
+            refresh_token_expires_at
         });
+
+        console.log('[LinkedIn][OAuth Callback] Buscando dados do usuário (/me)...');
+        const meRes = await axios.get('https://api.linkedin.com/rest/me', {
+            headers: { ...liHeaders(access_token) }
+        });
+        console.log('[LinkedIn][OAuth Callback] Resposta /me:', meRes.status, meRes.data);
+
         const id_user_linkedin = meRes.data.id;
 
+        console.log('[LinkedIn][OAuth Callback] Salvando dados no banco...');
         await pool.query(
             `INSERT INTO user_keys(
                 id_user,
@@ -81,12 +99,15 @@ exports.handleOAuthCallback = async (req, res) => {
             [id_user, id_user_linkedin, access_token, refresh_token, expires_at, refresh_token_expires_at]
         );
 
+        console.log('[LinkedIn][OAuth Callback] Dados salvos no banco com sucesso.');
+
         return res.redirect('/platformsPage.html');
     } catch (err) {
-        console.error('Erro OAuth LinkedIn:', err.response?.data || err.message);
+        console.error('[LinkedIn][OAuth Callback] Erro capturado:', err.response?.data || err.message);
         return res.status(500).send('Erro ao autenticar com o LinkedIn');
     }
 };
+
 
 // 3) Status para a platformsPage
 exports.checkStatus = async (req, res) => {
