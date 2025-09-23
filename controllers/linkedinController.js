@@ -41,6 +41,8 @@ exports.handleOAuthCallback = async (req, res) => {
         return res.redirect(`/platformsPage.html?li_error=${encodeURIComponent(error_description || error)}`);
     }
 
+    const id_user = state || req.user?.id;
+
     try {
         console.log('[LinkedIn][OAuth Callback] Solicitando troca de code por tokens...');
 
