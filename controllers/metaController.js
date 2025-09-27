@@ -112,12 +112,8 @@ exports.handleOAuthCallback = async (req, res) => {
 exports.getMetaPages = async (req, res) => {
   try {
     const { id } = req.user;
-    //access_token_facebook = access_token_instagram
     const result = await pool.query('SELECT access_token_facebook FROM user_keys WHERE id_user = $1', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Token do usuário não encontrado' });
-    }
-
+    if (result.rows.length === 0) return res.status(404).json({ message: 'Token do usuário não encontrado' });
     const access_token = result.rows[0].access_token_facebook;
 
     // ================= FACEBOOK =================

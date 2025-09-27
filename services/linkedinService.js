@@ -6,13 +6,13 @@ const { getValidLinkedInAccessToken, liHeaders, makeTimeIntervals, toMsUTC } = r
 const BASE = 'https://api.linkedin.com/rest';
 
 // ---------- MÉTRICAS ----------
-exports.getImpressions = async (orgId, token, startDate, endDate) => {
+exports.getImpressions = async (linkedin, startDate, endDate) => {
     const timeIntervals = makeTimeIntervals(startDate, endDate);
     const allDays = getAllDaysBetween(startDate, endDate);
     const perDay = allDays.map(() => 0);
 
-    const url = `https://api.linkedin.com/rest/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=urn%3Ali%3Aorganization%3A${orgId}&timeIntervals=${timeIntervals}`;
-    const { data } = await axios.get(url, { headers: liHeaders(token) });
+    const url = `https://api.linkedin.com/rest/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=urn%3Ali%3Aorganization%3A${linkedin.organization_id}&timeIntervals=${timeIntervals}`;
+    const { data } = await axios.get(url, { headers: liHeaders(linkedin.access_token) });
 
     const elements = Array.isArray(data.elements) ? data.elements : [];
     elements.forEach(el => {
@@ -27,19 +27,19 @@ exports.getImpressions = async (orgId, token, startDate, endDate) => {
     return perDay;
 }
 
-exports.getFollowers = async (orgId, token, startDate, endDate) => {
-    const orgUrn = `urn:li:organization:${orgId}`;
+exports.getFollowers = async (linkedin, startDate, endDate) => {
+    const orgUrn = `urn:li:organization:${linkedin.organization_id}`;
     const url = `${BASE}/networkSizes/${encodeURIComponent(orgUrn)}?edgeType=COMPANY_FOLLOWED_BY_MEMBER`;
-    const { data } = await axios.get(url, { headers: liHeaders(token) });
+    const { data } = await axios.get(url, { headers: liHeaders(linkedin.access_token) });
 
     const total = Number.parseInt(data?.firstDegreeSize ?? 0, 10);
     return Number.isFinite(total) && total >= 0 ? total : 0;
 }
 
-exports.getAllMetricsRows = async (id_customer, orgId, accessToken, startDate, endDate) => {
+exports.getAllMetricsRows = async (id_customer, linkedin, startDate, endDate) => {
     const [impressionsDaily, followersTotal] = await Promise.all([
-        exports.getImpressions(orgId, accessToken, startDate, endDate),
-        exports.getFollowers(orgId, accessToken, startDate, endDate),
+        exports.getImpressions(linkedin, startDate, endDate),
+        exports.getFollowers(linkedin, startDate, endDate),
     ]);
 
     // monta linhas por dia (padrão das outras plataformas)

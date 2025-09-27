@@ -96,7 +96,6 @@ exports.getChannels = async (req, res) => {
     try {
         const userId = req.user.id;
         const auth = await getValidYouTubeClient(userId);
-        console.log("auth: ", auth)
         const yt = google.youtube({ version: 'v3', auth });
         const { data } = await yt.channels.list({
             part: ['snippet', 'statistics'],

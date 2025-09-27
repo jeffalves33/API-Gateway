@@ -594,8 +594,8 @@
                 if (!responseMeta.ok) {
                     clearLoadingIndicator(facebookPagesList);
                     clearLoadingIndicator(instagramPagesList);
-                    facebookPagesList.innerHTML = '<div class="alert alert-warning">Erro ao carregar páginas do Facebook/Instagram</div>';
-                    instagramPagesList.innerHTML = '<div class="alert alert-warning">Erro ao carregar páginas do Facebook/Instagram</div>';
+                    //facebookPagesList.innerHTML = '<div class="alert alert-warning">Erro ao carregar páginas do Facebook/Instagram</div>';
+                    //instagramPagesList.innerHTML = '<div class="alert alert-warning">Erro ao carregar páginas do Facebook/Instagram</div>';
                 } else {
                     const pagesJsonMeta = await responseMeta.json();
                     const { facebook, instagram } = pagesJsonMeta;

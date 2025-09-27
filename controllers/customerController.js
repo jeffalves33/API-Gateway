@@ -1,6 +1,6 @@
 // Arquivo: controllers/customerController.js
 const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer } = require('../repositories/customerRepository');
-const { refreshKeysForCustomer, getGoogleAnalyticsKeys } = require('../helpers/keyHelper');
+const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 
 const addCustomer = async (req, res) => {
@@ -19,8 +19,10 @@ const addCustomer = async (req, res) => {
     );
 
     const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+    const linkedin = await getLinkedinKeys(id_user, id_customer);
 
-    await metricsOrchestrator.processCustomerMetrics(id_user, id_customer, platforms, google);
+    // refatorar para todas plaraformas serem enviadas da mesma forma que o google e linkedin
+    await metricsOrchestrator.processCustomerMetrics(id_user, id_customer, platforms, google, linkedin);
 
     return res.status(200).json({ success: true, message: 'Cliente e métricas adicionados com sucesso.' });
   } catch (error) {

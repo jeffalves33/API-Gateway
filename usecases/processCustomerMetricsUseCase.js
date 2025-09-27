@@ -6,7 +6,7 @@ const linkedinService = require('../services/linkedinService');
 const metricsRepo = require('../repositories/metricsRepository');
 const { buildDates } = require('../utils/dateUtils');
 
-async function processCustomerMetrics(id_user, id_customer, platforms, google) {
+async function processCustomerMetrics(id_user, id_customer, platforms, google, linkedin) {
     const { since, endDate } = buildDates(5);
 
     const jobs = platforms.map(async platform => {
@@ -44,7 +44,7 @@ async function processCustomerMetrics(id_user, id_customer, platforms, google) {
             case 'linkedin':
                 rows = await linkedinService.getAllMetricsRows(
                     id_customer,
-                    platform.id_linkedin_organization,
+                    linkedin,
                     since,
                     endDate
                 );
