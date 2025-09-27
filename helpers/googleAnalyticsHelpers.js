@@ -1,5 +1,5 @@
 const { google } = require('googleapis');
-const { pool } = require('../config/db'); // ajuste o path conforme seu projeto
+const { pool } = require('../config/db');
 
 const GOOGLE_CLIENT_ID = '950435540090-5afqh5jkq3b804ru5ej86s5q8g8gap20.apps.googleusercontent.com'
 const GOOGLE_CLIENT_SECRET = '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'

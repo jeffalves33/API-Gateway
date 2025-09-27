@@ -195,7 +195,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     async function fetchAndRenderFollowersChart(startDate, endDate, id_customer) {
-        // não vamos exibir gráfico; manter container oculto
         if (followersChartContainer) followersChartContainer.style.display = 'none';
 
         try {
@@ -207,7 +206,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (!res.ok) throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
 
             const data = await res.json();
-            // data esperado: { facebook: number, instagram: number, linkedin: number, youtube: number }
             const vals = {
                 facebook: Number(data?.facebook || 0),
                 instagram: Number(data?.instagram || 0),

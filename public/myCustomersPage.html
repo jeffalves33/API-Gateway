@@ -446,7 +446,9 @@
                     Object.entries(platformIcons).forEach(([platform, icon]) => {
                         const tokenKeyMeta = `access_token_page_${platform}`;
                         const tokenKeyGoogleAnalytics = `id_${platform}_property`;
-                        if (cliente[tokenKeyMeta] || cliente[tokenKeyGoogleAnalytics]) {
+                        const tokenKeyLinkedin = `id_${platform}_organization`;
+
+                        if (cliente[tokenKeyMeta] || cliente[tokenKeyGoogleAnalytics] || cliente[tokenKeyLinkedin]) {
                             platformsHTML += `
                                 <li data-bs-toggle="tooltip" title="${platform}" class="avatar avatar-xs pull-up">
                                     <img src="../assets/img/icons/brands/${icon}" alt="${platform}" class="rounded-circle" />

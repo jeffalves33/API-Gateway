@@ -1,8 +1,9 @@
 // Arquivo: controllers/metricsController.js
-const { getGoogleAnalyticsKeys, getFacebookCustomerKey, getInstagramCustomerKey } = require('../helpers/keyHelper');
+const { getFacebookCustomerKey, getGoogleAnalyticsKeys, getInstagramCustomerKey, getLinkedinKeys } = require('../helpers/keyHelper');
 const facebookService = require('../services/facebookService');
-const instagramService = require('../services/instagramService');
 const googleAnalyticsService = require('../services/googleAnalyticsService');
+const instagramService = require('../services/instagramService');
+const linkedinService = require('../services/linkedinService');
 
 exports.getReachMetrics = async (req, res) => {
   try {
@@ -61,8 +62,9 @@ exports.getImpressionMetrics = async (req, res) => {
     const { id_customer, startDate, endDate } = req.body;
 
     const facebook = await getFacebookCustomerKey(id_user, id_customer);
-    const instagram = await getInstagramCustomerKey(id_user, id_customer);
     const google = await getGoogleAnalyticsKeys(id_user, id_customer);
+    const instagram = await getInstagramCustomerKey(id_user, id_customer);
+    const linkedin = await getLinkedinKeys(id_user, id_customer);
 
     const promises = [];
 
@@ -87,8 +89,12 @@ exports.getImpressionMetrics = async (req, res) => {
       promises.push(Promise.resolve([]));
     }
 
-    // LinkedIn (sempre vazio por enquanto)
-    promises.push(Promise.resolve([]));
+    // LinkedIn
+    if (linkedin && linkedin.organization_id && linkedin.access_token) {
+      promises.push(linkedinService.getImpressions(linkedin.organization_id, linkedin.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve([]));
+    }
 
     const [facebookData, instagramData, googleData, linkedinData] = await Promise.allSettled(promises);
 
@@ -104,8 +110,9 @@ exports.getImpressionMetrics = async (req, res) => {
     // Gerar labels baseado no maior array de dados disponível
     const maxLength = Math.max(
       results.facebook.length,
+      results.google.length,
       results.instagram.length,
-      results.google.length
+      results.linkedin.length
     );
 
     if (maxLength > 0) {
@@ -130,6 +137,7 @@ exports.getfollowersMetrics = async (req, res) => {
 
     const facebook = await getFacebookCustomerKey(id_user, id_customer);
     const instagram = await getInstagramCustomerKey(id_user, id_customer);
+    const linkedin = await getLinkedinKeys(id_user, id_customer);
 
     const promises = [];
 
@@ -147,8 +155,14 @@ exports.getfollowersMetrics = async (req, res) => {
       promises.push(Promise.resolve(0));
     }
 
-    // LinkedIn e YouTube (sempre 0 por enquanto)
-    promises.push(Promise.resolve(0));
+    // LinkedIn
+    if (linkedin && linkedin.organization_id && linkedin.access_token) {
+      promises.push(linkedinService.getFollowers(linkedin.organization_id, linkedin.access_token, startDate, endDate));
+    } else {
+      promises.push(Promise.resolve([]));
+    }
+
+    // YouTube (sempre 0 por enquanto)
     promises.push(Promise.resolve(0));
 
     const [facebookData, instagramData, linkedinData, youtubeData] = await Promise.allSettled(promises);

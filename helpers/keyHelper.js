@@ -1,7 +1,5 @@
 // Arquivo: helpers/keyHelper.js
 const { checkCustomerBelongsToUser } = require('../repositories/customerRepository');
-const { getCustomerFacebookKeys } = require('../repositories/customerFacebookRepository');
-const { getCustomerInstagramKeys } = require('../repositories/customerInstagramRepository');
 const { getCustomerKeys } = require('../repositories/customerRepository');
 const { getUserKeys } = require('../repositories/userRepository');
 const { getValidAccessToken } = require('./googleAnalyticsHelpers');
@@ -105,29 +103,6 @@ const getGoogleAnalyticsKeys = async (id_user, id_customer) => {
   }
 }
 
-// Função opcional para pegar todas as plataformas de uma vez (se necessário)
-const getAllKeys = async (id_user, id_customer) => {
-  try {
-    const [facebook, instagram, google] = await Promise.allSettled([
-      getFacebookCustomerKey(id_user, id_customer),
-      getInstagramCustomerKey(id_user, id_customer),
-      getGoogleAnalyticsKeys(id_user, id_customer)
-    ]);
-
-    return {
-      facebook: facebook.status === 'fulfilled' ? facebook.value : null,
-      instagram: instagram.status === 'fulfilled' ? instagram.value : null,
-      google: google.status === 'fulfilled' ? google.value : null
-    };
-  } catch (error) {
-    console.error('Erro ao buscar todas as chaves:', error);
-    return {
-      facebook: null,
-      instagram: null,
-      google: null
-    };
-  }
-};
 // Limpar cache de um usuário
 const clearCacheForUser = (id_user) => {
   for (const key of cache.keys()) {
@@ -150,7 +125,7 @@ const getFacebookCustomerKey = async (id_user, id_customer) => {
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
   try {
-    const customerFacebookKeys = await getCustomerFacebookKeys(id_customer);
+    const customerFacebookKeys = await getCustomerKeys(id_customer);
 
     if (!customerFacebookKeys || !customerFacebookKeys.id_facebook_page || !customerFacebookKeys.access_token_page_facebook) {
       return null;
@@ -186,7 +161,7 @@ const getInstagramCustomerKey = async (id_user, id_customer) => {
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
   try {
-    const customerInstagramKeys = await getCustomerInstagramKeys(id_customer);
+    const customerInstagramKeys = await getCustomerKeys(id_customer);
 
     if (!customerInstagramKeys || !customerInstagramKeys.id_instagram_page || !customerInstagramKeys.access_token_page_instagram) {
       return null;
@@ -209,12 +184,47 @@ const getInstagramCustomerKey = async (id_user, id_customer) => {
   }
 };
 
+const getLinkedinKeys = async (id_user, id_customer) => {
+  const cacheKey = `linkedin:${id_user}:${id_customer}`;
+
+  if (cache.has(cacheKey)) {
+    const { expires, data } = cache.get(cacheKey);
+    if (Date.now() < expires) return data;
+    cache.delete(cacheKey);
+  }
+
+  const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
+  if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
+
+  try {
+    const customerLinkedinKeys = await getCustomerKeys(id_customer);
+    const userLinkedinKeys = await getUserKeys(id_user);
+
+    if (!customerLinkedinKeys || !userLinkedinKeys || !customerLinkedinKeys.id_linkedin_organization || !userLinkedinKeys.access_token_linkedin) return null;
+
+    const linkedinKeys = {
+      organization_id: customerLinkedinKeys.id_linkedin_organization,
+      access_token: userLinkedinKeys.access_token_linkedin
+    };
+
+    cache.set(cacheKey, {
+      data: linkedinKeys,
+      expires: Date.now() + 1000 * 60 * 5
+    });
+
+    return linkedinKeys;
+  } catch (error) {
+    console.error('Erro ao buscar chaves do Linkedin:', error);
+    return null;
+  }
+};
+
 
 module.exports = {
   getGoogleAnalyticsKeys,
-  getAllKeys,
   clearCacheForUser,
   refreshKeysForCustomer,
   getFacebookCustomerKey,
-  getInstagramCustomerKey
+  getInstagramCustomerKey,
+  getLinkedinKeys
 };

@@ -59,4 +59,16 @@ function liHeaders(token) {
     };
 }
 
-module.exports = { getValidLinkedInAccessToken, liHeaders };
+// helpers para montar intervalos no formato da API do LinkedIn
+function toMsUTC(d) {
+    const x = new Date(d);
+    return Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate());
+}
+
+function makeTimeIntervals(startDate, endDate) {
+    const startMs = toMsUTC(startDate);
+    const endMs = toMsUTC(endDate) + 86400000; // inclui o último dia
+    return `(timeRange:(start:${startMs},end:${endMs}),timeGranularityType:DAY)`;
+}
+
+module.exports = { getValidLinkedInAccessToken, liHeaders, makeTimeIntervals, toMsUTC };
