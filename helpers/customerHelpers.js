@@ -15,21 +15,6 @@ const clearFacebookDataCustomer = async (id_customer, id_user) => {
     );
 };
 
-const clearInstagramDataCustomer = async (id_customer, id_user) => {
-    await pool.query(
-        'DELETE FROM instagram WHERE id_customer = $1',
-        [id_customer]
-    );
-    await pool.query(
-        'UPDATE customer SET id_instagram_page = $1, access_token_page_instagram = $2 WHERE id_customer = $3',
-        [null, null, id_customer]
-    );
-    await pool.query(
-        'UPDATE user_keys SET id_user_instagram = $1, access_token_instagram = $2 WHERE id_user = $3',
-        [null, null, id_user]
-    );
-};
-
 const clearGoogleAnalyticsDataCustomer = async (id_customer, id_user) => {
     await pool.query(
         'DELETE FROM google_analytics WHERE id_customer = $1',
@@ -45,16 +30,39 @@ const clearGoogleAnalyticsDataCustomer = async (id_customer, id_user) => {
     );
 };
 
-const clearFacebookDataUser = async (id_user) => {
+const clearInstagramDataCustomer = async (id_customer, id_user) => {
     await pool.query(
-        'UPDATE user_keys SET id_user_facebook = $1, access_token_facebook = $2, expires_at_facebook = $3 WHERE id_user = $4',
+        'DELETE FROM instagram WHERE id_customer = $1',
+        [id_customer]
+    );
+    await pool.query(
+        'UPDATE customer SET id_instagram_page = $1, access_token_page_instagram = $2 WHERE id_customer = $3',
+        [null, null, id_customer]
+    );
+    await pool.query(
+        'UPDATE user_keys SET id_user_instagram = $1, access_token_instagram = $2 WHERE id_user = $3',
+        [null, null, id_user]
+    );
+};
+
+const clearLinkedinDataCustomer = async (id_customer, id_user) => {
+    await pool.query(
+        'DELETE FROM linkedin WHERE id_customer = $1',
+        [id_customer]
+    );
+    await pool.query(
+        'UPDATE customer SET id_linkedin_organization = $1 WHERE id_customer = $2',
+        [null, id_customer]
+    );
+    await pool.query(
+        'UPDATE user_keys SET id_user_linkedin = $1, access_token_linkedin = $2, refresh_token_linkedin = $3 WHERE id_user = $4',
         [null, null, null, id_user]
     );
 };
 
-const clearInstagramDataUser = async (id_user) => {
+const clearFacebookDataUser = async (id_user) => {
     await pool.query(
-        'UPDATE user_keys SET id_user_instagram = $1, access_token_instagram = $2, expires_at_instagram = $3 WHERE id_user = $4',
+        'UPDATE user_keys SET id_user_facebook = $1, access_token_facebook = $2, expires_at_facebook = $3 WHERE id_user = $4',
         [null, null, null, id_user]
     );
 };
@@ -66,11 +74,27 @@ const clearGoogleAnalyticsDataUser = async (id_user) => {
     );
 };
 
-module.exports = { 
+const clearInstagramDataUser = async (id_user) => {
+    await pool.query(
+        'UPDATE user_keys SET id_user_instagram = $1, access_token_instagram = $2, expires_at_instagram = $3 WHERE id_user = $4',
+        [null, null, null, id_user]
+    );
+};
+
+const clearLinkedinDataUser = async (id_user) => {
+    await pool.query(
+        'UPDATE user_keys SET id_user_linkedin = $1, access_token_linkedin = $2, refresh_token_linkedin = $3, expires_at_linkedin = $4, refresh_token_expires_at_linkedin = $5 WHERE id_user = $6',
+        [null, null, null, null, null, id_user]
+    );
+};
+
+module.exports = {
     clearFacebookDataCustomer,
     clearFacebookDataUser,
+    clearGoogleAnalyticsDataCustomer,
+    clearGoogleAnalyticsDataUser,
     clearInstagramDataCustomer,
     clearInstagramDataUser,
-    clearGoogleAnalyticsDataCustomer,
-    clearGoogleAnalyticsDataUser
+    clearLinkedinDataCustomer,
+    clearLinkedinDataUser
 };

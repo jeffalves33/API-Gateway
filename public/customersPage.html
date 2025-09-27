@@ -411,6 +411,28 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <!-- Linkedin -->
+                                            <div class="col-md-6 pt-3">
+                                                <div class="card">
+                                                    <div class="card-header d-flex align-items-center">
+                                                        <i class="bx bxl-linkedin text-primary me-2"></i>
+                                                        <small class="fw-medium">LinkeIn</small>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="linkedin-pages-list">
+                                                            <div class="loading-indicator text-center">
+                                                                <div class="spinner-border spinner-border-sm"
+                                                                    role="status">
+                                                                    <span class="visually-hidden">Carregando...</span>
+                                                                </div>
+                                                                <small class="d-block mt-2 text-muted">Carregando
+                                                                    canais...</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="row justify-content-end">
@@ -543,8 +565,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const facebookPagesList = document.getElementById('facebook-pages-list');
-            const instagramPagesList = document.getElementById('instagram-pages-list');
             const googleAnalyticsPagesList = document.getElementById('googleAnalytics-pages-list');
+            const instagramPagesList = document.getElementById('instagram-pages-list');
+            const linkedinOrganizationsList = document.getElementById('linkedin-pages-list');
             const youtubeChannelsList = document.getElementById('youtube-pages-list');
 
             function clearLoadingIndicator(container) {
@@ -562,8 +585,9 @@
                 const { customers } = await responseCustomers.json();
 
                 const registeredFacebookIds = customers.map(c => c.id_facebook_page).filter(id => id !== null);
-                const registeredInstagramIds = customers.map(c => c.id_instagram_page).filter(id => id !== null);
                 const registeredGooglePropertyIds = customers.map(c => c.id_googleanalytics_property).filter(id => id !== null);
+                const registeredInstagramIds = customers.map(c => c.id_instagram_page).filter(id => id !== null);
+                const registeredLinkedinOrganizationIds = customers.map(c => c.id_linkedin_organization).filter(id => id !== null);
                 const registeredYoutubePropertyIds = customers.map(c => c.id_youtube_property).filter(id => id !== null);
 
                 const responseMeta = await fetch('/api/meta/pages');
@@ -666,15 +690,42 @@
                     });
                 }
 
+                const responseLinkedin = await fetch('/api/linkedin/organizations');
+                if (!responseLinkedin.ok) {
+                    clearLoadingIndicator(linkedinOrganizationsList);
+                    linkedinOrganizationsList.innerHTML = '<div class="alert alert-warning">Erro ao carregar páginas do LinkedIn </div>';
+                } else {
+                    const pagesJsonLinkedin = await responseLinkedin.json();
+                    const { linkedin } = pagesJsonLinkedin;
+
+                    clearLoadingIndicator(linkedinOrganizationsList);
+                    linkedin.forEach(page => {
+                        if (registeredLinkedinOrganizationIds.includes(String(page.id))) return;
+                        const div = document.createElement('div');
+                        div.classList.add('form-check');
+                        div.innerHTML = `
+                        <input class="form-check-input" name="linkedin-pages" type="radio"
+                        id="linkedin-organization-${page.id}" value="${page.id}"
+                        data-access-token="${page.access_token}" />
+                        <label class="form-check-label" for="linkedin-organization-${page.id}">
+                        ${page.name}
+                        </label>
+                    `;
+                        linkedinOrganizationsList.appendChild(div);
+                    });
+                }
+
             } catch (error) {
                 console.error("Erro no fluxo de buscas API's:", error);
                 clearLoadingIndicator(facebookPagesList);
-                clearLoadingIndicator(instagramPagesList);
                 clearLoadingIndicator(googleAnalyticsPagesList);
+                clearLoadingIndicator(instagramPagesList);
+                clearLoadingIndicator(linkedinOrganizationsList);
 
                 facebookPagesList.innerHTML = '<div class="alert alert-danger">Erro ao carregar dados</div>';
-                instagramPagesList.innerHTML = '<div class="alert alert-danger">Erro ao carregar dados</div>';
                 googleAnalyticsPagesList.innerHTML = '<div class="alert alert-danger">Erro ao carregar dados</div>';
+                instagramPagesList.innerHTML = '<div class="alert alert-danger">Erro ao carregar dados</div>';
+                linkedinOrganizationsList.innerHTML = '<div class="alert alert-danger">Erro ao carregar dados</div>';
             }
         });
 
@@ -690,8 +741,9 @@
             const phone = document.getElementById('customer-phone').value;
 
             const selectedFb = document.querySelector('input[name="fb-pages"]:checked');
-            const selectedIg = document.querySelector('input[name="ig-pages"]:checked');
             const selectedGA = document.querySelector('input[name="ga-pages"]:checked');
+            const selectedIg = document.querySelector('input[name="ig-pages"]:checked');
+            const selectedLinkedin = document.querySelector('input[name="linkedin-pages"]:checked');
 
             const platforms = [];
 
@@ -703,6 +755,13 @@
                 });
             }
 
+            if (selectedGA) {
+                platforms.push({
+                    type: 'google',
+                    id_googleanalytics_property: selectedGA.value
+                });
+            }
+
             if (selectedIg) {
                 platforms.push({
                     type: 'instagram',
@@ -711,10 +770,10 @@
                 });
             }
 
-            if (selectedGA) {
+            if (selectedLinkedin) {
                 platforms.push({
-                    type: 'google',
-                    id_googleanalytics_property: selectedGA.value
+                    type: 'linkedin',
+                    id_linkedin_organization: selectedLinkedin.value
                 });
             }
 

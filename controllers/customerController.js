@@ -14,7 +14,8 @@ const addCustomer = async (req, res) => {
       platforms.find(p => p.id_facebook_page)?.access_token || null,
       platforms.find(p => p.id_instagram_page)?.id_instagram_page || null,
       platforms.find(p => p.id_instagram_page)?.access_token || null,
-      platforms.find(p => p.id_googleanalytics_property)?.id_googleanalytics_property || null
+      platforms.find(p => p.id_googleanalytics_property)?.id_googleanalytics_property || null,
+      platforms.find(p => p.id_linkedin_organization)?.id_linkedin_organization || null,
     );
 
     const google = await getGoogleAnalyticsKeys(id_user, id_customer);

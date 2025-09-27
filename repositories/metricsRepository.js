@@ -84,4 +84,30 @@ const insertGoogleAnalyticsMetrics = async (rows) => {
     }
 };
 
-module.exports = { insertFacebookMetrics, insertInstagramMetrics, insertGoogleAnalyticsMetrics };
+const insertLinkedinMetrics = async (rows) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        for (const row of rows) {
+            await client.query(
+                `INSERT INTO linkedin (id_customer, data, impressions, followers) VALUES ($1, $2, $3, $4)`,
+                [
+                    row.id_customer,
+                    row.data,
+                    row.impressions,
+                    row.followers
+                ]
+            );
+        }
+
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+};
+
+module.exports = { insertFacebookMetrics, insertGoogleAnalyticsMetrics, insertInstagramMetrics, insertLinkedinMetrics };
