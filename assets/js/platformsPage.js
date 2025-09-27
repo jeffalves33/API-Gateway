@@ -179,12 +179,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
             if (facebookConnected && needsReauthFacebook) injectUpdateButton('facebook', facebookDaysLeft);
-            if (googleAnalyticsConnected && needsReauthGA) injectUpdateButton('google', gaDaysLeft);
+            //if (googleAnalyticsConnected && needsReauthGA) injectUpdateButton('google', gaDaysLeft);
             if (instagramConnected && needsReauthInstagram) injectUpdateButton('instagram', instagramDaysLeft);
             if (linkedinConnected && needsReauthLinkedIn) injectUpdateButton('linkedin', linkedinDaysLeft);
 
         } catch (error) {
-            console.error('Erro ao verificar status do Facebook e Instagram:', error);
+            console.error('Erro ao verificar status das plataformas:', error);
         }
     })();
 

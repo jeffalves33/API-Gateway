@@ -10,17 +10,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
 
         const { facebookConnected, instagramConnected, facebookDaysLeft, needsReauthFacebook, instagramDaysLeft, needsReauthInstagram } = await metaR.json();
-        const { googleAnalyticsConnected, gaDaysLeft, needsReauthGA } = await gaR.json();
+        //const { googleAnalyticsConnected, gaDaysLeft, needsReauthGA } = await gaR.json();
         const { youtubeConnected } = await ytR.json();
 
-        const total = [facebookConnected, instagramConnected, googleAnalyticsConnected, youtubeConnected].filter(Boolean).length;
+        const total = [facebookConnected, instagramConnected, /*googleAnalyticsConnected,*/ youtubeConnected].filter(Boolean).length;
 
         if (total === 0) return;
 
         const warnings = [];
         if (facebookConnected && needsReauthFacebook) warnings.push(`Facebook (≤${facebookDaysLeft}d)`);
         if (instagramConnected && needsReauthInstagram) warnings.push(`Instagram (≤${instagramDaysLeft}d)`);
-        if (googleAnalyticsConnected && needsReauthGA) warnings.push(`Google (≤${gaDaysLeft}d)`);
+        //if (googleAnalyticsConnected && needsReauthGA) warnings.push(`Google (≤${gaDaysLeft}d)`);
 
         if (warnings.length == 0) return;
 
