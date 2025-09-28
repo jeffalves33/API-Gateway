@@ -13,9 +13,10 @@ const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
-const institutionalRoutes = require('./routes/institutionalRoutes');
 
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
+
+const landingDir = path.join(__dirname, 'public', 'institutional', 'out');
 
 dotenv.config();
 
@@ -41,8 +42,18 @@ app.use('/api/meta', metaRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/customer', customerRoutes);
 
-// === Rotas Institucionais ===
-app.use('/', institutionalRoutes);
+// Institucional
+app.use('/', express.static(landingDir, {
+  redirect: true,         // permite /sobre -> redireciona para /sobre/
+  maxAge: '7d',
+  setHeaders: (res, filePath) => {
+    // Evitar cache em HTML pra facilitar atualizações
+    if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(landingDir, 'index.html'));
+});
 
 // === Páginas protegidas ===
 app.get('/analyzesPage.html', authenticatePageAccess, (req, res) => {
