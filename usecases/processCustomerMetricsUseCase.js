@@ -7,7 +7,7 @@ const metricsRepo = require('../repositories/metricsRepository');
 const { buildDates } = require('../utils/dateUtils');
 
 async function processCustomerMetrics(id_user, id_customer, platforms, google, linkedin) {
-    const { since, endDate } = buildDates(5);
+    const { since, endDate } = buildDates(365);
 
     const jobs = platforms.map(async platform => {
         let rows = [];
