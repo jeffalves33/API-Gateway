@@ -265,22 +265,16 @@ document.addEventListener('DOMContentLoaded', async function () {
             const facebook = document.getElementById('facebook')?.checked;
             const instagram = document.getElementById('instagram')?.checked;
             const googleAnalytics = document.getElementById('googleAnalytics')?.checked;
+            const linkedin = document.getElementById('linkedin')?.checked;
             const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked');
             const formatoRelatorio = document.getElementById('formatoRelatorio')?.value;
 
-            if (!userId) {
-                throw new Error('Usuário não identificado. Faça login novamente.');
-            }
-
-            if (!startDate || !endDate) {
-                throw new Error('Por favor, selecione a data inicial e final.');
-            }
+            if (!userId) throw new Error('Usuário não identificado. Faça login novamente.');
+            if (!startDate || !endDate) throw new Error('Por favor, selecione a data inicial e final.');
 
             // Validar formato das datas
             const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-            if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
-                throw new Error('Formato de data inválido. Use DD/MM/AAAA.');
-            }
+            if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) throw new Error('Formato de data inválido. Use DD/MM/AAAA.');
 
             // Validar se data inicial é anterior à final
             const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
@@ -294,26 +288,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             // Validar se não é muito no futuro
             const today = new Date();
-            if (endDateObj > today) {
-                throw new Error('A data final não pode ser no futuro.');
-            }
-
-            if (!facebook && !instagram && !googleAnalytics) {
-                throw new Error('Por favor, selecione pelo menos uma plataforma.');
-            }
-
-            if (!tipoAnalise) {
-                throw new Error('Por favor, selecione o tipo de análise.');
-            }
-
-            if (!formatoRelatorio || formatoRelatorio === 'Selecione' || formatoRelatorio === '') {
-                throw new Error('Por favor, selecione o formato do relatório.');
-            }
+            if (endDateObj > today) throw new Error('A data final não pode ser no futuro.');
+            if (!facebook && !instagram && !googleAnalytics && !linkedin) throw new Error('Por favor, selecione pelo menos uma plataforma.');
+            if (!tipoAnalise) throw new Error('Por favor, selecione o tipo de análise.');
+            if (!formatoRelatorio || formatoRelatorio === 'Selecione' || formatoRelatorio === '') throw new Error('Por favor, selecione o formato do relatório.');
 
             const selectedCustomerId = localStorage.getItem('selectedCustomerId');
-            if (!selectedCustomerId) {
-                throw new Error('Por favor, selecione um cliente.');
-            }
+            if (!selectedCustomerId) throw new Error('Por favor, selecione um cliente.');
 
             return true;
         } catch (error) {
@@ -359,6 +340,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (document.getElementById('instagram').checked) platform.push('instagram');
             if (document.getElementById('facebook').checked) platform.push('facebook');
             if (document.getElementById('googleAnalytics').checked) platform.push('google_analytics');
+            if (document.getElementById('linkedin').checked) platform.push('linkedin');
 
             setTimeout(function () {
                 updateProgressBar(40, 'Preparando solicitação...');
