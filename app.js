@@ -4,7 +4,12 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const path = require('path');
 const dotenv = require('dotenv');
+dotenv.config();
 
+const { handleStripeWebhook } = require('./controllers/stripeWebhookController');
+const billingRoutes = require('./routes/billingRoutes');
+const { handleStripeWebhook } = require('./controllers/stripeWebhookController');
+const billingRoutes = require('./routes/billingRoutes');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
@@ -13,15 +18,14 @@ const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
-
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 
 const landingDir = path.join(__dirname, 'public', 'institutional', 'out');
 
-dotenv.config();
-
 const app = express();
+app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), handleStripeWebhook); // <-- RAW! :contentReference[oaicite:20]{index=20}
 const port = process.env.PORT || 3000;
+
 
 // Middleware
 app.use(bodyParser.json());
@@ -33,6 +37,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // === Rotas da API ===
 app.use('/api', authRoutes); // Não deve ser /api
+app.use('/api/billing', billingRoutes);
 app.use('/api/metrics', metricsRoutes);
 
 //Refatorado
