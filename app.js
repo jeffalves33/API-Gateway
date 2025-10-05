@@ -8,8 +8,6 @@ dotenv.config();
 
 const { handleStripeWebhook } = require('./controllers/stripeWebhookController');
 const billingRoutes = require('./routes/billingRoutes');
-const { handleStripeWebhook } = require('./controllers/stripeWebhookController');
-const billingRoutes = require('./routes/billingRoutes');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
