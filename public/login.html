@@ -258,10 +258,22 @@
         localStorage.clear();
 
         // Redirecionar após delay
-        setTimeout(() => {
-          window.location.href = '/dashboardPage.html';
-        }, 1500);
+        showAlert('Login realizado com sucesso! Verificando sua assinatura...', 'success');
 
+        try {
+          // seu cookie HttpOnly já foi setado pelo backend no /api/login
+          const me = await fetch('/api/billing/me', { credentials: 'same-origin' });
+          const { subscription: s } = await me.json();
+
+          const now = new Date();
+          const ativo = s && ['trialing', 'active'].includes(s.subscription_status) &&
+            (!s.current_period_end || new Date(s.current_period_end) >= now);
+
+          window.location.href = ativo ? '/dashboardPage.html' : '/settingsAccountPage.html';
+        } catch (e) {
+          // fallback: manda pra conta/planos
+          window.location.href = '/settingsAccountPage.html';
+        }
       } catch (error) {
         // Exibir mensagem de erro
         if (error.name === 'TypeError' && error.message.includes('fetch')) {

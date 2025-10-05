@@ -1,0 +1,77 @@
+<!-- settingsAccountPage.html (miolo simplificado) -->
+<section class="container">
+    <h1>Seu plano</h1>
+    <div id="subStatus"></div>
+
+    <h2>Escolha um plano</h2>
+    <input id="coupon" placeholder="Cupom (opcional, ex.: CUPOMTESTE)" />
+
+    <div id="plans" class="plans-grid"></div>
+
+    <div style="margin-top:16px">
+        <button id="btn-portal">Gerenciar assinatura</button>
+        <button id="btn-logout">Sair</button>
+    </div>
+</section>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    async function renderStatus() {
+        const r = await fetch('/api/billing/me', { headers: { Authorization: 'Bearer ' + token } });
+        const { subscription } = await r.json();
+        const el = document.getElementById('subStatus');
+
+        if (!subscription) { el.textContent = 'Sem assinatura.'; return; }
+
+        const fmt = (d) => d ? new Date(d).toLocaleDateString() : '-';
+        el.innerHTML = `
+    <p>Status: <strong>${subscription.subscription_status || '-'}</strong></p>
+    <p>Plano: ${subscription.plan_code || '-'} | Vigência: ${fmt(subscription.current_period_start)} → ${fmt(subscription.current_period_end)}</p>
+    <p>Trial até: ${fmt(subscription.trial_end)}</p>
+  `;
+    }
+
+    async function renderPlans() {
+        const r = await fetch('/api/billing/plans', { headers: { Authorization: 'Bearer ' + token } });
+        const { plans } = await r.json();
+        const wrap = document.getElementById('plans');
+        wrap.innerHTML = '';
+
+        plans.forEach(p => {
+            const price = (p.amount_cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: p.currency.toUpperCase() });
+            const card = document.createElement('div');
+            card.className = 'plan-card';
+            card.innerHTML = `
+      <h3>${p.name}</h3>
+      <p><strong>${price}</strong> / ${p.interval}</p>
+      <button data-code="${p.code}">Assinar ${p.name}</button>
+    `;
+            wrap.appendChild(card);
+        });
+
+        wrap.querySelectorAll('button[data-code]').forEach(btn => {
+            btn.onclick = async () => {
+                const plan_code = btn.getAttribute('data-code');
+                const promo_code = document.getElementById('coupon').value || null;
+                const resp = await fetch('/api/billing/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+                    body: JSON.stringify({ plan_code, promo_code })
+                });
+                const j = await resp.json();
+                if (j.url) window.location = j.url; else alert(j.message || 'Erro ao iniciar checkout');
+            };
+        });
+    }
+
+    document.getElementById('btn-portal').onclick = async () => {
+        const resp = await fetch('/api/billing/portal', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+        const j = await resp.json();
+        if (j.url) window.location = j.url; else alert(j.message || 'Erro ao abrir Portal');
+    };
+    document.getElementById('btn-logout').onclick = () => { localStorage.removeItem('token'); window.location = '/login.html'; };
+
+    renderStatus();
+    renderPlans();
+</script>
