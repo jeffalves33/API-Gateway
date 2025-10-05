@@ -52,6 +52,7 @@ async function createBillingPortalSession({ user }) {
     const session = await stripe.billingPortal.sessions.create({
         customer: customerId,
         return_url: `${process.env.FRONTEND_BASE_URL}/settingsAccountPage.html`,
+        ...(configId ? { configuration: process.env.STRIPE_PORTAL_CONFIGURATION_ID } : {})
     }); // :contentReference[oaicite:12]{index=12}
     return session.url;
 }
