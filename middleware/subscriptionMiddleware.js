@@ -9,18 +9,16 @@ module.exports = async function requireSubscription(req, res, next) {
         );
         const sub = rows[0];
         const now = new Date();
+        const endsAt = sub?.current_period_end || sub?.trial_end;
         const ok = sub && ['active', 'trialing'].includes(sub.subscription_status) &&
-            (!sub.current_period_end || new Date(sub.current_period_end) >= now);
+            (!endsAt || new Date(endsAt) >= now);
 
         if (ok) return next();
 
         // Se for requisição de página HTML (GET .html ou aceita HTML) => redireciona
-        const isHtmlPage = req.method === 'GET' &&
-            (req.path.endsWith('.html') || (req.headers.accept || '').includes('text/html'));
+        const isHtmlPage = req.method === 'GET' && (req.path.endsWith('.html') || (req.headers.accept || '').includes('text/html'));
 
-        if (isHtmlPage) {
-            return res.redirect('/settingsAccountPage.html');
-        }
+        if (isHtmlPage) return res.redirect('/settingsAccountPage.html');
 
         // APIs continuam respondendo 402 JSON
         return res.status(402).json({ success: false, message: 'Assinatura inativa' });
