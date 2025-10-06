@@ -10,8 +10,7 @@ module.exports = async function requireSubscription(req, res, next) {
         const sub = rows[0];
         const now = new Date();
         const endsAt = sub?.current_period_end || sub?.trial_end;
-        const ok = sub && ['active', 'trialing'].includes(sub.subscription_status) &&
-            (!endsAt || new Date(endsAt) >= now);
+        const ok = sub && ['active', 'trialing'].includes(sub.subscription_status) && (!endsAt || new Date(endsAt) >= now);
 
         if (ok) return next();
 

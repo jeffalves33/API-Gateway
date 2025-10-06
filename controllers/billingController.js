@@ -6,10 +6,10 @@ const { createCheckoutSession, createBillingPortalSession } = require('../servic
 exports.listPlans = async (req, res) => {
     try {
         const { rows } = await pool.query(`
-      SELECT code, name, amount_cents, currency, interval, stripe_price_id
-      FROM plans
-      WHERE active = true
-      ORDER BY amount_cents ASC
+        SELECT code, name, amount_cents, currency, interval, stripe_price_id
+        FROM plans
+        WHERE active = true
+        ORDER BY amount_cents ASC
     `);
         res.json({ success: true, plans: rows });
     } catch (e) {
