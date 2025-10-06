@@ -40,6 +40,18 @@ async function handleStripeWebhook(req, res) {
                         const q = await pool.query('SELECT id_user FROM "user" WHERE stripe_customer_id = $1', [customerId]);
                         if (q.rows[0]) userId = q.rows[0].id_user;
                     }
+                    console.log("🚀 ~ handleStripeWebhook ~ customerId, subscriptionId, sub.status || null, sub.metadata?.plan_code || session.metadata?.plan_code || null, sub.items.data[0]?.price?.id || null, sub.current_period_start, sub.current_period_end, sub.trial_start, sub.trial_end, userId: ",
+                        customerId,
+                        subscriptionId,
+                        sub.status || null,
+                        sub.metadata?.plan_code || session.metadata?.plan_code || null,
+                        sub.items.data[0]?.price?.id || null,
+                        sub.current_period_start,
+                        sub.current_period_end,
+                        sub.trial_start,   // número (epoch) OU null
+                        sub.trial_end,     // número (epoch) OU null
+                        userId
+                    )
 
                     if (userId) {
                         await pool.query(`
@@ -51,19 +63,19 @@ async function handleStripeWebhook(req, res) {
                                 stripe_price_id = $5,
                                 current_period_start = to_timestamp($6::double precision),
                                 current_period_end   = to_timestamp($7::double precision),
-                                trial_start = CASE WHEN $8 IS NULL THEN trial_start ELSE to_timestamp($8::double precision) END,
-                                trial_end   = CASE WHEN $9 IS NULL THEN trial_end   ELSE to_timestamp($9::double precision) END
+                                trial_start = COALESCE(to_timestamp($8::double precision), trial_start),
+                                trial_end   = COALESCE(to_timestamp($9::double precision), trial_end)
                         WHERE id_user = $10
                         `, [
                             customerId,
                             subscriptionId,
-                            sub.status,
-                            planCode,
-                            priceId,
+                            sub.status || null,
+                            sub.metadata?.plan_code || session.metadata?.plan_code || null,
+                            sub.items.data[0]?.price?.id || null,
                             sub.current_period_start,
                             sub.current_period_end,
-                            sub.trial_start,
-                            sub.trial_end,
+                            sub.trial_start,   // número (epoch) OU null
+                            sub.trial_end,     // número (epoch) OU null
                             userId
                         ]);
                     }
