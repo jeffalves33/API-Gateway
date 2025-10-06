@@ -49,10 +49,10 @@ async function handleStripeWebhook(req, res) {
                                 subscription_status = $3,
                                 plan_code = COALESCE($4, plan_code),
                                 stripe_price_id = $5,
-                                current_period_start = to_timestamp($6),
-                                current_period_end   = to_timestamp($7),
-                                trial_start = CASE WHEN $8 IS NULL THEN trial_start ELSE to_timestamp($8) END,
-                                trial_end   = CASE WHEN $9 IS NULL THEN trial_end   ELSE to_timestamp($9) END
+                                current_period_start = to_timestamp($6::double precision),
+                                current_period_end   = to_timestamp($7::double precision),
+                                trial_start = CASE WHEN $8 IS NULL THEN trial_start ELSE to_timestamp($8::double precision) END,
+                                trial_end   = CASE WHEN $9 IS NULL THEN trial_end   ELSE to_timestamp($9::double precision) END
                         WHERE id_user = $10
                         `, [
                             customerId,
@@ -84,11 +84,11 @@ async function handleStripeWebhook(req, res) {
                         SET stripe_subscription_id = $1,
                             subscription_status = $2,
                             stripe_price_id = $3,
-                            current_period_start = to_timestamp($4),
-                            current_period_end   = to_timestamp($5),
-                            trial_start = CASE WHEN $6 IS NULL THEN trial_start ELSE to_timestamp($6) END,
-                            trial_end   = CASE WHEN $7 IS NULL THEN trial_end   ELSE to_timestamp($7) END,
-                            cancel_at   = CASE WHEN $8 IS NULL THEN cancel_at   ELSE to_timestamp($8) END,
+                            current_period_start = to_timestamp($4::double precision),
+                            current_period_end   = to_timestamp($5::double precision),
+                            trial_start = CASE WHEN $6 IS NULL THEN trial_start ELSE to_timestamp($6::double precision) END,
+                            trial_end   = CASE WHEN $7 IS NULL THEN trial_end   ELSE to_timestamp($7::double precision) END,
+                            cancel_at   = CASE WHEN $8 IS NULL THEN cancel_at   ELSE to_timestamp($8::double precision) END,
                             cancel_at_period_end = $9
                         WHERE id_user = $10
                     `, [
@@ -113,11 +113,11 @@ async function handleStripeWebhook(req, res) {
                 const q = await pool.query('SELECT id_user FROM "user" WHERE stripe_customer_id = $1', [inv.customer]);
                 if (q.rows[0]) {
                     await pool.query(`
-            INSERT INTO subscription_invoices
-              (id_user, stripe_invoice_id, status, amount_due_cents, hosted_invoice_url, created_at, period_start, period_end)
-            VALUES ($1,$2,$3,$4,$5, to_timestamp($6), to_timestamp($7), to_timestamp($8))
-            ON CONFLICT (stripe_invoice_id) DO UPDATE SET status = EXCLUDED.status
-          `, [
+                        INSERT INTO subscription_invoices
+                        (id_user, stripe_invoice_id, status, amount_due_cents, hosted_invoice_url, created_at, period_start, period_end)
+                        VALUES ($1,$2,$3,$4,$5, to_timestamp($6::double precision), to_timestamp($7::double precision), to_timestamp($8::double precision))
+                        ON CONFLICT (stripe_invoice_id) DO UPDATE SET status = EXCLUDED.status
+                    `, [
                         q.rows[0].id_user, inv.id, inv.status, inv.amount_due, inv.hosted_invoice_url,
                         inv.created, inv.period_start, inv.period_end
                     ]);
