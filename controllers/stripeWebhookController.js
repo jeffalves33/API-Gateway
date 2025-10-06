@@ -30,6 +30,7 @@ async function handleStripeWebhook(req, res) {
                     // pegar assinatura completa
                     const sub = await stripe.subscriptions.retrieve(subscriptionId); // status, period, trial, price etc. :contentReference[oaicite:16]{index=16}
                     const priceId = sub.items.data[0].price.id;
+                    console.log("🚀1 ~ handleStripeWebhook ~ sub: ", sub)
                     const planCode = sub.metadata?.plan_code || session.metadata?.plan_code || null;
 
                     // encontrar user pelo metadata app_user_id (setado no subscription_data) ou pelo customer:
@@ -42,18 +43,18 @@ async function handleStripeWebhook(req, res) {
 
                     if (userId) {
                         await pool.query(`
-              UPDATE "user"
-                 SET stripe_customer_id = $1,
-                     stripe_subscription_id = $2,
-                     subscription_status = $3,
-                     plan_code = COALESCE($4, plan_code),
-                     stripe_price_id = $5,
-                     current_period_start = to_timestamp($6),
-                     current_period_end   = to_timestamp($7),
-                     trial_start = CASE WHEN $8 IS NULL THEN trial_start ELSE to_timestamp($8) END,
-                     trial_end   = CASE WHEN $9 IS NULL THEN trial_end   ELSE to_timestamp($9) END
-               WHERE id_user = $10
-            `, [
+                        UPDATE "user"
+                            SET stripe_customer_id = $1,
+                                stripe_subscription_id = $2,
+                                subscription_status = $3,
+                                plan_code = COALESCE($4, plan_code),
+                                stripe_price_id = $5,
+                                current_period_start = to_timestamp($6),
+                                current_period_end   = to_timestamp($7),
+                                trial_start = CASE WHEN $8 IS NULL THEN trial_start ELSE to_timestamp($8) END,
+                                trial_end   = CASE WHEN $9 IS NULL THEN trial_end   ELSE to_timestamp($9) END
+                        WHERE id_user = $10
+                        `, [
                             customerId,
                             subscriptionId,
                             sub.status,
@@ -74,22 +75,23 @@ async function handleStripeWebhook(req, res) {
             case 'customer.subscription.created':
             case 'customer.subscription.deleted': {
                 const sub = event.data.object;
+                console.log("🚀2 ~ handleStripeWebhook ~ sub: ", sub)
                 // achar user por stripe_customer_id
                 const q = await pool.query('SELECT id_user FROM "user" WHERE stripe_customer_id = $1', [sub.customer]);
                 if (q.rows[0]) {
                     await pool.query(`
-            UPDATE "user"
-               SET stripe_subscription_id = $1,
-                   subscription_status = $2,
-                   stripe_price_id = $3,
-                   current_period_start = to_timestamp($4),
-                   current_period_end   = to_timestamp($5),
-                   trial_start = CASE WHEN $6 IS NULL THEN trial_start ELSE to_timestamp($6) END,
-                   trial_end   = CASE WHEN $7 IS NULL THEN trial_end   ELSE to_timestamp($7) END,
-                   cancel_at   = CASE WHEN $8 IS NULL THEN cancel_at   ELSE to_timestamp($8) END,
-                   cancel_at_period_end = $9
-             WHERE id_user = $10
-          `, [
+                        UPDATE "user"
+                        SET stripe_subscription_id = $1,
+                            subscription_status = $2,
+                            stripe_price_id = $3,
+                            current_period_start = to_timestamp($4),
+                            current_period_end   = to_timestamp($5),
+                            trial_start = CASE WHEN $6 IS NULL THEN trial_start ELSE to_timestamp($6) END,
+                            trial_end   = CASE WHEN $7 IS NULL THEN trial_end   ELSE to_timestamp($7) END,
+                            cancel_at   = CASE WHEN $8 IS NULL THEN cancel_at   ELSE to_timestamp($8) END,
+                            cancel_at_period_end = $9
+                        WHERE id_user = $10
+                    `, [
                         sub.id,
                         sub.status,
                         sub.items.data[0]?.price?.id || null,
