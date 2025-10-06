@@ -34,7 +34,6 @@ async function handleStripeWebhook(req, res) {
                     const periodStart = sub.current_period_start ?? sub.trial_start ?? sub.start_date ?? null;
                     const periodEnd = sub.current_period_end ?? sub.trial_end ?? sub.billing_cycle_anchor ?? null;
                     let userId = sub.metadata?.app_user_id || session.metadata?.app_user_id || null;
-                    console.log("🚀1 ~ handleStripeWebhook ~ sub: ", sub)
 
                     if (!userId) {
                         const q = await pool.query('SELECT id_user FROM "user" WHERE stripe_customer_id = $1', [customerId]);

@@ -277,49 +277,57 @@
                             <div class="col-md-12">
                                 <ul class="nav nav-pills flex-column flex-md-row mb-3">
                                     <li class="nav-item">
-                                        <a class="nav-link active" href="javascript:void(0);"><i
-                                                class="bx bx-user me-1"></i> Conta</a>
+                                        <a class="nav-link active" data-bs-toggle="tab" href="#tab-account">
+                                            <i class="bx bx-user me-1"></i> Conta
+                                        </a>
                                     </li>
-                                    <!--<li class="nav-item">
-                                        <a class="nav-link" href="pages-account-settings-notifications.html"><i
-                                                class="bx bx-bell me-1"></i> Notificações</a>
-                                    </li>-->
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#tab-subscription">
+                                            <i class="bx bx-bell me-1"></i> Assinatura
+                                        </a>
+                                    </li>
                                 </ul>
-                                <div class="card mb-4">
-                                    <h5 class="card-header">Detalhes do perfil</h5>
-                                    <!-- Account -->
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-start align-items-sm-center gap-4">
-                                            <img src="" alt="user-avatar" class="d-block rounded" height="100"
-                                                width="100" id="uploadedAvatar" />
-                                            <div class="button-wrapper">
-                                                <label for="upload" class="btn btn-primary me-2 mb-4" tabindex="0">
-                                                    <span class="d-none d-sm-block">Carregar nova foto</span>
-                                                    <i class="bx bx-upload d-block d-sm-none"></i>
-                                                    <input type="file" id="upload" class="account-file-input" hidden
-                                                        accept="image/png, image/jpeg" />
-                                                </label>
+                                <div class="tab-content">
+                                    <!-- Conta -->
+                                    <div class="tab-pane fade show active" id="tab-account">
+                                        <div class="card mb-4">
+                                            <h5 class="card-header">Detalhes do perfil</h5>
+                                            <!-- Account -->
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-start align-items-sm-center gap-4">
+                                                    <img src="" alt="user-avatar" class="d-block rounded" height="100"
+                                                        width="100" id="uploadedAvatar" />
+                                                    <div class="button-wrapper">
+                                                        <label for="upload" class="btn btn-primary me-2 mb-4"
+                                                            tabindex="0">
+                                                            <span class="d-none d-sm-block">Carregar nova foto</span>
+                                                            <i class="bx bx-upload d-block d-sm-none"></i>
+                                                            <input type="file" id="upload" class="account-file-input"
+                                                                hidden accept="image/png, image/jpeg" />
+                                                        </label>
 
-                                                <p class="text-muted mb-0">JPG, GIF ou PNG permitidos. Tamanho máximo de
-                                                    800K</p>
+                                                        <p class="text-muted mb-0">JPG, GIF ou PNG permitidos. Tamanho
+                                                            máximo de
+                                                            800K</p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <hr class="my-0" />
-                                    <div class="card-body">
-                                        <form id="formAccountSettings" method="POST" onsubmit="return false">
-                                            <div class="row">
-                                                <div class="mb-3 col-md-6">
-                                                    <label for="completName" class="form-label">Nome completo</label>
-                                                    <input class="form-control" type="text" id="completName"
-                                                        name="completName" autofocus />
-                                                </div>
-                                                <div class="mb-3 col-md-6">
-                                                    <label for="email" class="form-label">E-mail</label>
-                                                    <input class="form-control" type="text" id="email" name="email"
-                                                        placeholder="john.doe@example.com" />
-                                                </div>
-                                                <!--<div class="mb-3 col-md-6">
+                                            <hr class="my-0" />
+                                            <div class="card-body">
+                                                <form id="formAccountSettings" method="POST" onsubmit="return false">
+                                                    <div class="row">
+                                                        <div class="mb-3 col-md-6">
+                                                            <label for="completName" class="form-label">Nome
+                                                                completo</label>
+                                                            <input class="form-control" type="text" id="completName"
+                                                                name="completName" autofocus />
+                                                        </div>
+                                                        <div class="mb-3 col-md-6">
+                                                            <label for="email" class="form-label">E-mail</label>
+                                                            <input class="form-control" type="text" id="email"
+                                                                name="email" placeholder="john.doe@example.com" />
+                                                        </div>
+                                                        <!--<div class="mb-3 col-md-6">
                                                     <label for="organization" class="form-label">Organização</label>
                                                     <input type="text" class="form-control" id="organization"
                                                         name="organization" disabled />
@@ -332,37 +340,70 @@
                                                             class="form-control" disabled />
                                                     </div>
                                                 </div>-->
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <button type="submit" class="btn btn-primary me-2">Salvar
+                                                            Alterações</button>
+                                                        <button type="reset"
+                                                            class="btn btn-outline-secondary">Cancelar</button>
+                                                    </div>
+                                                </form>
                                             </div>
-                                            <div class="mt-2">
-                                                <button type="submit" class="btn btn-primary me-2">Salvar
-                                                    Alterações</button>
-                                                <button type="reset" class="btn btn-outline-secondary">Cancelar</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <!-- /Account -->
-                                </div>
-                                <div class="card">
-                                    <h5 class="card-header">Excluir conta</h5>
-                                    <div class="card-body">
-                                        <div class="mb-3 col-12 mb-0">
-                                            <div class="alert alert-warning">
-                                                <h6 class="alert-heading mb-1">Tem certeza de que deseja excluir sua
-                                                    conta?</h6>
-                                                <p class="mb-0">Depois de excluir sua conta, não há como voltar atrás.
-                                                    Por favor, tenha certeza.</p>
+                                            <!-- /Account -->
+                                        </div>
+                                        <div class="card">
+                                            <h5 class="card-header">Excluir conta</h5>
+                                            <div class="card-body">
+                                                <div class="mb-3 col-12 mb-0">
+                                                    <div class="alert alert-warning">
+                                                        <h6 class="alert-heading mb-1">Tem certeza de que deseja excluir
+                                                            sua
+                                                            conta?</h6>
+                                                        <p class="mb-0">Depois de excluir sua conta, não há como voltar
+                                                            atrás.
+                                                            Por favor, tenha certeza.</p>
+                                                    </div>
+                                                </div>
+                                                <form id="formAccountDeactivation" onsubmit="return false">
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="accountActivation" id="accountActivation" />
+                                                        <label class="form-check-label" for="accountActivation">Confirmo
+                                                            a
+                                                            desativação da minha conta</label>
+                                                    </div>
+                                                    <button type="submit"
+                                                        class="btn btn-danger deactivate-account">Desativar
+                                                        Conta</button>
+                                                </form>
                                             </div>
                                         </div>
-                                        <form id="formAccountDeactivation" onsubmit="return false">
-                                            <div class="form-check mb-3">
-                                                <input class="form-check-input" type="checkbox" name="accountActivation"
-                                                    id="accountActivation" />
-                                                <label class="form-check-label" for="accountActivation">Confirmo a
-                                                    desativação da minha conta</label>
+                                    </div>
+                                    <!-- Assinatura -->
+                                    <div class="tab-pane fade" id="tab-subscription">
+                                        <div class="card">
+                                            <div class="card-header d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <h5 class="mb-0">Assinatura</h5>
+                                                    <small id="subStatus" class="text-muted">Carregando…</small>
+                                                </div>
+                                                <button id="btn-portal" class="btn btn-outline-secondary">
+                                                    <i class="bx bx-credit-card me-1"></i> Gerenciar assinatura
+                                                </button>
                                             </div>
-                                            <button type="submit" class="btn btn-danger deactivate-account">Desativar
-                                                Conta</button>
-                                        </form>
+
+                                            <div class="card-body">
+                                                <div class="row g-3 align-items-end mb-3">
+                                                    <div class="col-sm-6 col-md-4 col-lg-3">
+                                                        <label for="coupon" class="form-label">Cupom (opcional)</label>
+                                                        <input id="coupon" class="form-control"
+                                                            placeholder="ex.: CUPOMTESTE" />
+                                                    </div>
+                                                </div>
+
+                                                <div class="row" id="plansGrid"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -444,94 +485,100 @@
     </script>
     <script src="/assets/js/settingsAccountPage.js"></script>
     <script>
-        (async () => {
-            // helper de formatação
+        (() => {
             const brl = v => (v / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const elContainer = document.querySelector('.container-xxl');
 
-            // bloco de status + planos (injeção de UI na página existente)
-            const card = document.createElement('div');
-            card.className = 'card mt-4';
-            card.innerHTML = `
-    <h5 class="card-header">Assinatura</h5>
-    <div class="card-body">
-      <div id="subStatus" class="mb-3 text-muted">Carregando sua assinatura…</div>
-      <div class="row g-3 align-items-center mb-2">
-        <div class="col-auto">
-          <label for="coupon" class="col-form-label">Cupom (opcional)</label>
-        </div>
-        <div class="col-auto">
-          <input id="coupon" class="form-control" placeholder="ex.: CUPOMTESTE"/>
-        </div>
-        <div class="col-auto">
-          <button id="btn-portal" class="btn btn-outline-secondary">Gerenciar assinatura</button>
-        </div>
-      </div>
-      <div id="plansGrid" class="row gy-3"></div>
-      <div class="mt-3">
-        <a id="btn-logout" class="btn btn-outline-danger" href="/login.html">Sair</a>
-      </div>
-    </div>`;
-            elContainer.appendChild(card);
+            const elStatus = document.getElementById('subStatus');
+            const grid = document.getElementById('plansGrid');
+            const portalBtn = document.getElementById('btn-portal');
+            const couponInpt = document.getElementById('coupon');
 
-            // status atual
-            try {
-                const r = await fetch('/api/billing/me', { credentials: 'same-origin' });
-                const { subscription: s } = await r.json();
-                const fmt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '-';
-                const subEl = document.getElementById('subStatus');
-                if (!s) {
-                    subEl.innerHTML = '<span class="badge bg-secondary">Sem assinatura</span>';
-                } else {
+            async function loadStatus() {
+                try {
+                    const r = await fetch('/api/billing/me', { credentials: 'same-origin' });
+                    const { subscription: s } = await r.json();
+                    const fmt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '-';
+
+                    if (!s) {
+                        elStatus.innerHTML = '<span class="badge bg-secondary">Sem assinatura</span>';
+                        portalBtn.disabled = true;
+                        portalBtn.title = 'Disponível após iniciar o trial/assinatura';
+                        return;
+                    }
+
                     const badge = ['active', 'trialing'].includes(s.subscription_status)
                         ? '<span class="badge bg-success">Ativa</span>'
                         : `<span class="badge bg-warning text-dark">${s.subscription_status}</span>`;
-                    subEl.innerHTML = `${badge}
+
+                    elStatus.innerHTML = `${badge}
         <small class="ms-2">Plano: ${s.plan_code || '-'} · Vig.: ${fmt(s.current_period_start)} → ${fmt(s.current_period_end)} · Trial até: ${fmt(s.trial_end)}</small>`;
+
+                    // portal só habilita se tiver assinatura/trial
+                    portalBtn.disabled = !['active', 'trialing'].includes(s.subscription_status);
+                    portalBtn.title = portalBtn.disabled ? 'Disponível após iniciar o trial/assinatura' : '';
+                } catch (e) {
+                    elStatus.textContent = 'Não foi possível carregar sua assinatura.';
+                    portalBtn.disabled = true;
                 }
-            } catch { /* ignora */ }
+            }
 
-            // planos
-            const grid = document.getElementById('plansGrid');
-            const resp = await fetch('/api/billing/plans', { credentials: 'same-origin' });
-            const { plans } = await resp.json();
-            plans.forEach(p => {
-                const col = document.createElement('div');
-                col.className = 'col-12 col-md-6 col-xl-4';
-                col.innerHTML = `
-      <div class="border rounded p-3 h-100">
-        <h6 class="mb-1">${p.name}</h6>
-        <div class="mb-2"><strong>${brl(p.amount_cents)}</strong> / ${p.interval}</div>
-        <button class="btn btn-primary w-100" data-code="${p.code}">Assinar ${p.name}</button>
-      </div>`;
-                grid.appendChild(col);
-            });
+            async function loadPlans() {
+                grid.innerHTML = '';
+                const r = await fetch('/api/billing/plans', { credentials: 'same-origin' });
+                const { plans } = await r.json();
 
-            // assinar (Checkout)
-            grid.querySelectorAll('button[data-code]').forEach(btn => {
-                btn.onclick = async () => {
-                    const plan_code = btn.getAttribute('data-code');
-                    const promo_code = document.getElementById('coupon').value || null;
-                    const r = await fetch('/api/billing/checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'same-origin',
-                        body: JSON.stringify({ plan_code, promo_code })
-                    });
-                    const j = await r.json();
-                    if (j.url) window.location = j.url; else alert(j.message || 'Erro ao iniciar checkout');
-                };
-            });
+                plans.forEach(p => {
+                    const col = document.createElement('div');
+                    col.className = 'col-sm-6 col-lg-4';
+                    col.innerHTML = `
+        <div class="card h-100 shadow-none border">
+          <div class="card-body">
+            <h6 class="mb-1">${p.name}</h6>
+            <div class="mb-2">
+              <span class="fs-4 fw-semibold">${brl(p.amount_cents)}</span>
+              <small class="text-muted">/ ${p.interval}</small>
+            </div>
+            <button class="btn btn-primary w-100" data-code="${p.code}">
+              Assinar ${p.name}
+            </button>
+          </div>
+        </div>`;
+                    grid.appendChild(col);
+                });
 
-            // portal
-            document.getElementById('btn-portal').onclick = async () => {
+                grid.querySelectorAll('button[data-code]').forEach(btn => {
+                    btn.onclick = async () => {
+                        const plan_code = btn.getAttribute('data-code');
+                        const promo_code = couponInpt.value || null;
+                        const resp = await fetch('/api/billing/checkout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ plan_code, promo_code })
+                        });
+                        const j = await resp.json();
+                        if (j.url) window.location = j.url; else alert(j.message || 'Erro ao iniciar checkout');
+                    };
+                });
+            }
+
+            portalBtn?.addEventListener('click', async () => {
                 const r = await fetch('/api/billing/portal', { method: 'POST', credentials: 'same-origin' });
                 const j = await r.json();
                 if (j.url) window.location = j.url; else alert(j.message || 'Erro ao abrir Portal');
-            };
+            });
+
+            // Se voltou do checkout (?checkout=success|cancel), já abre a aba Assinatura
+            const qp = new URLSearchParams(location.search);
+            if (qp.has('checkout')) {
+                const tabTrigger = document.querySelector('a[href="#tab-subscription"]');
+                if (tabTrigger && window.bootstrap?.Tab) new bootstrap.Tab(tabTrigger).show();
+            }
+
+            loadStatus();
+            loadPlans();
         })();
     </script>
-
 
 </body>
 
