@@ -52,9 +52,9 @@ exports.handleOAuthCallback = async (req, res) => {
         fb_exchange_token: shortLivedToken
       }
     });
-    console.log("🚀 ~ exports.handleOAuthCallback= ~ longTokenRes: ", longTokenRes)
     const longLivedToken = longTokenRes.data.access_token;
     const llExpiresIn = Number(longTokenRes.data.expires_in);
+    console.log("🚀 ~ exports.handleOAuthCallback= ~ llExpiresIn: ", llExpiresIn)
 
     let metaExpiresAt = null;
     try {
@@ -65,18 +65,14 @@ exports.handleOAuthCallback = async (req, res) => {
         }
       });
       const d = dbg.data?.data || {};
-      console.log("🚀 ~ exports.handleOAuthCallback= ~ d: ", d)
       if (d.data_access_expires_at) {
         metaExpiresAt = new Date(d.data_access_expires_at * 1000);
-        console.log("🚀 ~ exports.handleOAuthCallback if= ~ metaExpiresAt: ", metaExpiresAt)
       } else if (!Number.isNaN(llExpiresIn) && llExpiresIn > 0) {
         metaExpiresAt = new Date(Date.now() + llExpiresIn * 1000);
-        console.log("🚀 ~ exports.handleOAuthCallback elif= ~ metaExpiresAt: ", metaExpiresAt)
       }
     } catch (_) {
       if (!Number.isNaN(llExpiresIn) && llExpiresIn > 0) {
         metaExpiresAt = new Date(Date.now() + llExpiresIn * 1000);
-        console.log("🚀 ~ exports.handleOAuthCallback catch= ~ metaExpiresAt: ", metaExpiresAt)
       }
     }
 

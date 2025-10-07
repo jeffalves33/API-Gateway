@@ -10,7 +10,6 @@ exports.getImpressions = async (linkedin, startDate, endDate) => {
     const timeIntervals = makeTimeIntervals(startDate, endDate);
     const allDays = getAllDaysBetween(startDate, endDate);
     const perDay = allDays.map(() => 0);
-
     const url = `https://api.linkedin.com/rest/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=urn%3Ali%3Aorganization%3A${linkedin.organization_id}&timeIntervals=${timeIntervals}`;
     const { data } = await axios.get(url, { headers: liHeaders(linkedin.access_token) });
 

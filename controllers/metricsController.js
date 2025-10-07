@@ -91,7 +91,7 @@ exports.getImpressionMetrics = async (req, res) => {
 
     // LinkedIn
     if (linkedin && linkedin.organization_id && linkedin.access_token) {
-      promises.push(linkedinService.getImpressions(linkedin.organization_id, linkedin.access_token, startDate, endDate));
+      promises.push(linkedinService.getImpressions(linkedin, startDate, endDate));
     } else {
       promises.push(Promise.resolve([]));
     }
@@ -157,7 +157,7 @@ exports.getfollowersMetrics = async (req, res) => {
 
     // LinkedIn
     if (linkedin && linkedin.organization_id && linkedin.access_token) {
-      promises.push(linkedinService.getFollowers(linkedin.organization_id, linkedin.access_token, startDate, endDate));
+      promises.push(linkedinService.getFollowers(linkedin, startDate, endDate));
     } else {
       promises.push(Promise.resolve([]));
     }
