@@ -27,7 +27,7 @@ async function createCheckoutSession({ user, priceId, planCode, promoCode }) {
         customer: customerId,
         line_items: [{ price: priceId, quantity: 1 }],
         // trial de 30 dias
-        subscription_data: { trial_period_days: 2, metadata: { plan_code: planCode, app_user_id: String(user.id_user) } },
+        subscription_data: { trial_period_days: 30, metadata: { plan_code: planCode, app_user_id: String(user.id_user) } },
         // permitir que o usuário digite cupom na tela
         allow_promotion_codes: true, // :contentReference[oaicite:9]{index=9}
         success_url: `${process.env.FRONTEND_BASE_URL}/settingsAccountPage.html?checkout=success`,

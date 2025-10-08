@@ -54,7 +54,6 @@ exports.handleOAuthCallback = async (req, res) => {
     });
     const longLivedToken = longTokenRes.data.access_token;
     const llExpiresIn = Number(longTokenRes.data.expires_in);
-    console.log("🚀 ~ exports.handleOAuthCallback= ~ llExpiresIn: ", llExpiresIn)
 
     let metaExpiresAt = null;
     try {
