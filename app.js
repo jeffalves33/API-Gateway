@@ -18,6 +18,7 @@ const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 
+// removi o middleware pois o redirecionamento de planos é pelo modal em cada tela
 const requireSubscription = require('./middleware/subscriptionMiddleware');
 
 const landingDir = path.join(__dirname, 'public', 'institutional', 'out');
@@ -61,16 +62,16 @@ app.get('/', (req, res) => {
 });
 
 // === Páginas protegidas ===
-app.get('/analyzesPage.html', authenticatePageAccess, requireSubscription, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'analyzesPage.html')); });
+app.get('/analyzesPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'analyzesPage.html')); });
 app.get('/chatPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'chatPage.html')); });
-app.get('/customersPage.html', authenticatePageAccess, requireSubscription, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'customersPage.html')); });
-app.get('/dashboardPage.html', authenticatePageAccess, requireSubscription, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html')); });
+app.get('/customersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'customersPage.html')); });
+app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html')); });
 app.get('/foodModelPage.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html'));
 });
 
-app.get('/myCustomersPage.html', authenticatePageAccess, requireSubscription, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
-app.get('/platformsPage.html', authenticatePageAccess, requireSubscription, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'platformsPage.html')); });
+app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
+app.get('/platformsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'platformsPage.html')); });
 
 app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html'));

@@ -539,6 +539,60 @@
         <p class="mt-2">Carregando dados iniciais...</p>
     </div>
 
+    <!-- Modal: Assinatura / Pagamento -->
+    <div class="modal fade" id="billingModal" tabindex="-1" aria-labelledby="billingModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="billingModalLabel">
+                        <i class="bx bx-credit-card me-2"></i> Assinatura da plataforma
+                    </h5>
+                    <!-- Sem botão de fechar para forçar decisão -->
+                </div>
+
+                <div class="modal-body">
+                    <div id="billing-alert" class="alert alert-info" role="alert" style="display:none;"></div>
+
+                    <!-- Status atual -->
+                    <div id="billing-status" class="mb-3">
+                        <small class="text-muted">Verificando sua assinatura…</small>
+                    </div>
+
+                    <!-- Cupom -->
+                    <div class="mb-3">
+                        <label for="couponInput" class="form-label">Cupom (opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bx bx-purchase-tag-alt"></i></span>
+                            <input type="text" id="couponInput" class="form-control" placeholder="EX.: BEMVINDO10">
+                        </div>
+                    </div>
+
+                    <!-- Planos -->
+                    <div class="mb-2">
+                        <h6 class="mb-1">Escolha um plano</h6>
+                        <small class="text-muted">Os valores são carregados automaticamente dos seus planos.</small>
+                    </div>
+                    <div id="plansGrid" class="row g-3">
+                        <!-- Cartões de planos serão injetados aqui via JS -->
+                    </div>
+                </div>
+
+                <div class="modal-footer d-flex justify-content-between">
+                    <button id="openPortalBtn" type="button" class="btn btn-outline-secondary" disabled>
+                        Gerenciar pagamento (Portal)
+                    </button>
+                    <div class="d-flex gap-2">
+                        <a href="/settingsAccountPage.html" class="btn btn-light">Ver opções completas</a>
+                        <button id="closeBillingBtn" type="button" class="btn btn-secondary">Fechar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Core JS -->
     <!-- build:js assets/vendor/js/core.js -->
 
@@ -829,6 +883,9 @@
             }
         });
     </script>
+
+    <!-- Jeferson: Check pagamentos -->
+    <script src="/assets/js/checkPayments.js"></script>
 
 </body>
 
