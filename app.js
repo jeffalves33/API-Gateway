@@ -10,6 +10,7 @@ const { handleStripeWebhook } = require('./controllers/stripeWebhookController')
 const billingRoutes = require('./routes/billingRoutes');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
@@ -42,6 +43,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/metrics', metricsRoutes);
 
 //Refatorado
+app.use('/api/contact', contactRoutes);
 app.use('/api/googleAnalytics', googleAnalyticsRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/meta', metaRoutes);
