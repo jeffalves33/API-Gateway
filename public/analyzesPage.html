@@ -462,7 +462,7 @@
                                     <!-- Plataformas e Tipo de análise -->
                                     <div class="row mb-4">
                                         <!-- Plataformas -->
-                                        <div class="col-md-6 mb-3 mb-md-0">
+                                        <div class="col-md-4">
                                             <label class="form-label mb-2 fw-medium">Plataformas</label>
                                             <div class="ps-2">
                                                 <div class="form-check mb-2">
@@ -491,7 +491,7 @@
                                         </div>
 
                                         <!-- Tipo de análise -->
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
                                             <label class="form-label mb-2 fw-medium">Tipo de análise</label>
                                             <div class="ps-2">
                                                 <div class="form-check mb-2">
@@ -517,9 +517,141 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Ângulo da análise (enviesamento) -->
+                                        <div class="col-md-4">
+                                            <fieldset class="ps-2" role="radiogroup" aria-labelledby="legendFocus">
+                                                <label id="legendFocus"
+                                                    class="form-label mb-2 fw-medium">Enviesamento</label>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusBranding" value="branding">
+                                                    <label class="form-check-label" for="focusBranding">Branding &
+                                                        Comunicação</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusNegocio" value="negocio">
+                                                    <label class="form-check-label" for="focusNegocio">Negócio</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusConexao" value="conexao">
+                                                    <label class="form-check-label" for="focusConexao">Conexão
+                                                        Integrada</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusPanorama" value="panorama" checked>
+                                                    <label class="form-check-label" for="focusPanorama">Panorama
+                                                        Integrado</label>
+                                                </div>
+                                            </fieldset>
+                                        </div>
                                     </div>
 
-                                    <!-- Formato do relatório -->
+                                    <!-- Parâmetros de narrativa -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-6 mb-3 mb-md-0">
+                                            <label for="voiceProfile" class="form-label mb-2 fw-medium">
+                                                Para quem é a análise?
+                                                <button type="button" class="btn btn-link p-0 ms-1 align-baseline"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                    title="Escolha quem vai ler para adaptar vocabulário e prioridades."
+                                                    aria-label="Mais informações sobre o perfil de audiência">
+                                                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                </button>
+                                            </label>
+                                            <select class="form-select" id="voiceProfile"
+                                                aria-describedby="voiceProfileHelp">
+                                                <option value="CMO" selected>CMO — Direção de negócio & marca</option>
+                                                <option value="HEAD_GROWTH">Head de Growth — Aquisição, retenção, testes
+                                                </option>
+                                                <option value="PERFORMANCE_MIDIA">Performance & Mídia — Canais,
+                                                    ROAS/CPAs, orçamento</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="narrativeStyle" class="form-label mb-2 fw-medium">
+                                                Como a história é organizada?
+                                                <button type="button" class="btn btn-link p-0 ms-1 align-baseline"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                    title="SCQA: Situação→Complicação→Pergunta→Resposta. Pirâmide: conclusão primeiro; depois pilares. Livre: prosa direta."
+                                                    aria-label="Mais informações sobre o estilo narrativo">
+                                                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                </button>
+                                            </label>
+                                            <select class="form-select" id="narrativeStyle"
+                                                aria-describedby="narrativeStyleHelp">
+                                                <option value="SCQA" selected>SCQA — Começo-meio-fim que prende atenção
+                                                </option>
+                                                <option value="piramide">Pirâmide — Resposta primeiro, pilares depois
+                                                </option>
+                                                <option value="livre">Livre — Prosa simples e direta</option>
+                                            </select>
+                                            <small id="narrativeStyleHelp" class="form-text text-muted">
+                                                Só muda a ordem lógica; os dados são os mesmos.
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-4">
+                                        <div class="col-md-4">
+                                            <label for="decisionMode" class="form-label mb-2 fw-medium">
+                                                Formato para decidir
+                                                <button type="button" class="btn btn-link p-0 ms-1 align-baseline"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                    title="Tópicos: leitura rápida. Narrativa: costura contexto. Decision Brief: TL;DR + ações com dono e prazo. Em Descritiva bloqueamos o Brief (não há plano de ação)."
+                                                    aria-label="Mais informações sobre o formato de decisão">
+                                                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                </button>
+                                            </label>
+                                            <select class="form-select" id="decisionMode"
+                                                aria-describedby="decisionModeHelp">
+                                                <option value="topicos" selected>Tópicos — Leitura rápida e objetiva
+                                                </option>
+                                                <option value="narrativa">Narrativa — Contexto antes da conclusão
+                                                </option>
+                                                <option value="decision_brief">Decision Brief — resumo + ações
+                                                    (executivo)</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Pergunta opcional -->
+                                        <div class="col-8">
+                                            <label for="analysisQuery" class="form-label mb-2 fw-medium">
+                                                Pergunta opcional para guiar a análise
+                                                <button type="button" class="btn btn-link p-0 ms-1 align-baseline"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                    title="Se vazio, usamos nosso estratégia. (Recomendamos deixar vazio)"
+                                                    aria-label="Mais informações sobre a pergunta opcional">
+                                                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                </button>
+                                            </label>
+                                            <textarea class="form-control" id="analysisQuery" rows="2"
+                                                placeholder="Ex.: Foco em alcance e crescimento; descreva picos por data e padrões por dia da semana."></textarea>
+
+                                        </div>
+
+                                        <!--<div class="col-md-3 mb-3 mb-md-0">
+                                            <label for="granularity"
+                                                class="form-label mb-2 fw-medium">Granularidade</label>
+                                            <select class="form-select" id="granularity">
+                                                <option value="detalhada" selected>Detalhada</option>
+                                                <option value="resumo">Resumo</option>
+                                            </select>
+                                        </div>-->
+
+                                        <!--<div class="col-md-3 d-flex align-items-end">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="bilingual" checked>
+                                                <label class="form-check-label" for="bilingual">Saída bilíngue</label>
+                                            </div>
+                                        </div>-->
+                                    </div>
+
+                                    <!-- Formato do relatório 
                                     <div class="row mb-4">
                                         <div class="col-md-6">
                                             <label for="formatoRelatorio" class="form-label mb-2 fw-medium">Formato do
@@ -531,7 +663,7 @@
                                                 <option value="detalhado">Detalhado</option>
                                             </select>
                                         </div>
-                                    </div>
+                                    </div>-->
 
                                     <!-- Botão Gerar -->
                                     <div class="d-flex justify-content-end mt-4">

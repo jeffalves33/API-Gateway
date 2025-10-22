@@ -16,6 +16,40 @@ document.addEventListener('DOMContentLoaded', async function () {
     let userId = null;
     const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
+    // Habilita todos os tooltips do Bootstrap 5
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].forEach(el => new bootstrap.Tooltip(el));
+
+    // ===== Helpers para novo payload =====
+    function selectedPlatforms() {
+        const ids = ['facebook', 'googleAnalytics', 'instagram', 'linkedin', 'youtube'];
+        const map = {
+            facebook: 'facebook',
+            instagram: 'instagram',
+            linkedin: 'linkedin',
+            googleAnalytics: 'google_analytics',
+            youtube: 'youtube'
+        };
+        return ids.filter(id => document.getElementById(id)?.checked)
+            .map(id => map[id])
+            .filter(Boolean);
+    }
+
+    // dd/mm/yyyy -> yyyy-mm-dd (ISO 8601, zero-padded)
+    function toISO(brDate) {
+        if (!brDate) return null;
+        const [d, m, y] = brDate.split('/');
+        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+
+    const TYPE_MAP = {
+        descritiva: 'descriptive',
+        preditiva: 'predictive',
+        prescritiva: 'prescriptive',
+        geral: 'general'
+    };
+
+
     function showError(message, duration = 5000) {
         const alertContainer = document.getElementById('alert-container');
         if (alertContainer) {
@@ -258,6 +292,30 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadUserProfile();
     await loadCustomers();
 
+    // Travar Decision Brief quando tipo = Descritiva
+    (function initDecisionModeGuard() {
+        const decisionMode = document.getElementById('decisionMode');
+        const help = document.getElementById('decisionModeHelp');
+        const radios = document.querySelectorAll('input[name="tipoAnalise"]');
+
+        function syncDecisionMode() {
+            const selected = document.querySelector('input[name="tipoAnalise"]:checked')?.id || 'descritiva';
+            const isDesc = selected === 'descritiva';
+            if (decisionMode) {
+                if (isDesc) {
+                    decisionMode.value = 'topicos';
+                    decisionMode.setAttribute('disabled', 'disabled');
+                    if (help) help.textContent = 'Em Descritiva, usamos “Tópicos” (Brief desativado).';
+                } else {
+                    decisionMode.removeAttribute('disabled');
+                    if (help) help.textContent = 'Escolha o formato de entrega para tomada de decisão.';
+                }
+            }
+        }
+        radios.forEach(r => r.addEventListener('change', syncDecisionMode));
+        syncDecisionMode();
+    })();
+
     async function validateForm() {
         try {
             const startDate = document.getElementById('startDate')?.value;
@@ -267,10 +325,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             const googleAnalytics = document.getElementById('googleAnalytics')?.checked;
             const linkedin = document.getElementById('linkedin')?.checked;
             const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked');
-            const formatoRelatorio = document.getElementById('formatoRelatorio')?.value;
+            const analysisFocus = document.querySelector('input[name="analysisFocus"]:checked');
+            //const formatoRelatorio = document.getElementById('formatoRelatorio')?.value;
 
             if (!userId) throw new Error('Usuário não identificado. Faça login novamente.');
             if (!startDate || !endDate) throw new Error('Por favor, selecione a data inicial e final.');
+            if (!analysisFocus) throw new Error('Selecione o ângulo da análise (Branding, Negócio, Conexão ou Panorama).');
 
             // Validar formato das datas
             const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -291,7 +351,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (endDateObj > today) throw new Error('A data final não pode ser no futuro.');
             if (!facebook && !instagram && !googleAnalytics && !linkedin) throw new Error('Por favor, selecione pelo menos uma plataforma.');
             if (!tipoAnalise) throw new Error('Por favor, selecione o tipo de análise.');
-            if (!formatoRelatorio || formatoRelatorio === 'Selecione' || formatoRelatorio === '') throw new Error('Por favor, selecione o formato do relatório.');
+            //if (!formatoRelatorio || formatoRelatorio === 'Selecione' || formatoRelatorio === '') throw new Error('Por favor, selecione o formato do relatório.');
 
             const selectedCustomerId = localStorage.getItem('selectedCustomerId');
             if (!selectedCustomerId) throw new Error('Por favor, selecione um cliente.');
@@ -333,28 +393,56 @@ document.addEventListener('DOMContentLoaded', async function () {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked').id;
-            const formatoRelatorio = document.getElementById('formatoRelatorio').value;
+            //const formatoRelatorio = document.getElementById('formatoRelatorio').value;
 
-            // Determina a plataforma
-            let platform = [];
-            if (document.getElementById('instagram').checked) platform.push('instagram');
-            if (document.getElementById('facebook').checked) platform.push('facebook');
-            if (document.getElementById('googleAnalytics').checked) platform.push('google_analytics');
-            if (document.getElementById('linkedin').checked) platform.push('linkedin');
+            // === NOVO BLOCO: coletar campos e montar payload completo ===
+            const startDateVal = document.getElementById('startDate').value.trim();
+            const endDateVal = document.getElementById('endDate').value.trim();
 
-            setTimeout(function () {
-                updateProgressBar(40, 'Preparando solicitação...');
-            }, 300);
+            // tipo de análise
+            const selectedTypeId = document.querySelector('input[name="tipoAnalise"]:checked')?.id || 'descritiva';
+            const analysisType = TYPE_MAP[selectedTypeId] || 'descriptive';
 
+            // ângulo/enviesamento (se o HTML ainda não tiver, cai em 'panorama')
+            const analysisFocus = document.querySelector('input[name="analysisFocus"]:checked')?.value || 'panorama';
+
+            // plataformas (snake_case)
+            const platforms = selectedPlatforms();
+
+            // parâmetros de narrativa (se não existirem no HTML, defaults seguros)
+            const voiceProfile = document.getElementById('voiceProfile')?.value || 'CMO';
+            const narrativeStyle = document.getElementById('narrativeStyle')?.value || 'SCQA';
+            //const granularity = document.getElementById('granularity')?.value || 'detalhada';
+            //const bilingual = document.getElementById('bilingual')?.checked ?? true;
+
+            // decision_mode: em Descritiva, força 'topicos'
+            let decisionMode = document.getElementById('decisionMode')?.value || 'topicos';
+            if (analysisType === 'descriptive') decisionMode = 'topicos';
+
+            // pergunta opcional
+            const analysisQuery = (document.getElementById('analysisQuery')?.value || '').trim() || null;
+
+            // formato do relatório (seu select atual; use padrão 'detalhado' se não existir)
+            //const outputFormat = document.getElementById('formatoRelatorio')?.value || 'detalhado';
+
+            // payload final (novo contrato)
             const requestBody = {
                 agency_id: String(userId),
                 client_id: id_customer,
-                platforms: platform,
-                analysis_type: tipoAnalise.replace('descritiva', 'descriptive').replace('prescritiva', 'prescriptive').replace('preditiva', 'predictive').replace('geral', 'general'),
-                start_date: formatDateToISO(startDate),
-                end_date: formatDateToISO(endDate),
-                output_format: formatoRelatorio
+                platforms: platforms,
+                analysis_type: analysisType,
+                analysis_focus: analysisFocus,
+                start_date: toISO(startDateVal),
+                end_date: toISO(endDateVal),
+                //output_format: outputFormat,
+                analysis_query: analysisQuery,
+                //bilingual: Boolean(bilingual),
+                //granularity: granularity,
+                voice_profile: voiceProfile,
+                decision_mode: decisionMode,
+                narrative_style: narrativeStyle
             };
+
 
             updateProgressBar(60, 'Enviando para análise...');
 
@@ -406,8 +494,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     function formatDateToISO(dateStr) {
+        if (!dateStr) return null;
         const [day, month, year] = dateStr.split('/');
-        return `${year}-${month}-${day}`;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
 
     function renderAnalyzeResult(data) {

@@ -17,11 +17,10 @@ const {
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/profile', authenticateToken, getUserProfile);
+router.get('/auth-status', authenticateToken, checkAuthStatus);
 router.post('/avatar', authenticateToken, uploadAvatar.single('avatar'), addAvatarProfileBucket);
 router.put('/update', authenticateToken, updateUserProfile);
 router.delete('/delete-account', authenticateToken, deleteUserAccount);
 router.post('/logout', authenticateToken, logoutUser);
-
-router.get('/auth-status', authenticateToken, checkAuthStatus);
 
 module.exports = router;
