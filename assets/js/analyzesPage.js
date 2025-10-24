@@ -49,48 +49,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         geral: 'general'
     };
 
-
-    function showError(message, duration = 5000) {
-        const alertContainer = document.getElementById('alert-container');
-        if (alertContainer) {
-            const alertId = 'alert-' + Date.now();
-            alertContainer.innerHTML = `
-            <div id="${alertId}" class="alert alert-danger alert-dismissible fade show position-fixed" 
-                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            </div>`;
-
-            // Auto-hide após duração especificada
-            setTimeout(() => {
-                const alert = document.getElementById(alertId);
-                if (alert) {
-                    alert.remove();
-                }
-            }, duration);
-        }
-    }
-
-    function showSuccess(message, duration = 3000) {
-        const alertContainer = document.getElementById('alert-container');
-        if (alertContainer) {
-            const alertId = 'alert-' + Date.now();
-            alertContainer.innerHTML = `
-            <div id="${alertId}" class="alert alert-success alert-dismissible fade show position-fixed" 
-                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            </div>`;
-
-            setTimeout(() => {
-                const alert = document.getElementById(alertId);
-                if (alert) {
-                    alert.remove();
-                }
-            }, duration);
-        }
-    }
-
     function updateProgressBar(percentage, text) {
         if (loadingPercentageElement) loadingPercentageElement.textContent = `${percentage}%`;
         if (loadingTextElement) loadingTextElement.textContent = text;
@@ -99,7 +57,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function showLoadingProgress() {
         if (loadingProgressElement) {
-
             loadingProgressElement.style.display = 'block';
             document.getElementById("form-busca").style.display = 'none';
             updateProgressBar(0, 'Preparando dados...');
@@ -153,9 +110,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 throw new Error('ID do usuário não encontrado');
             }
         } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
-            showError(`Erro ao carregar perfil: ${error.message}`);
-            // Redireciona para login se houver erro de autenticação
+            showError('Erro ao carregar perfil', error.message);
             if (error.message.includes('401') || error.message.includes('não autorizado')) {
                 setTimeout(() => {
                     window.location.href = '/';
@@ -187,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             customers.forEach(customer => {
                 if (!customer.id_customer || !customer.name) {
-                    console.warn('Cliente com dados inválidos:', customer);
+                    showError('Cliente com dados inválidos:', customer);
                     return;
                 }
 
@@ -235,19 +190,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 const data = await response.json().catch(() => ({ message: 'Erro de comunicação' }));
                                 throw new Error(data.message || 'Erro ao atualizar cache de chaves');
                             }
-
-                            showSuccess(`Cliente "${name}" selecionado com sucesso!`);
                         }
                     } catch (error) {
-                        console.error('Erro ao selecionar cliente:', error);
-                        showError(`Erro ao selecionar cliente: ${error.message}`);
+                        showError('Erro ao selecionar cliente', error.message);
                     }
                 });
             });
 
         } catch (error) {
-            console.error('Erro ao carregar clientes:', error);
-            showError(`Erro ao carregar clientes: ${error.message}`);
+            showError('Erro ao carregar clientes', error.message);
 
             // Fallback: mostrar apenas opção de adicionar cliente
             customerListElement.innerHTML = `
@@ -255,34 +206,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="/platformsPage.html">Adicionar cliente</a></li>
             `;
-        }
-    }
-
-    async function logout() {
-        try {
-            const response = await fetch('/api/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({ message: 'Erro de comunicação' }));
-                console.warn('Erro no logout:', data.message);
-                // Mesmo com erro, limpa os dados locais e redireciona
-            }
-
-            // Sempre limpa o localStorage e redireciona, mesmo se houver erro no servidor
-            localStorage.clear();
-            showSuccess('Logout realizado com sucesso!');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 1000);
-
-        } catch (error) {
-            console.error('Erro ao fazer logout:', error);
-            // Mesmo com erro, força o logout local
-            localStorage.clear();
-            window.location.href = '/';
         }
     }
 
@@ -358,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             return true;
         } catch (error) {
-            showError(error.message);
+            showError(null, error.message);
             return false;
         }
     }
@@ -442,8 +365,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 decision_mode: decisionMode,
                 narrative_style: narrativeStyle
             };
-
-
             updateProgressBar(60, 'Enviando para análise...');
 
             const response = await fetch('https://analyze-backend-5jyg.onrender.com/analyze/', {
@@ -453,7 +374,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 },
                 body: JSON.stringify(requestBody)
             });
-            console.log("response: ", response)
 
             updateProgressBar(80, 'Processando resposta...');
 
@@ -483,8 +403,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             showSuccess('Análise gerada com sucesso!');
 
         } catch (error) {
-            console.error('Erro ao gerar análise:', error);
-            showError(`Erro ao gerar análise: ${error.message}`);
+            showError('Erro ao gerar análise', error.message);
         } finally {
             // Sempre restaurar o estado original
             hideLoadingProgress();
@@ -505,18 +424,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         const htmlFormatted = marked.parse(resultMarkdown);
 
         contentDashboard.innerHTML = `
-        <div class="card p-4 shadow-sm border-0">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0">Análise Gerada</h4>
-                <button id="download-pdf" class="btn btn-outline-primary">
-                    <i class="bi bi-download me-2"></i>Baixar PDF
-                </button>
+            <div class="card p-4 shadow-sm border-0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Análise Gerada</h4>
+                    <button id="download-pdf" class="btn btn-outline-primary">
+                        <i class="bi bi-download me-2"></i>Baixar PDF
+                    </button>
+                </div>
+                <div class="markdown-body" id="analysis-content">
+                    ${htmlFormatted}
+                </div>
             </div>
-            <div class="markdown-body" id="analysis-content">
-                ${htmlFormatted}
-            </div>
-        </div>
-    `;
+        `;
 
         // Adiciona o event listener para o botão de download
         document.getElementById('download-pdf')?.addEventListener('click', downloadAsPDF);
@@ -603,8 +522,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             showSuccess('PDF baixado com sucesso!');
 
         } catch (error) {
-            console.error('Erro ao gerar PDF:', error);
-            showError(`Erro ao gerar PDF: ${error.message}`);
+            showError('Erro ao gerar PDF:', error.message);
         } finally {
             // Sempre restaurar o botão
             if (downloadBtn && originalContent) {

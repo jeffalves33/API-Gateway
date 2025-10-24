@@ -116,3 +116,26 @@ let menu, animate;
   // Auto update menu collapsed/expanded based on the themeConfig
   window.Helpers.setCollapsed(true, false);
 })();
+
+async function logout() {
+  try {
+    const response = await fetch('/api/logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({ message: 'Erro de comunicação' }));
+      showError('Erro no logout:', data.message);
+    }
+
+    localStorage.clear();
+    window.location.href = '/';
+
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+    // Mesmo com erro, força o logout local
+    localStorage.clear();
+    window.location.href = '/';
+  }
+}

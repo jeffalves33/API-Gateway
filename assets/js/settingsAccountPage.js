@@ -15,47 +15,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     let isSubmitting = false; // Prevenir múltiplos submits
     const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
-    // Função para exibir alertas ao usuário
-    function showAlert(message, type = 'danger', duration = 5000) {
-        const alertContainer = document.getElementById('alert-container') || createAlertContainer();
-
-        const alertId = 'alert-' + Date.now();
-        const alertHtml = `
-            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            </div>
-        `;
-
-        alertContainer.innerHTML = alertHtml;
-
-        // Auto-remover após o tempo especificado
-        if (duration > 0) {
-            setTimeout(() => {
-                const alertElement = document.getElementById(alertId);
-                if (alertElement) {
-                    alertElement.remove();
-                }
-            }, duration);
-        }
-    }
-
-    // Criar container de alertas se não existir
-    function createAlertContainer() {
-        let container = document.getElementById('alert-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'alert-container';
-            container.style.position = 'fixed';
-            container.style.top = '20px';
-            container.style.right = '20px';
-            container.style.zIndex = '9999';
-            container.style.maxWidth = '400px';
-            document.body.appendChild(container);
-        }
-        return container;
-    }
-
     // Função para validar email
     function isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -92,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    showAlert('Sessão expirada. Redirecionando para login...', 'warning');
+                    showWarning('Sessão expirada. Redirecionando para login...');
                     setTimeout(() => window.location.href = '/login', 2000);
                     return;
                 }
@@ -129,8 +88,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
         } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
-            showAlert(`Erro ao carregar perfil: ${error.message}`, 'danger');
+            showError('Erro ao carregar perfil', error);
         }
     }
 
@@ -148,13 +106,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             const email = userEmailForm.value.trim();
 
             if (!isValidName(name)) {
-                showAlert('Nome deve ter pelo menos 2 caracteres', 'warning');
+                showError('Nome deve ter pelo menos 2 caracteres');
                 userCompletNameForm.focus();
                 return;
             }
 
             if (!isValidEmail(email)) {
-                showAlert('Por favor, insira um email válido', 'warning');
+                showError('Por favor, insira um email válido');
                 userEmailForm.focus();
                 return;
             }
@@ -211,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 if (!updateResp.ok) {
                     if (updateResp.status === 401) {
-                        showAlert('Sessão expirada. Redirecionando para login...', 'warning');
+                        showError('Sessão expirada. Redirecionando para login...');
                         setTimeout(() => window.location.href = '/login', 2000);
                         return;
                     }
@@ -243,11 +201,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 });
 
-                showAlert('Perfil atualizado com sucesso!', 'success');
+                showSuccess('Perfil atualizado com sucesso!');
 
             } catch (err) {
-                console.error('Erro ao atualizar perfil:', err);
-                showAlert(`Erro ao atualizar perfil: ${err.message}`, 'danger');
+                showError('Erro ao atualizar perfil', err);
             } finally {
                 isSubmitting = false;
                 setLoading(false, submitButton);
@@ -263,12 +220,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             // Verificar se o checkbox existe e está marcado
             const checkbox = document.getElementById('accountActivation');
             if (!checkbox) {
-                showAlert('Erro: Checkbox de confirmação não encontrado', 'danger');
+                showError(null, 'Não encontrado checkbox de desativação de conta');
                 return;
             }
 
             if (!checkbox.checked) {
-                showAlert('Por favor, confirme a desativação da sua conta marcando a caixa de seleção.', 'warning');
+                showWarning('Confirme a desativação da sua conta marcando a caixa de seleção.');
                 checkbox.focus();
                 return;
             }
@@ -288,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 if (!response.ok) {
                     if (response.status === 401) {
-                        showAlert('Sessão expirada. Redirecionando para login...', 'warning');
+                        showWarning('Sessão expirada. Redirecionando para login...');
                         setTimeout(() => window.location.href = '/login', 2000);
                         return;
                     }
@@ -296,14 +253,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                     throw new Error(data.message || 'Erro ao deletar conta');
                 }
 
-                showAlert('Conta deletada com sucesso! Redirecionando...', 'success');
-
                 // Limpar dados locais
                 try {
                     localStorage.clear();
                     sessionStorage.clear();
                 } catch (e) {
-                    console.warn('Erro ao limpar storage:', e);
+                    showError(null, `Erro ao limpar storage ${e}`);
                 }
 
                 // Redirecionar após um breve delay
@@ -312,48 +267,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }, 2000);
 
             } catch (err) {
-                console.error('Erro ao deletar conta:', err);
-                showAlert(`Erro ao deletar conta: ${err.message}`, 'danger');
+                showError('Erro ao deletar conta', err);
                 setLoading(false, deleteButton);
             }
         });
-    }
-
-    // Função de logout
-    async function logout() {
-        if (!confirm('Deseja realmente sair da sua conta?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({ message: 'Erro no logout' }));
-                throw new Error(data.message || 'Erro ao fazer logout');
-            }
-
-            showAlert('Logout realizado com sucesso!', 'success', 1000);
-
-            // Limpar dados locais
-            try {
-                localStorage.clear();
-                sessionStorage.clear();
-            } catch (e) {
-                console.warn('Erro ao limpar storage:', e);
-            }
-
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 1000);
-
-        } catch (error) {
-            console.error('Erro no logout:', error);
-            showAlert(`Erro ao sair: ${error.message}`, 'danger');
-        }
     }
 
     // Event listener para logout
@@ -368,7 +285,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             fileInput = document.querySelector('.account-file-input');
 
             if (!accountUserImage || !fileInput) {
-                console.warn('Elementos de upload de imagem não encontrados');
+                showError(null, 'Elementos de upload de imagem não encontrados');
                 return;
             }
 
@@ -383,13 +300,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                         // Validações básicas
                         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                         if (!allowedTypes.includes(file.type)) {
-                            showAlert('Tipo de arquivo não permitido. Use apenas JPEG, PNG ou GIF.', 'warning');
+                            showWarning('Tipo de arquivo não permitido. Use apenas JPEG, PNG ou GIF.');
                             fileInput.value = '';
                             return;
                         }
 
                         if (file.size > 5 * 1024 * 1024) {
-                            showAlert('Arquivo muito grande. Tamanho máximo: 5MB.', 'warning');
+                            showWarning('Arquivo muito grande. Tamanho máximo: 5MB.');
                             fileInput.value = '';
                             return;
                         }
@@ -406,16 +323,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                         accountUserImage.onerror = () => {
                             window.URL.revokeObjectURL(objectUrl);
                             accountUserImage.src = defaultAvatar;
-                            showAlert('Erro ao carregar preview da imagem', 'warning');
+                            showError('Erro ao carregar preview da imagem');
                         };
                     }
                 } catch (error) {
-                    console.error('Erro no upload de imagem:', error);
-                    showAlert('Erro ao processar imagem', 'danger');
+                    showError('Erro no upload de imagem', error);
                 }
             };
         } catch (error) {
-            console.error('Erro ao inicializar upload de imagem:', error);
+            showError('Erro ao inicializar upload de imagem', error);
         }
     })();
 
@@ -424,9 +340,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Listener para erros não capturados
     window.addEventListener('unhandledrejection', (event) => {
-        console.error('Promise rejeitada não tratada:', event.reason);
-        showAlert('Ocorreu um erro inesperado. Tente novamente.', 'danger');
+        showError('Promise rejeitada não tratada', event.reason);
     });
-
-    console.log('Página de configurações da conta inicializada com sucesso');
 });

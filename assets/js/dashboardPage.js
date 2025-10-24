@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 updateSelectedCustomerDisplay(savedName);
             }
         } catch (error) {
-            console.error('Erro ao restaurar cliente:', error);
+            showError('Erro ao restaurar cliente', error);
             localStorage.removeItem('selectedCustomerName');
             localStorage.removeItem('selectedCustomerId');
         }
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 element.src = data.user.foto_perfil || defaultAvatar;
             });
         } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
+            showError('Erro ao carregar perfil', error);
         }
     }
 
@@ -118,39 +118,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 throw new Error(data.message || 'Erro ao atualizar chaves');
                             }
                         } catch (error) {
-                            console.error('Erro ao atualizar cache de chaves:', error);
+                            showError('Erro ao atualizar cache de chaves', error);
                         }
                     }
                 });
             });
         } catch (error) {
-            console.error('Erro ao carregar clientes:', error);
-        }
-    }
-
-    async function logout() {
-        try {
-            const response = await fetch('/api/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Erro ao fazer logout');
-            }
-
-            localStorage.clear();
-            window.location.href = '/';
-        } catch (error) {
-            const alertContainer = document.getElementById('alert-container');
-            if (alertContainer) {
-                alertContainer.innerHTML = `
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${error.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                  </div>`;
-            }
+            showError('Erro ao carregar clientes', error);
         }
     }
 
@@ -170,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             renderReachChart(data);
             reachChartContainer.style.display = 'block';
         } catch (error) {
-            console.error('Erro ao buscar dados de alcance:', error);
+            showError('Erro ao buscar dados de alcance', error);
         }
     }
 
@@ -190,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             renderImpressionsChart(data);
             impressionsChartContainer.style.display = 'block';
         } catch (error) {
-            console.error('Erro ao buscar dados de impressões:', error);
+            showError('Erro ao buscar dados de impressões', error);
         }
     }
 
@@ -225,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (el) el.textContent = new Intl.NumberFormat('pt-BR').format(vals[key]);
             });
         } catch (error) {
-            console.error('Erro ao buscar dados de seguidores:', error);
+            showError('Erro ao buscar dados de seguidores', error);
         }
     }
 
@@ -244,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             renderTrafficLineChart(data);    // Gráfico de linha principal
             renderTrafficSourcesChart(data); // Pizza + lista de fontes
         } catch (error) {
-            console.error('Erro ao buscar dados de tráfego:', error);
+            showError('Erro ao buscar dados de tráfego', error);
         }
     }
 
@@ -262,13 +236,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             renderSearchVolumeLineChart(data);
             renderSearchVolumeCards(data);
         } catch (error) {
-            console.error('Erro ao buscar dados de volume de pesquisa:', error);
+            showError('Erro ao buscar dados de volume de pesquisa', error);
         }
     }
 
     function renderReachChart(data) {
         if (!data || !data.facebook || !data.instagram || !data.labels) {
-            console.error('Dados inválidos recebidos:', data);
+            showError('Dados inválidos recebidos', data);
             return;
         }
         facebookSecoundCardReach.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
@@ -353,7 +327,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderImpressionsChart(data) {
         if (!data || !data.facebook || !data.instagram || !data.google || !data.labels) {
-            console.error('Dados inválidos recebidos:', data);
+            showError('Dados inválidos recebidos', data);
             return;
         }
         facebookSecoundCardImpressions.textContent = data.facebook.reduce((sum, value) => sum + value, 0);
@@ -448,7 +422,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         borderColor = config.colors.borderColor;
         if (data.facebook === undefined || data.instagram === undefined ||
             data.linkedin === undefined || data.youtube === undefined) {
-            console.error('f Dados inválidos recebidos:', data);
+            showError('Dados inválidos recebidos', data);
             return;
         }
         return new Promise((resolve) => {
@@ -581,7 +555,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderTrafficLineChart(data) {
         if (!data || !data.sessions || !data.labels) {
-            console.error('Dados inválidos recebidos:', data);
+            showError('Dados inválidos recebidos', data);
             return;
         }
         return new Promise((resolve) => {
@@ -642,7 +616,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderTrafficSourcesChart(data) {
         if (!data || !data.sessions || !data.labels) {
-            console.error('Dados inválidos recebidos:', data);
+            showError('Dados inválidos recebidos', data);
             return;
         }
         return new Promise((resolve) => {
@@ -750,7 +724,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderSearchVolumeLineChart(data) {
         if (!data || !data.labels) {
-            console.error('6Dados inválidos recebidos:', data);
+            showError('Dados inválidos recebidos', data);
             return;
         }
         return new Promise((resolve) => {
@@ -805,7 +779,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderSearchVolumeCards(data) {
         if (!data || !data.labels) {
-            console.error('Dados inválidos recebidos:', data);
+            showError('Dados inválidos recebidos', data);
             return;
         }
         return new Promise((resolve) => {
@@ -935,7 +909,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const endDate = document.getElementById('endDate').value;
 
             if (!startDate || !endDate) {
-                alert('Por favor, selecione as datas antes de buscar');
+                showWarning('Por favor, selecione as datas antes de buscar');
                 return;
             }
 
@@ -950,7 +924,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             try {
                 const id_customer = localStorage.getItem('selectedCustomerId');
                 if (!id_customer) {
-                    alert('Por favor, selecione um cliente antes de buscar os dados.');
+                    showWarning('Selecione um cliente.');
                 } else {
                     // Mostra loading no botão
                     btnBuscarTexto.classList.add('d-none');
@@ -979,11 +953,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }, 500);
                 }
             } catch (error) {
-                console.error('Erro ao buscar dados do dashboard:', error);
+                showError('Erro ao buscar dados do dashboard', error);
                 // restaurar estado anterior
                 contentDashboard.style.display = previousState.dashboardVisible ? 'block' : 'none';
                 instructionMessage.style.display = previousState.instructionVisible ? 'block' : 'none';
-                alert('Erro ao buscar dados. Tente novamente.');
+                showError('Erro ao buscar dados. Tente novamente.');
             } finally {
                 // Remove loading APENAS após tudo estar completamente renderizado
                 btnBuscarTexto.classList.remove('d-none');

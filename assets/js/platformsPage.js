@@ -21,33 +21,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 element.src = data.user.foto_perfil || defaultAvatar;
             });
         } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
-        }
-    }
-
-    async function logout() {
-        try {
-            const response = await fetch('/api/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Erro ao fazer logout');
-            }
-
-            localStorage.clear();
-            window.location.href = '/';
-        } catch (error) {
-            const alertContainer = document.getElementById('alert-container');
-            if (alertContainer) {
-                alertContainer.innerHTML = `
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${error.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                  </div>`;
-            }
+            showError('Erro ao carregar perfil', error);
         }
     }
 
@@ -81,18 +55,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 // Fechar o modal
                 modal.hide();
-
-                // Mostrar mensagem de sucesso
-                const alertContainer = document.getElementById('alert-container');
-                if (alertContainer) {
-                    alertContainer.innerHTML = `
-                      <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        ${platform} desconectado com sucesso!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                      </div>`;
-                }
             } catch (error) {
-                console.error(`Erro ao desconectar ${platform}:`, error);
+                showError(`Erro ao desconectar ${platform}`, error);
 
                 // Mostrar mensagem de erro
                 const alertContainer = document.getElementById('alert-container');
@@ -184,7 +148,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (linkedinConnected && needsReauthLinkedIn) injectUpdateButton('linkedin', linkedinDaysLeft);
 
         } catch (error) {
-            console.error('Erro ao verificar status das plataformas:', error);
+            showError('Erro ao verificar status das plataformas', error);
         }
     })();
 

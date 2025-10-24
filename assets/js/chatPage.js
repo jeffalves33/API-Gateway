@@ -13,27 +13,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     let currentLoadingMessage = null;
     const defaultAvatar = '/assets/img/avatars/default-avatar.png';
 
-    // Função para mostrar erro
-    function showError(message, isRetryable = false, retryCallback = null) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.innerHTML = `
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <span>${message}</span>
-            ${isRetryable && retryCallback ? `<button class="retry-btn" onclick="(${retryCallback.toString()})()">Tentar novamente</button>` : ''}
-        `;
-
-        chatMessagesContainer.appendChild(errorDiv);
-        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-
-        // Auto-remover erro após 5 segundos
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.remove();
-            }
-        }, 5000);
-    }
-
     // Função para validar dados
     function validateUserInput(message) {
         if (!message || message.trim().length === 0) {
@@ -102,8 +81,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             localStorage.setItem('selectedCustomerName', name);
             localStorage.setItem('selectedCustomerFacebookPageId', facebookPageId || '');
         } catch (error) {
-            console.error('Erro ao salvar dados no localStorage:', error);
-            showError('Erro ao salvar seleção do cliente');
+            showError('Erro ao salvar seleção do cliente', error);
         }
     }
 
@@ -114,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 updateSelectedCustomerDisplay(savedName);
             }
         } catch (error) {
-            console.error('Erro ao restaurar cliente selecionado:', error);
+            showError('Erro ao restaurar cliente selecionado', error);
         }
     }
 
@@ -142,10 +120,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
         } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
-            showError('Erro ao carregar perfil do usuário: ' + error.message);
+            showError('Erro ao carregar perfil', error);
 
-            // Tentar novamente após 5 segundos
             setTimeout(() => {
                 if (!userId) {
                     loadUserProfile();
@@ -226,41 +202,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         }
                     } catch (error) {
-                        console.error('Erro ao selecionar cliente:', error);
-                        showError('Erro ao selecionar cliente: ' + error.message);
+                        showError('Erro ao selecionar cliente', error);
                     }
                 });
             });
         } catch (error) {
-            console.error('Erro ao carregar clientes:', error);
-            showError('Erro ao carregar lista de clientes: ' + error.message, true, loadCustomers);
-        }
-    }
-
-    async function logout() {
-        try {
-            const response = await fetch('/api/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
-                throw new Error(data.message || 'Erro ao fazer logout');
-            }
-
-            localStorage.clear();
-            window.location.href = '/';
-        } catch (error) {
-            console.error('Erro no logout:', error);
-            const alertContainer = document.getElementById('alert-container');
-            if (alertContainer) {
-                alertContainer.innerHTML = `
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${error.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                  </div>`;
-            }
+            showError('Erro ao carregar clientes', error);
         }
     }
 
@@ -279,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             // Set the new height
             chatInputField.style.height = Math.max(newHeight, minHeight) + 'px';
         } catch (error) {
-            console.error('Erro no auto-resize:', error);
+            showError('Erro no auto-resize', error);
         }
     }
 
@@ -291,13 +238,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Validações
         const userValidation = validateUserInput(userMessage);
         if (!userValidation.valid) {
-            showError(userValidation.error);
+            showError('', userValidation.error);
             return;
         }
 
         const customerValidation = validateCustomerSelection();
         if (!customerValidation.valid) {
-            showError(customerValidation.error);
+            showError('', customerValidation.error);
             return;
         }
 
@@ -365,26 +312,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             messageHistory.push({ role: 'assistant', content: data.response });
 
         } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
+            showError('Erro ao enviar mensagem', error);
 
             // Remover loading message se ainda existir
-            if (currentLoadingMessage && currentLoadingMessage.parentNode) {
-                currentLoadingMessage.remove();
-            }
+            if (currentLoadingMessage && currentLoadingMessage.parentNode) currentLoadingMessage.remove();
 
             // Remover a última mensagem do usuário do histórico se houve erro
-            if (messageHistory.length > 0 && messageHistory[messageHistory.length - 1].role === 'user') {
-                messageHistory.pop();
-            }
-
-            const errorMsg = error.message.includes('Failed to fetch')
-                ? 'Erro de conexão. Verifique sua internet e tente novamente.'
-                : error.message;
-
-            showError('❌ ' + errorMsg, true, () => {
-                chatInputField.value = userMessage;
-                sendMessage();
-            });
+            if (messageHistory.length > 0 && messageHistory[messageHistory.length - 1].role === 'user') messageHistory.pop();
         } finally {
             isLoading = false;
             setButtonLoading(false);
@@ -431,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             // Rolagem automática para a última mensagem
             chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
         } catch (error) {
-            console.error('Erro ao renderizar mensagem:', error);
+            showError('Erro ao renderizar mensagem', error);
         }
     }
 
@@ -473,11 +407,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Tratamento de erros globais
     window.addEventListener('error', function (e) {
-        console.error('Erro global capturado:', e.error);
+        showError('Erro global capturado', e.error);
     });
 
     window.addEventListener('unhandledrejection', function (e) {
-        console.error('Promise rejection não tratada:', e.reason);
+        showError('Promise rejection não tratada', e.reason);
     });
 
     // Verificar conexão
@@ -505,8 +439,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         for (const { element, name } of requiredElements) {
             if (!element) {
-                console.error(`Elemento essencial não encontrado: ${name}`);
-                showError(`Erro de inicialização: ${name} não encontrado`);
+                showError('Elemento essencial não encontrado', name);
                 return false;
             }
         }
@@ -529,7 +462,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         console.log('Chat inicializado com sucesso');
     } catch (error) {
-        console.error('Erro na inicialização:', error);
-        showError('Erro ao inicializar a página: ' + error.message);
+        showError('Erro na inicialização', error);
     }
 });

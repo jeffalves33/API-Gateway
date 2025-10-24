@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 element.src = data.user.foto_perfil || defaultAvatar;
             });
         } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
+            showError('Erro ao carregar perfil', error);
         }
     }
 
@@ -110,39 +110,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                                 throw new Error(data.message || 'Erro ao atualizar chaves');
                             }
                         } catch (error) {
-                            console.error('Erro ao atualizar cache de chaves:', error);
+                            showError('Erro ao atualizar cache de chaves', error);
                         }
                     }
                 });
             });
         } catch (error) {
-            console.error('Erro ao carregar clientes:', error);
-        }
-    }
-
-    async function logout() {
-        try {
-            const response = await fetch('/api/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Erro ao fazer logout');
-            }
-
-            localStorage.clear();
-            window.location.href = '/';
-        } catch (error) {
-            const alertContainer = document.getElementById('alert-container');
-            if (alertContainer) {
-                alertContainer.innerHTML = `
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${error.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                  </div>`;
-            }
+            showError('Erro ao carregar clientes', error);
         }
     }
 
@@ -385,7 +359,7 @@ document.getElementById('upload-document-form').addEventListener('submit', async
         window.scrollTo(0, 0);
 
     } catch (error) {
-        console.error('Erro ao enviar documento:', error);
+        showError('Erro ao enviar documento', error);
 
         feedbackMessage.className = 'alert alert-danger';
         feedbackMessage.textContent = error.message;
