@@ -12,6 +12,16 @@ exports.splitDateRange = function* (start, end, deltaDays = 30) {
 
 exports.formatDate = (date) => new Date(date).toISOString().split('T')[0];
 
+exports.incrementDecrementDay = (date, purpose, quantity) => {
+  const [year, month, day] = date.split('-');
+  const newDate = new Date(year, month - 1, day);
+
+  if (purpose === "advance") newDate.setDate(newDate.getDate() + quantity);
+  if (purpose === "delay") newDate.setDate(newDate.getDate() - quantity);
+
+  return this.formatDate(newDate)
+}
+
 exports.getAllDaysBetween = (start, end) => {
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -26,11 +36,11 @@ exports.getAllDaysBetween = (start, end) => {
 }
 
 exports.buildDates = (qtdDays) => {
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() - 1);
-    endDate.setHours(0, 0, 0, 0);
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - 1);
+  endDate.setHours(0, 0, 0, 0);
 
-    const since = new Date(endDate);
-    since.setDate(since.getDate() - qtdDays);
-    return { since, endDate };
+  const since = new Date(endDate);
+  since.setDate(since.getDate() - qtdDays);
+  return { since, endDate };
 }

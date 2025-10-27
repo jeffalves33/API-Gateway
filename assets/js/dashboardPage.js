@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
             }
             const data = await res.json();
+            console.log("🚀 ~ fetchAndRenderReachChart ~ data: ", data)
             renderReachChart(data);
             reachChartContainer.style.display = 'block';
         } catch (error) {
@@ -202,7 +203,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             showError('Erro ao buscar dados de seguidores', error);
         }
     }
-
 
     async function fetchAndRenderTrafficChart(startDate, endDate, id_customer) {
         try {
@@ -363,7 +363,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 xaxis: {
                     categories: data.labels,
                     labels: {
-                        formatter: val => new Date(val).toLocaleDateString('pt-BR'),
+                        formatter: (val) => {
+                            const [y, m, d] = String(val).split('-');
+                            return `${d}/${m}/${y}`;
+                        },
                         style: { fontSize: '10px', fontWeight: 500 }
                     },
                     crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
@@ -563,11 +566,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (trafficChartInstance) trafficChartInstance.destroy();
 
-            const formattedDates = data.labels.map(dateStr => {
-                if (!dateStr) return '';
-                return new Date(
-                    dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
-                ).toLocaleDateString('pt-BR');
+            const formattedDates = data.labels.map((s) => {
+                if (!s) return '';
+                const y = s.slice(0, 4), m = s.slice(4, 6), d = s.slice(6, 8);
+                return `${d}/${m}/${y}`;
             });
 
             trafficChartInstance = new ApexCharts(trafficChartContainer, {
@@ -588,7 +590,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 ],
                 xaxis: {
-                    categories: formattedDates
+                    categories: formattedDates,
+                    labels: {
+                        formatter: (val) => String(val),
+                        style: { fontSize: '10px', fontWeight: 500 }
+                    }
                 },
                 stroke: {
                     curve: 'smooth',
@@ -732,11 +738,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (searchVolumeChartInstance) searchVolumeChartInstance.destroy();
 
-            const formattedDates = data.labels.map(dateStr => {
-                if (!dateStr) return '';
-                return new Date(
-                    dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
-                ).toLocaleDateString('pt-BR');
+            const formattedDates = data.labels.map((s) => {
+                if (!s) return '';
+                const y = s.slice(0, 4), m = s.slice(4, 6), d = s.slice(6, 8);
+                return `${d}/${m}/${y}`;
             });
 
             searchVolumeChartInstance = new ApexCharts(searchVolumeChartContainer, {
@@ -757,7 +762,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 ],
                 xaxis: {
-                    categories: formattedDates
+                    categories: formattedDates,
+                    labels: {
+                        formatter: (val) => String(val),
+                        style: { fontSize: '10px', fontWeight: 500 }
+                    }
                 },
                 stroke: {
                     curve: 'smooth',

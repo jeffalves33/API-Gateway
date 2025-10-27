@@ -1,12 +1,14 @@
 // Arquivo: services/linkedinService.js
 const axios = require('axios');
 const { pool } = require('../config/db');
-const { getAllDaysBetween } = require('../utils/dateUtils');
+const { getAllDaysBetween, incrementDecrementDay } = require('../utils/dateUtils');
 const { getValidLinkedInAccessToken, liHeaders, makeTimeIntervals, toMsUTC } = require('../helpers/linkedinHelpers');
 const BASE = 'https://api.linkedin.com/rest';
 
 // ---------- MÉTRICAS ----------
 exports.getImpressions = async (linkedin, startDate, endDate) => {
+    const startDateCorrected = incrementDecrementDay(startDate, 'advance', 1)
+    const endDateCorrected = incrementDecrementDay(endDate, 'advance', 1)
     const timeIntervals = makeTimeIntervals(startDate, endDate);
     const allDays = getAllDaysBetween(startDate, endDate);
     const perDay = allDays.map(() => 0);
@@ -19,7 +21,7 @@ exports.getImpressions = async (linkedin, startDate, endDate) => {
         if (typeof startMs !== 'number') return;
 
         let viewsCount = Number(el?.totalShareStatistics?.impressionCount ?? 0);
-        const idx = Math.floor((startMs - toMsUTC(startDate)) / 86400000);
+        const idx = Math.floor((startMs - toMsUTC(startDateCorrected)) / 86400000);
         if (idx >= 0 && idx < perDay.length) perDay[idx] = viewsCount;
     });
 

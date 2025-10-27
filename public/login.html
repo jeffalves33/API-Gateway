@@ -251,14 +251,8 @@
           throw new Error(errorMessage);
         }
 
-        // Login bem-sucedido
-        showAlert('Login realizado com sucesso! Redirecionando...', 'success');
-
         // Limpar localStorage antes do redirecionamento
         localStorage.clear();
-
-        // Redirecionar após delay
-        showAlert('Login realizado com sucesso! Verificando sua assinatura...', 'success');
 
         try {
           // seu cookie HttpOnly já foi setado pelo backend no /api/login
