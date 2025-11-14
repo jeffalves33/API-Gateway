@@ -368,7 +368,7 @@
                 </nav>
 
                 <div class="container py-4">
-                    <div class="platforms-card-model pb-2">
+                    <!--<div class="platforms-card-model pb-2">
                         <div class="collapse show" id="ai-limit-card">
                             <div class="card position-relative">
                                 <button type="button" class="btn-close position-absolute top-0 end-0 m-2 z-3"
@@ -401,7 +401,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div>-->
                     <div id="platforms-card-anchor"></div>
 
                     <div class="card border-0">
@@ -497,23 +497,58 @@
                                                 <div class="form-check mb-2">
                                                     <input class="form-check-input" type="radio" name="tipoAnalise"
                                                         id="descritiva" checked>
-                                                    <label class="form-check-label" for="descritiva">Descritiva</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
-                                                        id="prescritiva">
-                                                    <label class="form-check-label"
-                                                        for="prescritiva">Prescritiva</label>
+                                                    <label class="form-check-label" for="descritiva">
+                                                        Descritiva
+                                                        <button type="button"
+                                                            class="btn btn-link p-0 ms-1 align-baseline"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Explica o que aconteceu no período analisado."
+                                                            aria-label="Mais informações sobre análise descrivia">
+                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                        </button>
+                                                    </label>
                                                 </div>
                                                 <div class="form-check mb-2">
                                                     <input class="form-check-input" type="radio" name="tipoAnalise"
                                                         id="preditiva">
-                                                    <label class="form-check-label" for="preditiva">Preditiva</label>
+                                                    <label class="form-check-label" for="preditiva">
+                                                        Preditiva
+                                                        <button type="button"
+                                                            class="btn btn-link p-0 ms-1 align-baseline"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Prevê o que provavelmente irá acontecer com base nos dados."
+                                                            aria-label="Mais informações sobre análise preditiva">
+                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                        </button>
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="tipoAnalise"
+                                                        id="prescritiva">
+                                                    <label class="form-check-label" for="prescritiva">
+                                                        Prescritiva
+                                                        <button type="button"
+                                                            class="btn btn-link p-0 ms-1 align-baseline"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Indica o que fazer para melhorar resultados futuros."
+                                                            aria-label="Mais informações sobre análise prescritiva">
+                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                        </button>
+                                                    </label>
                                                 </div>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="tipoAnalise"
                                                         id="geral">
-                                                    <label class="form-check-label" for="geral">Geral</label>
+                                                    <label class="form-check-label" for="geral">
+                                                        Geral
+                                                        <button type="button"
+                                                            class="btn btn-link p-0 ms-1 align-baseline"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Combina visão descritiva, preditiva e prescritiva em um único relatório."
+                                                            aria-label="Mais informações sobre análise geral">
+                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                        </button>
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
