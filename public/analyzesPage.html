@@ -435,7 +435,7 @@
 
                                 <form id="form-busca">
                                     <!-- Datas -->
-                                    <div class="row mb-4">
+                                    <div class="row mb-4" id="dates-row">
                                         <div class="col-md-6 mb-3 mb-md-0">
                                             <label for="startDate" class="form-label mb-2">Data Inicial</label>
                                             <div class="input-group">
@@ -460,52 +460,63 @@
                                     </div>
 
                                     <!-- Plataformas e Tipo de análise -->
-                                    <div class="row mb-4">
-                                        <!-- Plataformas -->
+                                    <!-- Plataformas, Tipo de análise e Enviesamento -->
+                                    <div class="row mb-4" id="type-platforms-row">
+                                        <!-- Ângulo da análise (enviesamento) -->
                                         <div class="col-md-4">
-                                            <label class="form-label mb-2 fw-medium">Plataformas</label>
-                                            <div class="ps-2">
+                                            <fieldset class="ps-2" role="radiogroup" aria-labelledby="legendFocus">
+                                                <label id="legendFocus"
+                                                    class="form-label mb-2 fw-medium">Enviesamento</label>
+
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="facebook">
-                                                    <label class="form-check-label" for="facebook">Facebook</label>
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusBranding" value="branding">
+                                                    <label class="form-check-label" for="focusBranding">
+                                                        Branding & Comunicação
+                                                    </label>
                                                 </div>
+
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox"
-                                                        id="googleAnalytics">
-                                                    <label class="form-check-label" for="googleAnalytics">Google
-                                                        Analytics</label>
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusNegocio" value="negocio">
+                                                    <label class="form-check-label" for="focusNegocio">
+                                                        Negócio
+                                                    </label>
                                                 </div>
+
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="instagram">
-                                                    <label class="form-check-label" for="instagram">Instagram</label>
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusConexao" value="conexao">
+                                                    <label class="form-check-label" for="focusConexao">
+                                                        Conexão com públicos
+                                                    </label>
                                                 </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="linkedin">
-                                                    <label class="form-check-label" for="linkedin">LinkedIn</label>
-                                                </div>
+
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="youtube">
-                                                    <label class="form-check-label" for="youtube">Youtube</label>
+                                                    <input class="form-check-input" type="radio" name="analysisFocus"
+                                                        id="focusPanorama" value="panorama" checked>
+                                                    <label class="form-check-label" for="focusPanorama">
+                                                        Panorama geral
+                                                    </label>
                                                 </div>
-                                            </div>
+                                            </fieldset>
                                         </div>
 
                                         <!-- Tipo de análise -->
-                                        <div class="col-md-4">
-                                            <label class="form-label mb-2 fw-medium">Tipo de análise</label>
+                                        <div class="col-md-4" id="analysis-type-column">
+                                            <label class="form-label mb-2 fw-medium d-flex align-items-center gap-1">
+                                                Tipo de análise
+                                                <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    title="Escolha o tipo de análise que deseja gerar."></i>
+                                            </label>
+
                                             <div class="ps-2">
                                                 <div class="form-check mb-2">
                                                     <input class="form-check-input" type="radio" name="tipoAnalise"
                                                         id="descritiva" checked>
                                                     <label class="form-check-label" for="descritiva">
                                                         Descritiva
-                                                        <button type="button"
-                                                            class="btn btn-link p-0 ms-1 align-baseline"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Explica o que aconteceu no período analisado."
-                                                            aria-label="Mais informações sobre análise descrivia">
-                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
-                                                        </button>
                                                     </label>
                                                 </div>
                                                 <div class="form-check mb-2">
@@ -513,13 +524,6 @@
                                                         id="preditiva">
                                                     <label class="form-check-label" for="preditiva">
                                                         Preditiva
-                                                        <button type="button"
-                                                            class="btn btn-link p-0 ms-1 align-baseline"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Prevê o que provavelmente irá acontecer com base nos dados."
-                                                            aria-label="Mais informações sobre análise preditiva">
-                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
-                                                        </button>
                                                     </label>
                                                 </div>
                                                 <div class="form-check mb-2">
@@ -527,13 +531,6 @@
                                                         id="prescritiva">
                                                     <label class="form-check-label" for="prescritiva">
                                                         Prescritiva
-                                                        <button type="button"
-                                                            class="btn btn-link p-0 ms-1 align-baseline"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Indica o que fazer para melhorar resultados futuros."
-                                                            aria-label="Mais informações sobre análise prescritiva">
-                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
-                                                        </button>
                                                     </label>
                                                 </div>
                                                 <div class="form-check">
@@ -541,47 +538,48 @@
                                                         id="geral">
                                                     <label class="form-check-label" for="geral">
                                                         Geral
-                                                        <button type="button"
-                                                            class="btn btn-link p-0 ms-1 align-baseline"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Combina visão descritiva, preditiva e prescritiva em um único relatório."
-                                                            aria-label="Mais informações sobre análise geral">
-                                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
-                                                        </button>
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Ângulo da análise (enviesamento) -->
-                                        <div class="col-md-4">
-                                            <fieldset class="ps-2" role="radiogroup" aria-labelledby="legendFocus">
-                                                <label id="legendFocus"
-                                                    class="form-label mb-2 fw-medium">Enviesamento</label>
+                                        <!-- Plataformas -->
+                                        <div class="col-md-4" id="platforms-column">
+                                            <label class="form-label mb-2 fw-medium d-flex align-items-center gap-1">
+                                                Plataformas
+                                                <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    title="Escolha de quais plataformas os dados serão utilizados."></i>
+                                            </label>
+
+                                            <div class="ps-2">
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="analysisFocus"
-                                                        id="focusBranding" value="branding">
-                                                    <label class="form-check-label" for="focusBranding">Branding &
-                                                        Comunicação</label>
+                                                    <input class="form-check-input" type="checkbox" id="facebook">
+                                                    <label class="form-check-label" for="facebook">Facebook</label>
                                                 </div>
+
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="analysisFocus"
-                                                        id="focusNegocio" value="negocio">
-                                                    <label class="form-check-label" for="focusNegocio">Negócio</label>
+                                                    <input class="form-check-input" type="checkbox" id="instagram">
+                                                    <label class="form-check-label" for="instagram">Instagram</label>
                                                 </div>
+
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="analysisFocus"
-                                                        id="focusConexao" value="conexao">
-                                                    <label class="form-check-label" for="focusConexao">Conexão
-                                                        Integrada</label>
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="googleAnalytics">
+                                                    <label class="form-check-label" for="googleAnalytics">Google
+                                                        Analytics</label>
                                                 </div>
+
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="linkedin">
+                                                    <label class="form-check-label" for="linkedin">LinkedIn</label>
+                                                </div>
+
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="analysisFocus"
-                                                        id="focusPanorama" value="panorama" checked>
-                                                    <label class="form-check-label" for="focusPanorama">Panorama
-                                                        Integrado</label>
+                                                    <input class="form-check-input" type="checkbox" id="youtube">
+                                                    <label class="form-check-label" for="youtube">YouTube</label>
                                                 </div>
-                                            </fieldset>
+                                            </div>
                                         </div>
                                     </div>
 

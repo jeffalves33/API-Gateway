@@ -239,6 +239,38 @@ document.addEventListener('DOMContentLoaded', async function () {
         syncDecisionMode();
     })();
 
+    // Controle de exibição conforme enviesamento (Negócio x demais)
+    (function initAnalysisFocusFlow() {
+        const focusRadios = document.querySelectorAll('input[name="analysisFocus"]');
+        const datesRow = document.getElementById('dates-row');
+        const typeColumn = document.getElementById('analysis-type-column');
+        const platformsColumn = document.getElementById('platforms-column');
+
+        function syncView() {
+            const selectedValue = document.querySelector('input[name="analysisFocus"]:checked')?.value;
+            const isBusiness = selectedValue === 'negocio';
+
+            if (isBusiness) {
+                // Enviesamento de negócio → esconde Período, Tipo de análise e Plataformas
+                if (datesRow) datesRow.classList.add('d-none');
+                if (typeColumn) typeColumn.classList.add('d-none');
+                if (platformsColumn) platformsColumn.classList.add('d-none');
+            } else {
+                // Outros enviesamentos → mostra tudo
+                if (datesRow) datesRow.classList.remove('d-none');
+                if (typeColumn) typeColumn.classList.remove('d-none');
+                if (platformsColumn) platformsColumn.classList.remove('d-none');
+            }
+        }
+
+        focusRadios.forEach((radio) => {
+            radio.addEventListener('change', syncView);
+        });
+
+        // Garante que o estado inicial respeita o valor selecionado (Panorama por padrão)
+        syncView();
+    })();
+
     async function validateForm() {
         try {
             const startDate = document.getElementById('startDate')?.value;
@@ -247,37 +279,34 @@ document.addEventListener('DOMContentLoaded', async function () {
             const instagram = document.getElementById('instagram')?.checked;
             const googleAnalytics = document.getElementById('googleAnalytics')?.checked;
             const linkedin = document.getElementById('linkedin')?.checked;
+            const youtube = document.getElementById('youtube')?.checked;
             const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked');
-            const analysisFocus = document.querySelector('input[name="analysisFocus"]:checked');
-            //const formatoRelatorio = document.getElementById('formatoRelatorio')?.value;
+            const analysisFocusInput = document.querySelector('input[name="analysisFocus"]:checked');
+            const selectedCustomerId = localStorage.getItem('selectedCustomerId');
 
             if (!userId) throw new Error('Usuário não identificado. Faça login novamente.');
-            if (!startDate || !endDate) throw new Error('Por favor, selecione a data inicial e final.');
-            if (!analysisFocus) throw new Error('Selecione o ângulo da análise (Branding, Negócio, Conexão ou Panorama).');
-
-            // Validar formato das datas
-            const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-            if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) throw new Error('Formato de data inválido. Use DD/MM/AAAA.');
-
-            // Validar se data inicial é anterior à final
-            const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
-            const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
-            const startDateObj = new Date(startYear, startMonth - 1, startDay);
-            const endDateObj = new Date(endYear, endMonth - 1, endDay);
-
-            if (startDateObj > endDateObj) {
-                throw new Error('A data inicial deve ser anterior à data final.');
-            }
-
-            // Validar se não é muito no futuro
-            const today = new Date();
-            if (endDateObj > today) throw new Error('A data final não pode ser no futuro.');
-            if (!facebook && !instagram && !googleAnalytics && !linkedin) throw new Error('Por favor, selecione pelo menos uma plataforma.');
-            if (!tipoAnalise) throw new Error('Por favor, selecione o tipo de análise.');
-            //if (!formatoRelatorio || formatoRelatorio === 'Selecione' || formatoRelatorio === '') throw new Error('Por favor, selecione o formato do relatório.');
-
-            const selectedCustomerId = localStorage.getItem('selectedCustomerId');
+            if (!analysisFocusInput) throw new Error('Selecione o ângulo da análise (Branding, Negócio, Conexão ou Panorama).');
             if (!selectedCustomerId) throw new Error('Por favor, selecione um cliente.');
+
+            const analysisFocus = analysisFocusInput.value;
+            const isBusiness = analysisFocus === 'negocio';
+
+            // Para enviesamento de NEGÓCIO: não obriga período, tipo de análise nem plataformas
+            if (!isBusiness) {
+                const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
+                const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
+                const startDateObj = new Date(startYear, startMonth - 1, startDay);
+                const endDateObj = new Date(endYear, endMonth - 1, endDay);
+                const today = new Date();
+                const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+
+                if (!startDate || !endDate) throw new Error('Por favor, selecione a data inicial e final.');
+                if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) throw new Error('Formato de data inválido. Use DD/MM/AAAA.');
+                if (startDateObj > endDateObj) throw new Error('A data inicial deve ser anterior à data final.');
+                if (endDateObj > today) throw new Error('A data final não pode ser no futuro.');
+                if (!facebook && !instagram && !googleAnalytics && !linkedin && !youtube) throw new Error('Por favor, selecione pelo menos uma plataforma.');
+                if (!tipoAnalise) throw new Error('Por favor, selecione o tipo de análise.');
+            }
 
             return true;
         } catch (error) {
@@ -313,60 +342,62 @@ document.addEventListener('DOMContentLoaded', async function () {
                 updateProgressBar(25, 'Coletando informações...');
             }, 500);
 
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const tipoAnalise = document.querySelector('input[name="tipoAnalise"]:checked').id;
-            //const formatoRelatorio = document.getElementById('formatoRelatorio').value;
-
-            // === NOVO BLOCO: coletar campos e montar payload completo ===
-            const startDateVal = document.getElementById('startDate').value.trim();
-            const endDateVal = document.getElementById('endDate').value.trim();
-
-            // tipo de análise
-            const selectedTypeId = document.querySelector('input[name="tipoAnalise"]:checked')?.id || 'descritiva';
-            const analysisType = TYPE_MAP[selectedTypeId] || 'descriptive';
+            // ------------ Fluxo de formulário --------------
+            let requestBody;
 
             // ângulo/enviesamento (se o HTML ainda não tiver, cai em 'panorama')
             const analysisFocus = document.querySelector('input[name="analysisFocus"]:checked')?.value || 'panorama';
+            if (analysisFocus === 'negocio') {
+                requestBody = {
+                    agency_id: String(userId),
+                    client_id: id_customer,
+                    analysis_focus: analysisFocus,
+                };
+            } else {
+                // data
+                const startDateVal = document.getElementById('startDate').value.trim();
+                const endDateVal = document.getElementById('endDate').value.trim();
 
-            // plataformas (snake_case)
-            const platforms = selectedPlatforms();
+                // tipo de análise
+                const selectedTypeId = document.querySelector('input[name="tipoAnalise"]:checked')?.id || 'descritiva';
+                const analysisType = TYPE_MAP[selectedTypeId] || 'descriptive';
 
-            // parâmetros de narrativa (se não existirem no HTML, defaults seguros)
-            const voiceProfile = document.getElementById('voiceProfile')?.value || 'CMO';
-            const narrativeStyle = document.getElementById('narrativeStyle')?.value || 'SCQA';
-            //const granularity = document.getElementById('granularity')?.value || 'detalhada';
-            //const bilingual = document.getElementById('bilingual')?.checked ?? true;
+                // plataformas (snake_case)
+                const platforms = selectedPlatforms();
 
-            // decision_mode: em Descritiva, força 'topicos'
-            let decisionMode = document.getElementById('decisionMode')?.value || 'topicos';
-            if (analysisType === 'descriptive') decisionMode = 'topicos';
+                // parâmetros de narrativa (se não existirem no HTML, defaults seguros)
+                const voiceProfile = document.getElementById('voiceProfile')?.value || 'CMO';
+                const narrativeStyle = document.getElementById('narrativeStyle')?.value || 'SCQA';
+                //const granularity = document.getElementById('granularity')?.value || 'detalhada';
+                //const bilingual = document.getElementById('bilingual')?.checked ?? true;
 
-            // pergunta opcional
-            const analysisQuery = (document.getElementById('analysisQuery')?.value || '').trim() || null;
+                // decision_mode: em Descritiva, força 'topicos'
+                let decisionMode = document.getElementById('decisionMode')?.value || 'topicos';
+                if (analysisType === 'descriptive') decisionMode = 'topicos';
 
-            // formato do relatório (seu select atual; use padrão 'detalhado' se não existir)
-            //const outputFormat = document.getElementById('formatoRelatorio')?.value || 'detalhado';
+                // pergunta opcional
+                const analysisQuery = (document.getElementById('analysisQuery')?.value || '').trim() || null;
 
-            // payload final (novo contrato)
-            const requestBody = {
-                agency_id: String(userId),
-                client_id: id_customer,
-                platforms: platforms,
-                analysis_type: analysisType,
-                analysis_focus: analysisFocus,
-                start_date: toISO(startDateVal),
-                end_date: toISO(endDateVal),
-                //output_format: outputFormat,
-                analysis_query: analysisQuery,
-                //bilingual: Boolean(bilingual),
-                //granularity: granularity,
-                voice_profile: voiceProfile,
-                decision_mode: decisionMode,
-                narrative_style: narrativeStyle
-            };
+                requestBody = {
+                    agency_id: String(userId),
+                    client_id: id_customer,
+                    platforms: platforms.length ? platforms : null,
+                    analysis_type: analysisType,
+                    analysis_focus: analysisFocus,
+                    start_date: toISO(startDateVal),
+                    end_date: toISO(endDateVal),
+                    //output_format: outputFormat,
+                    analysis_query: analysisQuery,
+                    //bilingual: Boolean(bilingual),
+                    //granularity: granularity,
+                    voice_profile: voiceProfile,
+                    decision_mode: decisionMode,
+                    narrative_style: narrativeStyle
+                };
+            }
+            console.log(JSON.stringify(requestBody))
+
             updateProgressBar(60, 'Enviando para análise...');
-
             const response = await fetch('https://analyze-backend-5jyg.onrender.com/analyze/', {
                 method: 'POST',
                 headers: {
