@@ -13,29 +13,107 @@ require('dotenv').config();
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    const mailer = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
 
     // Verificar se o usuário já existe
-    const userExists = await pool.query('SELECT * FROM "user" WHERE email = $1', [email]);
+    const userExists = await pool.query('SELECT id_user, email_verified, name FROM "user" WHERE email = $1', [email]);
 
     if (userExists.rows.length > 0) {
-      return res.status(400).json({ success: false, message: 'Email já registrado' });
+      const existing = userExists.rows[0];
+
+      // 1) Já verificado -> bloqueia cadastro
+      if (existing.email_verified) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'Email já registrado' });
+      }
+
+      // 2) Não verificado -> REENVIA link de verificação
+      const userId = existing.id_user;
+
+      // invalida tokens antigos
+      await pool.query('UPDATE email_verification_tokens SET used = TRUE WHERE user_id = $1', [userId]);
+
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
+      await pool.query(
+        `INSERT INTO email_verification_tokens (user_id, token, expires_at)
+         VALUES ($1, $2, $3)`,
+        [userId, token, expiresAt]
+      );
+
+      const baseUrl = process.env.BASE_URL || 'https://www.hokoainalytics.com.br';
+      const verifyLink = `${baseUrl}/api/verify-email?token=${token}`;
+
+      await mailer.sendMail({
+        from: process.env.SMTP_USER,
+        to: email,
+        subject: 'Confirme seu email - ho.ko AI.nalytics',
+        html: `
+          <p>Olá, ${existing.name || name}!</p>
+          <p>Você já tinha um cadastro pendente na ho.ko AI.nalytics.</p>
+          <p>Reenviamos o link para confirmação do seu email:</p>
+          <p><a href="${verifyLink}">${verifyLink}</a></p>
+          <p>Este novo link é válido por 24 horas.</p>
+        `
+      });
+
+      return res.json({
+        success: true,
+        message:
+          'Você já tinha um cadastro pendente. Reenviamos o link de confirmação para seu email.'
+      });
     }
 
-    // Criptografar a senha
+    // ===== fluxo normal de criação =====
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Inserir novo usuário no banco de dados
     const newUser = await pool.query(
-      'INSERT INTO "user" (name, email, password) VALUES ($1, $2, $3) RETURNING id_user, name, email',
+      'INSERT INTO "user" (name, email, password, email_verified) VALUES ($1, $2, $3, FALSE) RETURNING id_user, name, email',
       [name, email, hashedPassword]
     );
 
+    const userId = newUser.rows[0].id_user;
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await pool.query(
+      `INSERT INTO email_verification_tokens (user_id, token, expires_at)
+       VALUES ($1, $2, $3)`,
+      [userId, token, expiresAt]
+    );
+
+    const baseUrl = process.env.FRONTEND_BASE_URL || 'https://www.hokoainalytics.com.br';
+    const verifyLink = `${baseUrl}/api/verify-email?token=${token}`;
+
+    await mailer.sendMail({
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: 'Confirme seu email - ho.ko AI.nalytics',
+      html: `
+        <p>Olá, ${name}!</p>
+        <p>Obrigado por se cadastrar na ho.ko AI.nalytics.</p>
+        <p>Para ativar sua conta, clique no link abaixo:</p>
+        <p><a href="${verifyLink}">${verifyLink}</a></p>
+        <p>Este link é válido por 24 horas.</p>
+      `
+    });
+
     res.status(201).json({
       success: true,
-      message: 'Usuário registrado com sucesso!',
+      message:
+        'Conta criada! Verifique seu email para ativar o acesso.',
       user: {
-        id: newUser.rows[0].id_user,
+        id: userId,
         name: newUser.rows[0].name,
         email: newUser.rows[0].email
       }
@@ -43,6 +121,46 @@ const registerUser = async (req, res) => {
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+  }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).send('Token de verificação inválido.');
+    }
+
+    const result = await pool.query(
+      `SELECT * FROM email_verification_tokens 
+       WHERE token = $1 AND used = FALSE`,
+      [token]
+    );
+
+    if (result.rows.length === 0) return res.status(400).send('Link de verificação inválido ou já utilizado.');
+
+    const row = result.rows[0];
+
+    if (new Date() > row.expires_at) return res.status(400).send('Link de verificação expirado. Faça um novo cadastro.');
+
+    // Marca email como verificado
+    await pool.query(
+      `UPDATE "user" SET email_verified = TRUE WHERE id_user = $1`,
+      [row.user_id]
+    );
+
+    // Marca token como usado
+    await pool.query(
+      `UPDATE email_verification_tokens SET used = TRUE WHERE id = $1`,
+      [row.id]
+    );
+
+    // Redireciona para login com mensagem de sucesso
+    return res.redirect('/login.html?verified=1');
+  } catch (error) {
+    console.error('Erro ao verificar email:', error);
+    return res.status(500).send('Erro interno ao verificar email.');
   }
 };
 
@@ -59,6 +177,14 @@ const loginUser = async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    // Verificar se email foi confirmado
+    if (!user.email_verified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Confirme seu email antes de fazer login. Verifique sua caixa de entrada.'
+      });
+    }
 
     // Verificar se a senha está correta
     const validPassword = await bcrypt.compare(password, user.password);
@@ -459,4 +585,5 @@ module.exports = {
   registerUser,
   resetPassword,
   updateUserProfile,
+  verifyEmail
 };

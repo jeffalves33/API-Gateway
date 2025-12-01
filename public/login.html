@@ -314,6 +314,18 @@
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(email);
     }
+
+    // Mostrar mensagem se veio de verificação de email
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('verified') === '1') {
+        showAlert('Email confirmado com sucesso! Agora você já pode fazer login.', 'success');
+        // limpa o param da URL (opcional)
+        const url = new URL(window.location);
+        url.searchParams.delete('verified');
+        window.history.replaceState({}, '', url);
+      }
+    })();
   </script>
 
   <script src="/assets/js/main.js"></script>
