@@ -5,6 +5,8 @@ const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { pool } = require('../config/db');
 const { clearCacheForUser } = require('../helpers/keyHelper');
 const { s3, BUCKET_NAME } = require('../config/s3Config');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 // Função para registrar um novo usuário
@@ -61,9 +63,8 @@ const loginUser = async (req, res) => {
     // Verificar se a senha está correta
     const validPassword = await bcrypt.compare(password, user.password);
 
-    if (!validPassword) {
-      return res.status(400).json({ success: false, message: 'Email ou senha incorretos' });
-    }
+    if (!validPassword) return res.status(400).json({ success: false, message: 'Email ou senha incorretos' });
+
 
     // Criar e atribuir um token JWT
     const token = jwt.sign(
@@ -91,6 +92,102 @@ const loginUser = async (req, res) => {
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+  }
+};
+
+// Função para trocar senha com token
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // Verifica token
+    const tokenQuery = await pool.query(
+      `SELECT * FROM password_reset_tokens 
+       WHERE token = $1 AND used = FALSE`,
+      [token]
+    );
+
+    if (tokenQuery.rows.length === 0) return res.status(400).json({ success: false, message: "Token inválido" });
+
+    const row = tokenQuery.rows[0];
+
+    if (new Date() > row.expires_at) return res.status(400).json({ success: false, message: "Token expirado" });
+
+    // Atualiza senha
+    const hash = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      `UPDATE "user" SET password = $1 WHERE email = $2`,
+      [hash, row.email]
+    );
+
+    // Marca token como usado
+    await pool.query(
+      `UPDATE password_reset_tokens SET used = TRUE WHERE token = $1`,
+      [token]
+    );
+
+    res.json({ success: true, message: "Senha alterada com sucesso!" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Erro ao alterar senha" });
+  }
+};
+
+// Função para enviar email com link
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Verifica se usuario existe
+    const userQuery = await pool.query(
+      'SELECT id_user FROM "user" WHERE email = $1',
+      [email]
+    );
+
+    if (userQuery.rows.length === 0) return res.status(400).json({ success: false, message: "Email não encontrado" });
+
+    // Gera token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    // Salva token
+    await pool.query(
+      `INSERT INTO password_reset_tokens (email, token, expires_at)
+       VALUES ($1, $2, $3)`,
+      [email, token, expiresAt]
+    );
+
+    // URL do reset
+    const resetLink = `${process.env.FRONTEND_BASE_URL}/resetPassword.html?token=${token}`;
+
+    // Envio de email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: "Recuperação de senha",
+      html: `
+        <p>Você solicitou a recuperação de senha.</p>
+        <p>Clique no link abaixo para redefinir sua senha:</p>
+        <a href="${resetLink}">${resetLink}</a>
+        <p>Este link expira em 1 hora.</p>
+      `
+    });
+
+    res.json({ success: true, message: "Email enviado!" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Erro ao enviar email" });
   }
 };
 
@@ -353,11 +450,13 @@ const deleteUserAccount = async (req, res) => {
 
 module.exports = {
   addAvatarProfileBucket,
+  checkAuthStatus,
   deleteUserAccount,
-  updateUserProfile,
-  registerUser,
-  loginUser,
+  forgotPassword,
   getUserProfile,
+  loginUser,
   logoutUser,
-  checkAuthStatus
+  registerUser,
+  resetPassword,
+  updateUserProfile,
 };

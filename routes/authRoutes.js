@@ -5,13 +5,15 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 const { uploadAvatar } = require('../middleware/uploadMiddleware');
 const {
   addAvatarProfileBucket,
-  updateUserProfile,
+  checkAuthStatus,
   deleteUserAccount,
-  registerUser,
-  loginUser,
+  forgotPassword,
   getUserProfile,
+  loginUser,
   logoutUser,
-  checkAuthStatus
+  registerUser,
+  resetPassword,
+  updateUserProfile
 } = require('../controllers/authController');
 
 router.post('/register', registerUser);
@@ -22,5 +24,7 @@ router.post('/avatar', authenticateToken, uploadAvatar.single('avatar'), addAvat
 router.put('/update', authenticateToken, updateUserProfile);
 router.delete('/delete-account', authenticateToken, deleteUserAccount);
 router.post('/logout', authenticateToken, logoutUser);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 module.exports = router;

@@ -68,33 +68,18 @@ app.get('/analyzesPage.html', authenticatePageAccess, (req, res) => { res.sendFi
 app.get('/chatPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'chatPage.html')); });
 app.get('/customersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'customersPage.html')); });
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html')); });
-app.get('/foodModelPage.html', authenticatePageAccess, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html'));
-});
-
+app.get('/foodModelPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html')); });
 app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
 app.get('/platformsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'platformsPage.html')); });
-
-app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html'));
-});
+app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html')); });
 
 // === Páginas públicas ===
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.get('/register.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'register.html'));
-});
-
-app.get('/privacyPolicyPage.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'privacyPolicyPage.html'));
-});
-
-app.get('/termsUse.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'termsUse.html'));
-});
+app.get('/login.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'login.html')); });
+app.get('/forgotPassword.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'forgotPassword.html')); });
+app.get('/resetPassword.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'resetPassword.html')); });
+app.get('/register.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'register.html')); });
+app.get('/privacyPolicyPage.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'privacyPolicyPage.html')); });
+app.get('/termsUse.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'termsUse.html')); });
 
 // === Área do usuário com ID ===
 app.get('/:userId', authenticatePageAccess, (req, res, next) => {
