@@ -494,7 +494,7 @@
             const elStatus = document.getElementById('subStatus');
             const grid = document.getElementById('plansGrid');
             const portalBtn = document.getElementById('btn-portal');
-            const couponInpt = document.getElementById('coupon');
+            //const couponInpt = document.getElementById('coupon');
 
             async function loadStatus() {
                 try {
@@ -553,7 +553,7 @@
                 grid.querySelectorAll('button[data-code]').forEach(btn => {
                     btn.onclick = async () => {
                         const plan_code = btn.getAttribute('data-code');
-                        const promo_code = couponInpt.value || null;
+                        const promo_code = null; //couponInpt.value || null;
                         const resp = await fetch('/api/billing/checkout', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
