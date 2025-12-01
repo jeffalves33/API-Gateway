@@ -277,19 +277,19 @@
                             <div class="col-md-12">
                                 <ul class="nav nav-pills flex-column flex-md-row mb-3">
                                     <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#tab-account">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#tab-account">
                                             <i class="bx bx-user me-1"></i> Conta
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#tab-subscription">
+                                        <a class="nav-link active" data-bs-toggle="tab" href="#tab-subscription">
                                             <i class="bx bx-bell me-1"></i> Assinatura
                                         </a>
                                     </li>
                                 </ul>
                                 <div class="tab-content">
                                     <!-- Conta -->
-                                    <div class="tab-pane fade show active" id="tab-account">
+                                    <div class="tab-pane fade" id="tab-account">
                                         <div class="card mb-4">
                                             <h5 class="card-header">Detalhes do perfil</h5>
                                             <!-- Account -->
@@ -379,7 +379,7 @@
                                         </div>
                                     </div>
                                     <!-- Assinatura -->
-                                    <div class="tab-pane fade" id="tab-subscription">
+                                    <div class="tab-pane fade show active" id="tab-subscription">
                                         <div class="card">
                                             <div class="card-header d-flex align-items-center justify-content-between">
                                                 <div>
@@ -392,13 +392,13 @@
                                             </div>
 
                                             <div class="card-body">
-                                                <div class="row g-3 align-items-end mb-3">
+                                                <!--<div class="row g-3 align-items-end mb-3">
                                                     <div class="col-sm-6 col-md-4 col-lg-3">
                                                         <label for="coupon" class="form-label">Cupom (opcional)</label>
                                                         <input id="coupon" class="form-control"
                                                             placeholder="ex.: CUPOMTESTE" />
                                                     </div>
-                                                </div>
+                                                </div>-->
 
                                                 <div class="row" id="plansGrid"></div>
                                             </div>
@@ -513,8 +513,9 @@
                         ? '<span class="badge bg-success">Ativa</span>'
                         : `<span class="badge bg-warning text-dark">${s.subscription_status}</span>`;
 
-                    elStatus.innerHTML = `${badge}
-        <small class="ms-2">Plano: ${s.plan_code || '-'} · Vig.: ${fmt(s.current_period_start)} → ${fmt(s.current_period_end)} · Trial até: ${fmt(s.trial_end)}</small>`;
+                    const vigencia = `· Vigência.: ${fmt(s.current_period_start)} → ${fmt(s.current_period_end)} · Trial até: ${fmt(s.trial_end)}`;
+
+                    elStatus.innerHTML = `${badge} <small class="ms-2">Plano: ${s.plan_code || 'nenhum plano'} ${s.current_period_start ? vigencia : ''}</small>`;
 
                     // portal só habilita se tiver assinatura/trial
                     portalBtn.disabled = !['active', 'trialing'].includes(s.subscription_status);
@@ -534,18 +535,18 @@
                     const col = document.createElement('div');
                     col.className = 'col-sm-6 col-lg-4';
                     col.innerHTML = `
-        <div class="card h-100 shadow-none border">
-          <div class="card-body">
-            <h6 class="mb-1">${p.name}</h6>
-            <div class="mb-2">
-              <span class="fs-4 fw-semibold">${brl(p.amount_cents)}</span>
-              <small class="text-muted">/ ${p.interval}</small>
-            </div>
-            <button class="btn btn-primary w-100" data-code="${p.code}">
-              Assinar ${p.name}
-            </button>
-          </div>
-        </div>`;
+                    <div class="card h-100 shadow-none border">
+                        <div class="card-body">
+                            <h6 class="mb-1">${p.name}</h6>
+                            <div class="mb-2">
+                                <span class="fs-4 fw-semibold">${brl(p.amount_cents)}</span>
+                                <small class="text-muted">/ ${p.interval}</small>
+                            </div>
+                            <button class="btn btn-primary w-100" data-code="${p.code}">
+                                Assinar ${p.name}
+                            </button>
+                        </div>
+                    </div>`;
                     grid.appendChild(col);
                 });
 

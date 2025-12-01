@@ -61,18 +61,18 @@
                 const col = document.createElement('div');
                 col.className = 'col-sm-6 col-lg-4';
                 col.innerHTML = `
-          <div class="card h-100 shadow-none border">
-            <div class="card-body">
-              <h6 class="mb-1">${p.name}</h6>
-              <div class="mb-2">
-                <span class="fs-4 fw-semibold">${brl(p.amount_cents)}</span>
-                <small class="text-muted">/ ${p.interval}</small>
-              </div>
-              <button class="btn btn-primary w-100" data-code="${p.code}">
-                Assinar ${p.name}
-              </button>
-            </div>
-          </div>`;
+                <div class="card h-100 shadow-none border">
+                    <div class="card-body">
+                    <h6 class="mb-1">${p.name}</h6>
+                    <div class="mb-2">
+                        <span class="fs-4 fw-semibold">${brl(p.amount_cents)}</span>
+                        <small class="text-muted">/ ${p.interval}</small>
+                    </div>
+                    <button class="btn btn-primary w-100" data-code="${p.code}">
+                        Assinar ${p.name}
+                    </button>
+                    </div>
+                </div>`;
                 elGrid.appendChild(col);
             });
 
