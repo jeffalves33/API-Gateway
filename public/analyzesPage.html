@@ -465,8 +465,8 @@
                                         <!-- Ângulo da análise (enviesamento) -->
                                         <div class="col-md-4">
                                             <fieldset class="ps-2" role="radiogroup" aria-labelledby="legendFocus">
-                                                <label id="legendFocus"
-                                                    class="form-label mb-2 fw-medium">Enviesamento</label>
+                                                <label id="legendFocus" class="form-label mb-2 fw-medium">Foco
+                                                    Estratégico da Análise</label>
 
                                                 <div class="form-check mb-2">
                                                     <input class="form-check-input" type="radio" name="analysisFocus"
@@ -480,23 +480,23 @@
                                                     <input class="form-check-input" type="radio" name="analysisFocus"
                                                         id="focusNegocio" value="negocio">
                                                     <label class="form-check-label" for="focusNegocio">
-                                                        Negócio
+                                                        Negócio & Crescimento
                                                     </label>
                                                 </div>
 
-                                                <div class="form-check mb-2">
+                                                <!--<div class="form-check mb-2">
                                                     <input class="form-check-input" type="radio" name="analysisFocus"
                                                         id="focusConexao" value="conexao">
                                                     <label class="form-check-label" for="focusConexao">
                                                         Conexão com públicos
                                                     </label>
-                                                </div>
+                                                </div>-->
 
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="analysisFocus"
                                                         id="focusPanorama" value="panorama" checked>
                                                     <label class="form-check-label" for="focusPanorama">
-                                                        Panorama geral
+                                                        Visão Integrada
                                                     </label>
                                                 </div>
                                             </fieldset>
@@ -587,7 +587,7 @@
                                     <div class="row mb-4" style="display: none;">
                                         <div class="col-md-6 mb-3 mb-md-0">
                                             <label for="voiceProfile" class="form-label mb-2 fw-medium">
-                                                Para quem é a análise?
+                                                Perspectiva do Usuário
                                                 <button type="button" class="btn btn-link p-0 ms-1 align-baseline"
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Escolha quem vai ler para adaptar vocabulário e prioridades."
@@ -597,17 +597,15 @@
                                             </label>
                                             <select class="form-select" id="voiceProfile"
                                                 aria-describedby="voiceProfileHelp">
-                                                <option value="CMO" selected>CMO — Direção de negócio & marca</option>
-                                                <option value="HEAD_GROWTH">Head de Growth — Aquisição, retenção, testes
-                                                </option>
-                                                <option value="PERFORMANCE_MIDIA">Performance & Mídia — Canais,
-                                                    ROAS/CPAs, orçamento</option>
+                                                <option value="CMO" selected>Direção de Marca & Negócio</option>
+                                                <option value="HEAD_GROWTH">Growth & Estratégia de Aquisição</option>
+                                                <option value="PERFORMANCE_MIDIA">Performance & Mídia</option>
                                             </select>
                                         </div>
 
                                         <div class="col-md-6">
                                             <label for="narrativeStyle" class="form-label mb-2 fw-medium">
-                                                Como a história é organizada?
+                                                Estrutura da Análise
                                                 <button type="button" class="btn btn-link p-0 ms-1 align-baseline"
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="SCQA: Situação→Complicação→Pergunta→Resposta. Pirâmide: conclusão primeiro; depois pilares. Livre: prosa direta."
@@ -617,11 +615,9 @@
                                             </label>
                                             <select class="form-select" id="narrativeStyle"
                                                 aria-describedby="narrativeStyleHelp">
-                                                <option value="SCQA" selected>SCQA — Começo-meio-fim que prende atenção
-                                                </option>
-                                                <option value="piramide">Pirâmide — Resposta primeiro, pilares depois
-                                                </option>
-                                                <option value="livre">Livre — Prosa simples e direta</option>
+                                                <option value="SCQA" selected>SCQA (Storytelling Estruturado)</option>
+                                                <option value="piramide">Pirâmide Invertida (Resposta Primeiro)</option>
+                                                <option value="livre">Livre (Prosa Direta)</option>
                                             </select>
                                             <small id="narrativeStyleHelp" class="form-text text-muted">
                                                 Só muda a ordem lógica; os dados são os mesmos.
@@ -632,7 +628,7 @@
                                     <div class="row mb-4">
                                         <div class="col-md-4" style="display: none;">
                                             <label for="decisionMode" class="form-label mb-2 fw-medium">
-                                                Formato para decidir
+                                                Formato de Entrega
                                                 <button type="button" class="btn btn-link p-0 ms-1 align-baseline"
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Tópicos: leitura rápida. Narrativa: costura contexto. Decision Brief: TL;DR + ações com dono e prazo. Em Descritiva bloqueamos o Brief (não há plano de ação)."
@@ -642,12 +638,9 @@
                                             </label>
                                             <select class="form-select" id="decisionMode"
                                                 aria-describedby="decisionModeHelp">
-                                                <option value="topicos" selected>Tópicos — Leitura rápida e objetiva
-                                                </option>
-                                                <option value="narrativa">Narrativa — Contexto antes da conclusão
-                                                </option>
-                                                <option value="decision_brief">Decision Brief — resumo + ações
-                                                    (executivo)</option>
+                                                <option value="topicos" selected>Tópicos (Rápido & Objetivo)</option>
+                                                <option value="narrativa">Narrativa (Contexto & Conexões)</option>
+                                                <option value="decision_brief">Decision Brief (Resumo + Ação)</option>
                                             </select>
                                         </div>
 
