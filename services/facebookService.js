@@ -83,3 +83,27 @@ exports.getAllMetricsRows = async (id_customer, pageId, accessToken, startDate, 
     page_follows: follows[index] || 0
   }));
 };
+
+exports.getAllMetricsPosts = async (pageId, accessToken, startDate, endDate, period = 'day') => {
+  const allValues = [];
+  const fields = 'id,created_time,message,full_picture,permalink_url,reactions.summary(true),comments.summary(true),shares'
+
+  for (const [since, until] of splitDateRange(startDate, endDate, 30)) {
+    const response = await axios.get(`${BASE_URL}/${pageId}/posts`, {
+      params: {
+        access_token: accessToken,
+        period,
+        since: formatDate(since),
+        until: formatDate(until),
+        fields: fields
+      }
+    });
+
+    if (response.status === 200) {
+      const values = response.data?.data || [];
+      allValues.push(...values);
+    } else throw new Error(`Erro Facebook API: getAllMetricsPosts ${response.status} - ${response.statusText}`);
+
+  }
+  return allValues;
+};

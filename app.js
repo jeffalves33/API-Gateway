@@ -11,6 +11,7 @@ const billingRoutes = require('./routes/billingRoutes');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const contentsRoutes = require('./routes/contentsRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
@@ -41,6 +42,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/api', authRoutes); // Não deve ser /api
 app.use('/api/billing', billingRoutes);
 app.use('/api/metrics', metricsRoutes);
+app.use('/api/contents', contentsRoutes);
 
 //Refatorado
 app.use('/api/contact', contactRoutes);
@@ -86,14 +88,11 @@ app.get('/:userId', authenticatePageAccess, (req, res, next) => {
   const userId = req.params.userId;
 
   // Evita colisão com arquivos .html e rotas inválidas
-  if (!/^\d+$/.test(userId)) {
-    return next(); // pula para o próximo middleware (404 ou outras rotas)
-  }
+  if (!/^\d+$/.test(userId)) return next(); // pula para o próximo middleware (404 ou outras rotas)
 
   // Verificar se o userId corresponde ao usuário logado
-  if (req.user && req.user.id.toString() === userId) {
-    res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html'));
-  } else {
+  if (req.user && req.user.id.toString() === userId) res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html'));
+  else {
     res.status(403).json({
       success: false,
       message: 'Acesso negado. Você não tem permissão para acessar esta área.'

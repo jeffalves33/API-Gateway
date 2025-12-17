@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     const followersChartContainer = document.getElementById('followersChart');
     const instructionMessage = document.getElementById('instruction-message'); // <- Agora existe no HTML
     const facebookSecoundCardReach = document.getElementById('facebook-secound-card-reach')
+    const totalContentSummary = document.getElementById('content-total-posts');
+    const totalEngagementSummary = document.getElementById('content-total-engagement');
+    const totalLikesSummary = document.getElementById('content-total-likes');
+    const totalCommentsSummary = document.getElementById('content-total-comments');
     const instagramSecoundCardReach = document.getElementById('instagram-secound-card-reach')
     const facebookSecoundCardImpressions = document.getElementById('facebook-secound-card-impressions')
     const instagramSecoundCardImpressions = document.getElementById('instagram-secound-card-impressions')
@@ -203,7 +207,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-
     async function fetchAndRenderTrafficChart(startDate, endDate, id_customer) {
         try {
             const res = await fetch('/api/metrics/traffic', {
@@ -229,12 +232,31 @@ document.addEventListener('DOMContentLoaded', async function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-            if (!res.ok) {
-                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
-            }
+            if (!res.ok) throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+
             const data = await res.json();
             renderSearchVolumeLineChart(data);
             renderSearchVolumeCards(data);
+        } catch (error) {
+            showError('Erro ao buscar dados de volume de pesquisa', error);
+        }
+    }
+
+    async function fetchAndRenderContentChart(startDate, endDate, id_customer) {
+        try {
+            const res = await fetch('/api/contents/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_customer, startDate, endDate })
+            });
+            if (!res.ok) throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+
+            const data = await res.json();
+
+            lastContentsData = data;
+            renderContentSummary(data);
+            renderTopPosts(data);
+            renderContentPostsTable(data);
         } catch (error) {
             showError('Erro ao buscar dados de volume de pesquisa', error);
         }
@@ -854,6 +876,460 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
+    function renderContentSummary(data) {
+        if (
+            !data ||
+            data.amountContents == null ||
+            data.totalComments == null ||
+            data.totalEngagement == null ||
+            data.totalLikes == null ||
+            !Array.isArray(data.facebook) ||
+            !Array.isArray(data.instagram) ||
+            !Array.isArray(data.labels)
+        ) {
+            showError('Dados inválidos de sumário de posts', data);
+            return;
+        }
+
+        totalCommentsSummary.textContent = data.totalComments || '0';
+        totalContentSummary.textContent = data.amountContents || '0';
+        totalEngagementSummary.textContent = data.totalEngagement || '0';
+        totalLikesSummary.textContent = data.totalLikes || '0';
+    }
+
+    function renderTopPosts(data) {
+        if (
+            !data ||
+            data.amountContents == null ||
+            data.totalComments == null ||
+            data.totalEngagement == null ||
+            data.totalLikes == null ||
+            !Array.isArray(data.facebook) ||
+            !Array.isArray(data.instagram) ||
+            !Array.isArray(data.labels)
+        ) {
+            showError('Dados inválidos recebidos de top posts', data);
+            return;
+        }
+
+        // Normaliza posts (FB + IG) para um formato único
+        const posts = [
+            ...data.facebook.map((p) => {
+                const likes = p.reactions?.summary?.total_count ?? 0;
+                const comments = p.comments?.summary?.total_count ?? 0;
+                const shares = p.shares?.count ?? 0;
+
+                return {
+                    platform: 'facebook',
+                    platformLabel: 'Facebook',
+                    platformIcon: 'bx bxl-facebook',
+                    platformBadge: 'bg-label-primary',
+                    postTitle: p.message || 'Post do Facebook',
+                    likes,
+                    comments,
+                    shares,
+                    reach: 0, // não vem no payload atual
+                    permalink: p.permalink_url || '#',
+                    createdTime: p.created_time || null,
+                    picture: p.full_picture || null,
+                    engagement: likes + comments + shares,
+                };
+            }),
+            ...data.instagram.map((p) => {
+                const likes = p.like_count ?? 0;
+                const comments = p.comments_count ?? 0;
+                const shares = 0; // IG não tem shares no seu payload atual
+
+                return {
+                    platform: 'instagram',
+                    platformLabel: 'Instagram',
+                    platformIcon: 'bx bxl-instagram',
+                    platformBadge: 'bg-label-danger',
+                    postTitle: p.message || 'Post do Instagram',
+                    likes,
+                    comments,
+                    shares,
+                    reach: 0, // não vem no payload atual
+                    permalink: p.permalink || '#',
+                    createdTime: p.created_time || null,
+                    picture: p.full_picture || null,
+                    engagement: likes + comments + shares,
+                };
+            }),
+        ];
+
+        // Top 3 por engajamento (likes + comments + shares)
+        const top = posts
+            .sort((a, b) => b.engagement - a.engagement)
+            .slice(0, 3);
+
+        const container = document.getElementById('topPostsRow');
+        if (!container) return;
+
+        if (top.length === 0) {
+            container.innerHTML = `
+            <div class="col-12">
+                <div class="card">
+                <div class="card-body text-muted">Sem posts no período selecionado.</div>
+                </div>
+            </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = top
+            .map((p, idx) => {
+                const rank = idx + 1;
+
+                return `
+                <div class="col-12 col-md-4">
+                <div class="card h-100 border">
+                    <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                        <div class="avatar">
+                            <span class="avatar-initial rounded ${p.platformBadge}">
+                            <i class="${p.platformIcon}"></i>
+                            </span>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2">
+                            <small class="text-warning fw-semibold">🏅 #${rank}</small>
+                            <small class="text-muted">${p.platformLabel}</small>
+                            </div>
+                        </div>
+                        </div>
+
+                        <div class="dropdown">
+                        <button class="btn p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bx bx-dots-vertical-rounded"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="javascript:void(0)">Ver detalhes</a></li>
+                            <li><a class="dropdown-item" href="${p.permalink}" target="_blank" rel="noopener">Abrir post</a></li>
+                        </ul>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3">${escapeHtml(p.postTitle.slice(0, 50))}...</h6>
+
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-muted"><i class="bx bx-heart text-danger me-1"></i> Curtidas</small>
+                        <small class="fw-semibold">${formatNumber(p.likes)}</small>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-muted"><i class="bx bx-message-rounded-dots text-info me-1"></i> Comentários</small>
+                        <small class="fw-semibold">${formatNumber(p.comments)}</small>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-muted"><i class="bx bx-share-alt text-success me-1"></i> Compartilh.</small>
+                        <small class="fw-semibold">${formatNumber(p.shares)}</small>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-muted"><i class="bx bx-show text-primary me-1"></i> Alcance</small>
+                        <small class="fw-semibold">${formatNumber(p.reach)}</small>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                        <small class="text-muted">Engajamento</small>
+                        <small class="fw-semibold">${formatNumber(p.engagement)}</small>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            `;
+            })
+            .join('');
+    }
+
+    function renderContentPostsTable(data) {
+        if (!data || !Array.isArray(data.facebook) || !Array.isArray(data.instagram)) {
+            showError('Dados inválidos recebidos de listagem de posts', data);
+            return;
+        }
+
+        const tbody = document.getElementById('contentPostsTbody');
+        if (!tbody) return;
+
+        // Normaliza FB + IG
+        const posts = [
+            ...data.facebook.map((p) => {
+                const likes = p.reactions?.summary?.total_count ?? 0;
+                const comments = p.comments?.summary?.total_count ?? 0;
+                const shares = p.shares?.count ?? 0;
+
+                return {
+                    publishedAt: p.created_time,
+                    postTitle: p.message || 'Post do Facebook',
+                    platformLabel: 'Facebook',
+                    platformIcon: 'bx bxl-facebook',
+                    platformBadge: 'bg-label-primary',
+                    typeLabel: 'Feed',
+                    likes,
+                    comments,
+                    shares,
+                    reach: 0,
+                    permalink: p.permalink_url || '#',
+                };
+            }),
+            ...data.instagram.map((p) => {
+                const likes = p.like_count ?? 0;
+                const comments = p.comments_count ?? 0;
+
+                return {
+                    publishedAt: p.created_time,
+                    postTitle: p.message || 'Post do Instagram',
+                    platformLabel: 'Instagram',
+                    platformIcon: 'bx bxl-instagram',
+                    platformBadge: 'bg-label-danger',
+                    typeLabel:
+                        p.media_type === 'CAROUSEL_ALBUM'
+                            ? 'Carrossel'
+                            : p.media_type === 'VIDEO'
+                                ? 'Vídeo'
+                                : 'Imagem',
+                    likes,
+                    comments,
+                    shares: 0,
+                    reach: 0,
+                    permalink: p.permalink || '#',
+                };
+            }),
+        ];
+
+        console.log('state.platform:', contentPostsState.platform);
+        console.log('sample posts:', posts.slice(0, 3));
+
+        // ==========================
+        // Filtro + Ordenação
+        // ==========================
+        let filtered = posts;
+
+        if (contentPostsState.platform !== 'all') {
+            filtered = filtered.filter(p => p.platform === contentPostsState.platform);
+        }
+
+        const dateValue = (d) => {
+            const t = Date.parse(d);
+            return Number.isFinite(t) ? t : 0;
+        };
+
+        filtered.sort((a, b) => {
+            const byDateDesc = dateValue(b.publishedAt) - dateValue(a.publishedAt);
+            const byDateAsc = dateValue(a.publishedAt) - dateValue(b.publishedAt);
+            const byPlatform = (a.platform || '').localeCompare(b.platform || '');
+
+            switch (contentPostsState.sort) {
+                case 'date_asc':
+                    return byDateAsc;
+
+                case 'platform_asc':
+                    // plataforma, e desempata por data desc
+                    return byPlatform || byDateDesc;
+
+                case 'platform_then_date':
+                    return byPlatform || byDateDesc;
+
+                case 'date_then_platform':
+                    return byDateDesc || byPlatform;
+
+                case 'date_desc':
+                default:
+                    return byDateDesc;
+            }
+        });
+
+        // Paginação
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / contentPostsState.pageSize));
+        const safePage = Math.min(Math.max(contentPostsState.page, 1), totalPages);
+        contentPostsState.page = safePage;
+
+        const startIdx = (safePage - 1) * contentPostsState.pageSize;
+        const endIdx = Math.min(startIdx + contentPostsState.pageSize, total);
+        const pageItems = filtered.slice(startIdx, endIdx);
+
+        // Render tabela
+        tbody.innerHTML = pageItems
+            .map(
+                (p) => `
+      <tr>
+        <td>${formatDateBR(p.publishedAt)}</td>
+        <td><span class="fw-medium">${escapeHtml(p.postTitle.slice(0, 40))}...</span></td>
+        <td>
+          <span class="badge ${p.platformBadge}">
+            <i class="${p.platformIcon} me-1"></i>
+          </span>
+        </td>
+        <td>${escapeHtml(p.typeLabel)}</td>
+        <td class="text-end">${formatNumber(p.likes)}</td>
+        <td class="text-end">${formatNumber(p.comments)}</td>
+        <td class="text-end">${formatNumber(p.shares)}</td>
+        <td class="text-end">${formatNumber(p.reach)}</td>
+        <td class="text-center">
+          <div class="dropdown">
+            <button class="btn p-0" type="button" data-bs-toggle="dropdown">
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="javascript:void(0)">Ver detalhes</a></li>
+              <li><a class="dropdown-item" href="${p.permalink}" target="_blank" rel="noopener">Abrir post</a></li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+    `
+            )
+            .join('');
+
+        // Info
+        const info = document.getElementById('contentPostsPaginationInfo');
+        if (info) {
+            info.textContent = total === 0
+                ? 'Nenhum post encontrado'
+                : `Mostrando ${startIdx + 1}-${endIdx} de ${total} posts`;
+        }
+
+        // Paginação HTML
+        const pagination = document.getElementById('contentPostsPagination');
+        if (pagination) {
+            const prev = safePage > 1 ? safePage - 1 : 1;
+            const next = safePage < totalPages ? safePage + 1 : totalPages;
+
+            const maxButtons = 7;
+            const pages = buildPaginationWindow(safePage, totalPages, maxButtons);
+
+            pagination.innerHTML = `
+      <li class="page-item ${safePage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-page="${prev}">
+          <i class="bx bx-chevron-left"></i>
+        </a>
+      </li>
+      ${pages
+                    .map((n) =>
+                        n === '…'
+                            ? `<li class="page-item disabled"><span class="page-link">…</span></li>`
+                            : `<li class="page-item ${n === safePage ? 'active' : ''}">
+                 <a class="page-link" href="#" data-page="${n}">${n}</a>
+               </li>`
+                    )
+                    .join('')}
+      <li class="page-item ${safePage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-page="${next}">
+          <i class="bx bx-chevron-right"></i>
+        </a>
+      </li>
+    `;
+        }
+    }
+
+
+    // helpers
+    const contentPostsState = {
+        page: 1,
+        pageSize: 10,
+        platform: 'all',          // 'all' | 'facebook' | 'instagram'
+        sort: 'date_desc',        // default SEMPRE por data
+        sortTie: 'platform_then_date' // 'platform_then_date' | 'date_then_platform'
+    };
+
+    let lastContentsData = null;
+
+    function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+
+    function formatNumber(n) {
+        return new Intl.NumberFormat('pt-BR').format(Number(n || 0));
+    }
+
+    function formatDateBR(date) {
+        try {
+            return new Date(date).toLocaleDateString('pt-BR');
+        } catch {
+            return '-';
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function buildPaginationWindow(current, totalPages, maxButtons) {
+        if (totalPages <= maxButtons) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+
+        const windowSize = maxButtons - 2; // reserva espaço para ellipsis
+        let start = Math.max(2, current - Math.floor(windowSize / 2));
+        let end = Math.min(totalPages - 1, start + windowSize - 1);
+
+        // ajusta start se end encostar
+        start = Math.max(2, end - windowSize + 1);
+
+        const pages = [1];
+
+        if (start > 2) pages.push('…');
+
+        for (let i = start; i <= end; i++) pages.push(i);
+
+        if (end < totalPages - 1) pages.push('…');
+
+        pages.push(totalPages);
+        return pages;
+    }
+
+    // ============================
+    // CONTEÚDOS (MOCK + RENDER)
+    // ============================
+    /*let contentPostsState = {
+        posts: [],
+        page: 1,
+        pageSize: 10
+    };
+
+    function renderContentMock() {
+        // evita re-render duplicado (caso usuário clique Buscar várias vezes)
+        if (contentPostsState.posts && contentPostsState.posts.length > 0) {
+            renderContentSummary(contentPostsState.posts);
+            renderTopPosts(contentPostsState.posts);
+            renderContentPostsTable();
+            return;
+        }
+
+        contentPostsState.posts = buildMockPosts(27); // 27 posts pra testar paginação
+        contentPostsState.page = 1;
+
+        renderContentSummary(contentPostsState.posts);
+        renderTopPosts(contentPostsState.posts);
+        renderContentPostsTable();
+
+        // paginação click (delegação)
+        const pagination = document.getElementById('contentPostsPagination');
+        if (pagination && !pagination.dataset.bound) {
+            pagination.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-page]');
+                if (!btn) return;
+                e.preventDefault();
+
+                const next = Number(btn.getAttribute('data-page'));
+                const totalPages = Math.max(1, Math.ceil(contentPostsState.posts.length / contentPostsState.pageSize));
+                if (Number.isNaN(next) || next < 1 || next > totalPages) return;
+
+                contentPostsState.page = next;
+                renderContentPostsTable();
+            });
+            pagination.dataset.bound = '1';
+        }
+    }*/
+
     function updateProgressBar(percentage, text) {
         const loadingBar = document.getElementById('loading-bar');
         const loadingText = document.getElementById('loading-text');
@@ -890,6 +1366,123 @@ document.addEventListener('DOMContentLoaded', async function () {
         const loadingProgress = document.getElementById('loading-progress');
         if (loadingProgress) loadingProgress.style.display = 'none';
     }
+
+    /*function buildMockPosts(count) {
+        const platforms = [
+            { key: 'instagram', label: 'Instagram', badge: 'bg-label-danger', icon: 'bx bxl-instagram' },
+            { key: 'facebook', label: 'Facebook', badge: 'bg-label-primary', icon: 'bx bxl-facebook' },
+            { key: 'linkedin', label: 'LinkedIn', badge: 'bg-label-info', icon: 'bx bxl-linkedin' }
+        ];
+
+        const types = [
+            { key: 'feed', label: 'Feed' },
+            { key: 'reels', label: 'Reels' },
+            { key: 'carrossel', label: 'Carrossel' }
+        ];
+
+        const titles = [
+            'Lançamento de Produto',
+            'Dica do Dia',
+            'Promoção Black Friday',
+            'Case de Sucesso',
+            'Bastidores da Equipe',
+            'Webinar Gratuito',
+            'Checklist do Mês',
+            'Antes e Depois',
+            'FAQ Rápido'
+        ];
+
+        // datas fictícias recentes
+        const base = new Date();
+        const posts = [];
+
+        for (let i = 0; i < count; i++) {
+            const p = platforms[i % platforms.length];
+            const t = types[i % types.length];
+            const title = titles[i % titles.length] + ` #${i + 1}`;
+
+            const date = new Date(base);
+            date.setDate(base.getDate() - (count - i));
+
+            const reach = 800 + (i * 70) + Math.floor(Math.random() * 250);
+            const likes = 80 + (i * 9) + Math.floor(Math.random() * 60);
+            const comments = 8 + Math.floor(i * 1.2) + Math.floor(Math.random() * 15);
+            const shares = 3 + Math.floor(i * 0.8) + Math.floor(Math.random() * 10);
+
+            posts.push({
+                id: `mock-${i + 1}`,
+                publishedAt: date,
+                postTitle: title,
+                platformKey: p.key,
+                platformLabel: p.label,
+                platformBadge: p.badge,
+                platformIcon: p.icon,
+                typeLabel: t.label,
+                likes,
+                comments,
+                shares,
+                reach
+            });
+        }
+
+        // ordena por engajamento (likes+comments+shares) desc
+        posts.sort((a, b) => (b.likes + b.comments + b.shares) - (a.likes + a.comments + a.shares));
+        return posts;
+    }
+
+    function renderContentSummary(posts) {
+        const totalPosts = posts.length;
+        const totalEngagement = posts.reduce((acc, p) => acc + p.likes + p.comments + p.shares, 0);
+        const totalReach = posts.reduce((acc, p) => acc + p.reach, 0);
+        const engagementRate = totalReach > 0 ? (totalEngagement / totalReach) * 100 : 0;
+
+        setText('content-total-posts', formatNumber(totalPosts));
+        setText('content-total-engagement', formatNumber(totalEngagement));
+        setText('content-engagement-rate', `${engagementRate.toFixed(1)}%`);
+
+        // deltas fictícios (por enquanto)
+        //setText('content-total-posts-delta', '↗ +12% vs período anterior');
+        //setText('content-total-engagement-delta', '↗ +24% vs período anterior');
+        //setText('content-engagement-rate-delta', '↗ +1.2% vs período anterior');
+
+        // melhor horário fictício (vai virar algoritmo depois)
+        //setText('content-best-hour', '18h');
+        //setText('content-best-hour-sub', 'Seg–Sex, 18h–20h');
+    }
+*/
+
+    document.addEventListener('change', (e) => {
+        const pf = e.target.closest('#contentPostsPlatformFilter');
+        const so = e.target.closest('#contentPostsSort');
+
+        if (pf) {
+            contentPostsState.platform = pf.value; // all|facebook|instagram
+            contentPostsState.page = 1;
+            if (lastContentsData) renderContentPostsTable(lastContentsData);
+        }
+
+        if (so) {
+            contentPostsState.sort = so.value; // date_desc|date_asc|platform_then_date|date_then_platform|platform_asc
+            contentPostsState.page = 1;
+            if (lastContentsData) renderContentPostsTable(lastContentsData);
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('#contentPostsPagination a.page-link');
+        if (!link) return;
+
+        e.preventDefault();
+
+        const page = Number(link.dataset.page);
+        if (!Number.isFinite(page)) return;
+
+        contentPostsState.page = page;
+
+        if (lastContentsData) {
+            renderContentPostsTable(lastContentsData);
+        }
+    });
 
     document.getElementById('log-out')?.addEventListener('click', logout);
 
@@ -936,6 +1529,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         { name: 'Carregando seguidores...', fn: () => fetchAndRenderFollowersChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
                         { name: 'Carregando tráfego...', fn: () => fetchAndRenderTrafficChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
                         { name: 'Carregando volume...', fn: () => fetchAndRenderSearchVolumeChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
+                        { name: 'Carregando resumo de conteúdo...', fn: () => fetchAndRenderContentChart(formatToISO(startDate), formatToISO(endDate), id_customer) },
                         // etc...
                     ];
                     // Executa todas as buscas e aguarda TODAS terminarem completamente
@@ -946,6 +1540,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     updateProgressBar(100, 'Concluído!');
                     setTimeout(() => {
                         hideProgressBar();
+                        //renderContentMock();
                         // Exibe dashboard e esconde instrução APENAS após tudo estar renderizado
                         formBusca.style.display = 'block';
                         if (instructionMessage) instructionMessage.style.display = 'none';

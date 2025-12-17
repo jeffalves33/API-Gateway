@@ -34,3 +34,11 @@ exports.buildDates = (qtdDays) => {
     since.setDate(since.getDate() - qtdDays);
     return { since, endDate };
 }
+
+exports.isInRange = (timestamp, startDate, endDate) => {
+  // startDate/endDate: "YYYY-MM-DD"
+  const t = new Date(timestamp).getTime();
+  const s = new Date(`${startDate}T00:00:00Z`).getTime();
+  const e = new Date(`${endDate}T23:59:59Z`).getTime();
+  return t >= s && t <= e;
+}

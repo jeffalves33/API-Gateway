@@ -1,6 +1,6 @@
 // Arquivo: services/instagramService.js
 const axios = require('axios');
-const { splitDateRange, formatDate } = require('../utils/dateUtils');
+const { splitDateRange, formatDate, isInRange } = require('../utils/dateUtils');
 
 const BASE_URL = 'https://graph.facebook.com/v22.0';
 
@@ -100,4 +100,54 @@ exports.getAllMetricsRows = async (id_customer, pageId, accessToken, startDate, 
     views: views[idx] || 0,
     followers
   }));
+};
+
+exports.getAllMetricsPosts = async (pageId, accessToken, startDate, endDate, period = 'day') => {
+  const allValues = [];
+  const fields = 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count';
+  let url = `${BASE_URL}/${pageId}/media`;
+  let params = {
+    access_token: accessToken,
+    fields
+  };
+
+  while (url) {
+    const response = await axios.get(url, { params });
+
+    if (response.status === 200) {
+      const items = response.data?.data || [];
+      
+      // filtra por intervalo (post-level)
+      for (const m of items) {
+        if (m.timestamp && isInRange(m.timestamp, startDate, endDate)) {
+          allValues.push({
+            id: m.id,
+            created_time: m.timestamp,                     // equivalente ao FB created_time
+            message: m.caption || null,                    // equivalente ao FB message
+            full_picture: m.media_url || m.thumbnail_url || null,
+            permalink_url: m.permalink || null,
+            media_type: m.media_type || null,
+
+            // métricas nativas IG no /media
+            like_count: m.like_count ?? 0,
+            comments_count: m.comments_count ?? 0
+          });
+        }
+      }
+
+      // para cedo quando já passou do startDate (como a lista vem do mais recente -> antigo)
+      const last = items[items.length - 1];
+      if (last?.timestamp) {
+        const lastTime = new Date(last.timestamp).getTime();
+        const startTime = new Date(`${startDate}T00:00:00Z`).getTime();
+        if (lastTime < startTime) break;
+      }
+
+      // paginação
+      url = response.data?.paging?.next || null;
+      params = undefined; // paging.next já vem com query completa
+    } else throw new Error(`Erro Instagram API: getAllMetricsPosts ${response.status} - ${response.statusText}`);
+  }
+
+  return allValues;
 };
