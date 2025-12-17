@@ -950,7 +950,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     comments,
                     shares,
                     reach: 0, // não vem no payload atual
-                    permalink: p.permalink || '#',
+                    permalink: p.permalink_url || '#',
                     createdTime: p.created_time || null,
                     picture: p.full_picture || null,
                     engagement: likes + comments + shares,
@@ -1060,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const shares = p.shares?.count ?? 0;
 
                 return {
+                    platform: 'facebook',
                     publishedAt: p.created_time,
                     postTitle: p.message || 'Post do Facebook',
                     platformLabel: 'Facebook',
@@ -1078,6 +1079,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const comments = p.comments_count ?? 0;
 
                 return {
+                    platform: 'instagram',
                     publishedAt: p.created_time,
                     postTitle: p.message || 'Post do Instagram',
                     platformLabel: 'Instagram',
@@ -1093,13 +1095,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                     comments,
                     shares: 0,
                     reach: 0,
-                    permalink: p.permalink || '#',
+                    permalink: p.permalink_url || '#',
                 };
             }),
         ];
-
-        console.log('state.platform:', contentPostsState.platform);
-        console.log('sample posts:', posts.slice(0, 3));
 
         // ==========================
         // Filtro + Ordenação
