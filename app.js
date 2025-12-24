@@ -13,8 +13,9 @@ const authRoutes = require('./routes/authRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const contentsRoutes = require('./routes/contentsRoutes');
 const customerRoutes = require('./routes/customerRoutes');
-const metricsRoutes = require('./routes/metricsRoutes');
+const goalsRoutes = require('./routes/goalsRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
+const metricsRoutes = require('./routes/metricsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
@@ -46,6 +47,7 @@ app.use('/api/contents', contentsRoutes);
 
 //Refatorado
 app.use('/api/contact', contactRoutes);
+app.use('/api/goals', goalsRoutes);
 app.use('/api/googleAnalytics', googleAnalyticsRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/meta', metaRoutes);
@@ -71,6 +73,7 @@ app.get('/chatPage.html', authenticatePageAccess, (req, res) => { res.sendFile(p
 app.get('/customersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'customersPage.html')); });
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html')); });
 app.get('/foodModelPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html')); });
+app.get('/goalsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'goalsPage.html')); });
 app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
 app.get('/platformsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'platformsPage.html')); });
 app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html')); });
