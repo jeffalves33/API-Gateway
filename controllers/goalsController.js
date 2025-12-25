@@ -145,7 +145,7 @@ exports.suggestions = async (req, res) => {
         const belongs = await checkCustomerBelongsToUser(Number(id_customer), id_user);
         if (!belongs) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário.' });
 
-        const pyRes = await fetch(`https://analyze-backend-5jyg.onrender.com/analyze/goals/suggestions`, {
+        const pyRes = await fetch(`https://analyze-backend-5jyg.onrender.com/goals/suggestions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -194,7 +194,7 @@ exports.generateAnalysis = async (req, res) => {
             });
         }
 
-        const pyRes = await fetch(`https://analyze-backend-5jyg.onrender.com/analyze/goals/generate-analysis`, {
+        const pyRes = await fetch(`https://analyze-backend-5jyg.onrender.com/goals/generate-analysis`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

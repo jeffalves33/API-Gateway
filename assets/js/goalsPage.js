@@ -478,11 +478,7 @@ async function loadSuggestions() {
   try { data = JSON.parse(raw); }
   catch { data = { success: false, message: raw?.slice(0, 300) || 'Resposta não-JSON do servidor' }; }
 
-  console.log('suggestions status:', res.status, data);
-
-  if (!res.ok || !data.success) {
-    return showAlert(data.message || data.detail || `Erro ao gerar sugestões (HTTP ${res.status})`);
-  }
+  if (!res.ok || !data.success) return showAlert(data.message || data.detail || `Erro ao gerar sugestões (HTTP ${res.status})`);
 
   const container = document.getElementById('suggestions-list');
 
