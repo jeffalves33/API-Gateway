@@ -224,6 +224,23 @@ function daysRemaining(goal) {
   return diff;
 }
 
+function setBtnLoading(btn, isLoading, loadingText = 'Carregando...') {
+  if (!btn) return;
+
+  if (isLoading) {
+    btn.dataset.originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+      ${loadingText}
+    `;
+  } else {
+    btn.disabled = false;
+    if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+  }
+}
+
+
 function goalCard(goal) {
   const kpis = Array.isArray(goal.kpis) ? goal.kpis : [];
   const ended = isGoalPeriodEnded(goal);
@@ -428,14 +445,20 @@ async function deleteGoal(id_goal) {
   await renderGoals();
 }
 
-async function generateAnalysis(id_goal) {
-  const res = await fetch(`/api/goals/${id_goal}/actions/generate-analysis`, { method: 'POST' });
-  const data = await res.json();
+async function generateAnalysis(id_goal, btnEl) {
+  setBtnLoading(btnEl, true, 'Gerando análise...');
 
-  if (!res.ok || !data.success) return showAlert(data.message || 'Erro ao gerar análise');
+  try {
+    const res = await fetch(`/api/goals/${id_goal}/actions/generate-analysis`, { method: 'POST' });
+    const data = await res.json();
 
-  showAlert('Análise gerada e salva na meta!', 'success');
-  await renderGoals();
+    if (!res.ok || !data.success) return showAlert(data.message || 'Erro ao gerar análise');
+
+    showAlert('Análise gerada e salva na meta!', 'success');
+    await renderGoals();
+  } finally {
+    setBtnLoading(btnEl, false);
+  }
 }
 
 async function viewAnalysis(id_goal) {
@@ -461,33 +484,37 @@ async function openSuggestionsModal() {
 async function loadSuggestions() {
   const id_customer = document.getElementById('suggest_customer').value;
   const platform_name = document.getElementById('suggest_platform').value;
+  const btn = document.getElementById('btn-load-suggestions');
 
   if (!id_customer) {
     showAlert('Selecione um cliente para gerar sugestões.');
     return;
   }
 
-  const res = await fetch('/api/goals/actions/suggestions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id_customer: Number(id_customer), platform_name })
-  });
+  setBtnLoading(btn, true, 'Gerando sugestões...');
 
-  const raw = await res.text();
-  let data;
-  try { data = JSON.parse(raw); }
-  catch { data = { success: false, message: raw?.slice(0, 300) || 'Resposta não-JSON do servidor' }; }
+  try {
+    const res = await fetch('/api/goals/actions/suggestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_customer: Number(id_customer), platform_name })
+    });
 
-  if (!res.ok || !data.success) return showAlert(data.message || data.detail || `Erro ao gerar sugestões (HTTP ${res.status})`);
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { data = { success: false, message: raw?.slice(0, 300) || 'Resposta não-JSON do servidor' }; }
 
-  const container = document.getElementById('suggestions-list');
+    if (!res.ok || !data.success) return showAlert(data.message || data.detail || `Erro ao gerar sugestões (HTTP ${res.status})`);
 
-  if (!data.suggestions.length) {
-    container.innerHTML = `<div class="text-muted">Sem sugestões para essa plataforma.</div>`;
-    return;
-  }
+    const container = document.getElementById('suggestions-list');
 
-  container.innerHTML = data.suggestions.map((s, idx) => `
+    if (!data.suggestions.length) {
+      container.innerHTML = `<div class="text-muted">Sem sugestões para essa plataforma.</div>`;
+      return;
+    }
+
+    container.innerHTML = data.suggestions.map((s, idx) => `
     <div class="card mb-2">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-start gap-2">
@@ -510,36 +537,39 @@ async function loadSuggestions() {
     </div>
   `).join('');
 
-  // ao clicar, preencher form e abrir modal de meta
-  container.onclick = (e) => {
-    const btn = e.target.closest('[data-use-suggestion]');
-    if (!btn) return;
+    // ao clicar, preencher form e abrir modal de meta
+    container.onclick = (e) => {
+      const btn = e.target.closest('[data-use-suggestion]');
+      if (!btn) return;
 
-    const s = data.suggestions[Number(btn.getAttribute('data-use-suggestion'))];
+      const s = data.suggestions[Number(btn.getAttribute('data-use-suggestion'))];
 
-    // fecha modal sugestões
-    bootstrap.Modal.getInstance(document.getElementById('modalSuggestions')).hide();
+      // fecha modal sugestões
+      bootstrap.Modal.getInstance(document.getElementById('modalSuggestions')).hide();
 
-    // abre modal meta e preenche
-    document.getElementById('goalModalTitle').textContent = 'Nova meta (a partir de sugestão)';
-    document.getElementById('id_goal').value = '';
-    document.getElementById('goal-form').reset();
+      // abre modal meta e preenche
+      document.getElementById('goalModalTitle').textContent = 'Nova meta (a partir de sugestão)';
+      document.getElementById('id_goal').value = '';
+      document.getElementById('goal-form').reset();
 
-    document.getElementById('id_customer').value = id_customer;
-    document.getElementById('platform_name').value = platform_name;
-    document.getElementById('tipo_meta').value = s.tipo_meta;
-    document.getElementById('title').value = s.title;
-    document.getElementById('descricao').value = s.descricao;
+      document.getElementById('id_customer').value = id_customer;
+      document.getElementById('platform_name').value = platform_name;
+      document.getElementById('tipo_meta').value = s.tipo_meta;
+      document.getElementById('title').value = s.title;
+      document.getElementById('descricao').value = s.descricao;
 
-    // KPIs predefinidos (baseline/target ficam pra você preencher)
-    renderKpis(platform_name, (s.kpis || []).map(k => ({
-      kpi: k.kpi,
-      baseline: null,
-      target: null
-    })));
+      // KPIs predefinidos (baseline/target ficam pra você preencher)
+      renderKpis(platform_name, (s.kpis || []).map(k => ({
+        kpi: k.kpi,
+        baseline: null,
+        target: null
+      })));
 
-    new bootstrap.Modal(document.getElementById('modalGoal')).show();
-  };
+      new bootstrap.Modal(document.getElementById('modalGoal')).show();
+    };
+  } finally {
+    setBtnLoading(btn, false);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -582,7 +612,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (action === 'edit') return openGoalModalEdit(id_goal);
       if (action === 'delete') return deleteGoal(id_goal);
-      if (action === 'generate-analysis') return generateAnalysis(id_goal);
+      if (action === 'generate-analysis') return generateAnalysis(id_goal, btn);
       if (action === 'view-analysis') return viewAnalysis(id_goal);
     });
 
