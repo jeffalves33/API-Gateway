@@ -331,6 +331,7 @@
                                 <thead>
                                     <tr>
                                         <th>Clientes</th>
+                                        <th>Telefone</th>
                                         <th>Email</th>
                                         <th>Plataformas</th>
                                         <th>Status</th>
@@ -338,359 +339,85 @@
                                     </tr>
                                 </thead>
                                 <tbody class="table-border-bottom-0" id="clients-table-body">
-
-                                    <!-- =========================
-                                    EXEMPLO VISUAL (UI)
-                                    Depois você remove quando o JS começar a injetar.
-                                    ========================= -->
-                                    <!-- Cliente (linha principal) -->
-                                    <tr>
-                                        <td class="align-middle">
-                                            <button type="button"
-                                                class="btn btn-sm btn-icon btn-outline-secondary me-2 customer-expand"
-                                                data-bs-toggle="collapse" data-bs-target="#customerPlatforms-demo-1"
-                                                aria-expanded="false" aria-controls="customerPlatforms-demo-1"
-                                                title="Ver plataformas do cliente">
-                                                <i class="bx bx-chevron-down"></i>
-                                            </button>
-                                            <span class="fw-medium">ho.ko Comunicação</span>
-                                        </td>
-
-                                        <td class="align-middle">hoko@comunicacao.com.br</td>
-
-                                        <td class="align-middle">
-                                            <div class="d-inline-flex align-items-center gap-1">
-                                                <img class="platform-mini-icon"
-                                                    src="/assets/img/icons/brands/facebook.png" alt="Facebook">
-                                                <img class="platform-mini-icon"
-                                                    src="/assets/img/icons/brands/instagram.png" alt="Instagram">
-                                                <img class="platform-mini-icon"
-                                                    src="/assets/img/icons/brands/google.png" alt="Google Analytics">
-                                                <img class="platform-mini-icon"
-                                                    src="/assets/img/icons/brands/linkedin.png" alt="LinkedIn">
-                                            </div>
-                                        </td>
-
-                                        <td class="align-middle">
-                                            <span class="badge bg-label-success">CONECTADO</span>
-                                        </td>
-
-                                        <td class="align-middle">
-                                            <div class="dropdown">
-                                                <button class="btn p-0" type="button" data-bs-toggle="dropdown"
-                                                    aria-expanded="false">
-                                                    <i class="bx bx-dots-vertical-rounded"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i
-                                                                class="bx bx-edit-alt me-2"></i>Editar</a></li>
-                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i
-                                                                class="bx bx-trash me-2"></i>Remover</a></li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Cliente (accordion: detalhes) -->
-                                    <tr class="customer-details-row">
-                                        <td colspan="5">
-                                            <div class="collapse" id="customerPlatforms-demo-1"
-                                                data-bs-parent="#clients-table-body">
-                                                <div class="p-3 pt-0">
-                                                    <div class="card shadow-none border mb-0">
-                                                        <div class="card-body">
-                                                            <!-- Lista (reaproveita o layout do platformsPage) -->
-                                                            <div>
-                                                                <!-- Facebook -->
-                                                                <div class="d-flex customer-platform-item">
-                                                                    <div class="flex-shrink-0">
-                                                                        <img src="/assets/img/icons/brands/facebook.png"
-                                                                            alt="facebook" class="me-3" height="30" />
-                                                                    </div>
-
-                                                                    <div class="flex-grow-1 row align-items-center">
-                                                                        <div class="col-9">
-                                                                            <div
-                                                                                class="d-flex align-items-center flex-wrap gap-2">
-                                                                                <h6 class="mb-0">Facebook</h6>
-                                                                                <span
-                                                                                    class="badge bg-label-success">Conectado</span>
-                                                                                <span
-                                                                                    class="badge bg-label-warning">Expira
-                                                                                    em 3d</span>
-                                                                            </div>
-
-                                                                            <small
-                                                                                class="text-muted d-block">Páginas</small>
-                                                                            <small
-                                                                                class="text-muted d-block">Selecionado:
-                                                                                Página “ho.ko Comunicação”</small>
-                                                                        </div>
-
-                                                                        <div
-                                                                            class="col-3 text-end customer-platform-actions">
-                                                                            <div
-                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
-                                                                                <!-- Botão renovar (aparece quando expira/está perto de expirar) -->
-                                                                                <button type="button"
-                                                                                    class="btn btn-sm btn-icon btn-outline-warning"
-                                                                                    title="Renovar conexão">
-                                                                                    <i class="bx bx-refresh"></i>
-                                                                                </button>
-
-                                                                                <div class="form-check form-switch">
-                                                                                    <input
-                                                                                        class="form-check-input float-end"
-                                                                                        type="checkbox" role="switch"
-                                                                                        checked>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                </div>
-
-                                                                <!-- Google Analytics -->
-                                                                <div class="d-flex customer-platform-item">
-                                                                    <div class="flex-shrink-0">
-                                                                        <img src="/assets/img/icons/brands/google.png"
-                                                                            alt="google" class="me-3" height="30" />
-                                                                    </div>
-
-                                                                    <div class="flex-grow-1 row align-items-center">
-                                                                        <div class="col-9">
-                                                                            <div
-                                                                                class="d-flex align-items-center flex-wrap gap-2">
-                                                                                <h6 class="mb-0">Google Analytics</h6>
-                                                                                <span
-                                                                                    class="badge bg-label-success">Conectado</span>
-                                                                                <span
-                                                                                    class="badge bg-label-warning">Expira
-                                                                                    em 12d</span>
-                                                                            </div>
-
-                                                                            <small
-                                                                                class="text-muted d-block">Properties</small>
-                                                                            <small
-                                                                                class="text-muted d-block">Selecionado:
-                                                                                Property “GA4 - ho.ko”</small>
-                                                                        </div>
-
-                                                                        <div
-                                                                            class="col-3 text-end customer-platform-actions">
-                                                                            <div
-                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
-                                                                                <button type="button"
-                                                                                    class="btn btn-sm btn-icon btn-outline-warning"
-                                                                                    title="Renovar conexão">
-                                                                                    <i class="bx bx-refresh"></i>
-                                                                                </button>
-
-                                                                                <div class="form-check form-switch">
-                                                                                    <input
-                                                                                        class="form-check-input float-end"
-                                                                                        type="checkbox" role="switch"
-                                                                                        checked>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                </div>
-
-                                                                <!-- Instagram -->
-                                                                <div class="d-flex customer-platform-item">
-                                                                    <div class="flex-shrink-0">
-                                                                        <img src="/assets/img/icons/brands/instagram.png"
-                                                                            alt="instagram" class="me-3" height="30" />
-                                                                    </div>
-
-                                                                    <div class="flex-grow-1 row align-items-center">
-                                                                        <div class="col-9">
-                                                                            <div
-                                                                                class="d-flex align-items-center flex-wrap gap-2">
-                                                                                <h6 class="mb-0">Instagram</h6>
-                                                                                <span
-                                                                                    class="badge bg-label-success">Conectado</span>
-                                                                                <span
-                                                                                    class="badge bg-label-warning">Expira
-                                                                                    em 3d</span>
-                                                                            </div>
-
-                                                                            <small
-                                                                                class="text-muted d-block">Contas</small>
-                                                                            <small
-                                                                                class="text-muted d-block">Selecionado:
-                                                                                @hokocomunicacao</small>
-                                                                        </div>
-
-                                                                        <div
-                                                                            class="col-3 text-end customer-platform-actions">
-                                                                            <div
-                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
-                                                                                <button type="button"
-                                                                                    class="btn btn-sm btn-icon btn-outline-warning"
-                                                                                    title="Renovar conexão">
-                                                                                    <i class="bx bx-refresh"></i>
-                                                                                </button>
-
-                                                                                <div class="form-check form-switch">
-                                                                                    <input
-                                                                                        class="form-check-input float-end"
-                                                                                        type="checkbox" role="switch"
-                                                                                        checked>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- LinkedIn -->
-                                                                <div class="d-flex customer-platform-item">
-                                                                    <div class="flex-shrink-0">
-                                                                        <img src="/assets/img/icons/brands/linkedin.png"
-                                                                            alt="youtube" class="me-3" height="30" />
-                                                                    </div>
-
-                                                                    <div class="flex-grow-1 row align-items-center">
-                                                                        <div class="col-9">
-                                                                            <div
-                                                                                class="d-flex align-items-center flex-wrap gap-2">
-                                                                                <h6 class="mb-0">LinkdIn</h6>
-                                                                                <span class="badge bg-label-danger">Não
-                                                                                    conectado</span>
-                                                                            </div>
-
-                                                                            <small
-                                                                                class="text-muted d-block">Organizações</small>
-                                                                            <small class="text-muted d-block">Selecione
-                                                                                uma organização após conectar</small>
-                                                                        </div>
-
-                                                                        <div
-                                                                            class="col-3 text-end customer-platform-actions">
-                                                                            <div
-                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
-                                                                                <div class="form-check form-switch">
-                                                                                    <input
-                                                                                        class="form-check-input float-end"
-                                                                                        type="checkbox" role="switch">
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- YouTube -->
-                                                                <div class="d-flex customer-platform-item">
-                                                                    <div class="flex-shrink-0">
-                                                                        <img src="/assets/img/icons/brands/youtube.png"
-                                                                            alt="youtube" class="me-3" height="30" />
-                                                                    </div>
-
-                                                                    <div class="flex-grow-1 row align-items-center">
-                                                                        <div class="col-9">
-                                                                            <div
-                                                                                class="d-flex align-items-center flex-wrap gap-2">
-                                                                                <h6 class="mb-0">YouTube</h6>
-                                                                                <span class="badge bg-label-danger">Não
-                                                                                    conectado</span>
-                                                                            </div>
-
-                                                                            <small
-                                                                                class="text-muted d-block">Canais</small>
-                                                                            <small class="text-muted d-block">Selecione
-                                                                                um canal após conectar</small>
-                                                                        </div>
-
-                                                                        <div
-                                                                            class="col-3 text-end customer-platform-actions">
-                                                                            <div
-                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
-                                                                                <div class="form-check form-switch">
-                                                                                    <input
-                                                                                        class="form-check-input float-end"
-                                                                                        type="checkbox" role="switch">
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                            </div>
-                                                            <!-- /Lista -->
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- =========================
-                                    TEMPLATE (para o JS clonar depois)
-                                    Mantém o seu padrão: tabela + accordion.
-                                    ========================= -->
                                     <template id="customerRowTemplate">
+                                        <!-- Linha principal -->
                                         <tr>
                                             <td class="align-middle">
                                                 <button type="button"
                                                     class="btn btn-sm btn-icon btn-outline-secondary me-2 customer-expand"
                                                     data-bs-toggle="collapse" data-bs-target="#__CUSTOMER_COLLAPSE_ID__"
-                                                    aria-expanded="false" aria-controls="__CUSTOMER_COLLAPSE_ID__">
+                                                    aria-expanded="false" aria-controls="__CUSTOMER_COLLAPSE_ID__"
+                                                    title="Ver plataformas do cliente">
                                                     <i class="bx bx-chevron-down"></i>
                                                 </button>
                                                 <span class="fw-medium">__CUSTOMER_NAME__</span>
                                             </td>
 
+                                            <td class="align-middle">__CUSTOMER_PHONE__</td>
+
                                             <td class="align-middle">__CUSTOMER_EMAIL__</td>
 
                                             <td class="align-middle">
                                                 <div class="d-inline-flex align-items-center gap-1">
-                                                    <!-- JS injeta ícones conforme integrações -->
+                                                    <!-- JS injeta ícones -->
                                                 </div>
                                             </td>
 
                                             <td class="align-middle">
-                                                <span class="badge bg-label-secondary">SEM PLATAFORMAS</span>
+                                                <span class="badge bg-label-secondary">SEM CONEXÃO</span>
                                             </td>
 
                                             <td class="align-middle">
+                                                <!-- Mantém ações (sem funcionalidade nesta task) -->
                                                 <div class="dropdown">
                                                     <button class="btn p-0" type="button" data-bs-toggle="dropdown"
                                                         aria-expanded="false">
                                                         <i class="bx bx-dots-vertical-rounded"></i>
                                                     </button>
+
                                                     <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i
-                                                                    class="bx bx-edit-alt me-2"></i>Editar</a></li>
-                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i
-                                                                    class="bx bx-trash me-2"></i>Remover</a></li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="javascript:void(0);">
+                                                                <i class="bx bx-edit-alt me-2"></i>Editar
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="javascript:void(0);">
+                                                                <i class="bx bx-trash me-2"></i>Remover
+                                                            </a>
+                                                        </li>
                                                     </ul>
                                                 </div>
                                             </td>
                                         </tr>
 
+                                        <!-- Linha detalhe (accordion) -->
                                         <tr class="customer-details-row">
-                                            <td colspan="5">
+                                            <td colspan="6">
                                                 <div class="collapse" id="__CUSTOMER_COLLAPSE_ID__"
                                                     data-bs-parent="#clients-table-body">
                                                     <div class="p-3 pt-0">
                                                         <div class="card shadow-none border mb-0">
                                                             <div class="card-body">
                                                                 <div
-                                                                    class="d-flex align-items-start justify-content-between mb-3">
+                                                                    class="d-flex align-items-start justify-content-between mb-2">
                                                                     <div>
                                                                         <h6 class="mb-1">Plataformas do cliente</h6>
-                                                                        <small class="text-muted">Conecte a conta
-                                                                            (OAuth) e selecione 1 recurso por
-                                                                            plataforma.</small>
+                                                                        <small class="text-muted">Nesta task, apenas
+                                                                            listagem do cliente. Integrações virão
+                                                                            depois.</small>
                                                                     </div>
                                                                     <span
                                                                         class="badge bg-label-secondary">Integrações</span>
                                                                 </div>
 
-                                                                <!-- JS injeta aqui a lista das plataformas no mesmo layout -->
-                                                                <div class="customer-platforms-container"></div>
+                                                                <!-- Placeholder que o JS pode preencher -->
+                                                                <div class="customer-platforms-container">
+                                                                    <div class="alert alert-light border mb-0 py-2">
+                                                                        <small class="text-muted">Em breve: conectar e
+                                                                            gerenciar plataformas por cliente.</small>
+                                                                    </div>
+                                                                </div>
 
                                                             </div>
                                                         </div>
@@ -699,9 +426,7 @@
                                             </td>
                                         </tr>
                                     </template>
-
                                 </tbody>
-
                             </table>
                         </div>
                     </div>
@@ -1036,6 +761,117 @@
                 } finally {
                     setLoading(false);
                 }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const tbody = document.getElementById("clients-table-body");
+            const tpl = document.getElementById("customerRowTemplate");
+
+            if (!tbody || !tpl) return;
+
+            const platformIconMap = {
+                facebook: "/assets/img/icons/brands/facebook.png",
+                instagram: "/assets/img/icons/brands/instagram.png",
+                google_analytics: "/assets/img/icons/brands/google.png",
+                youtube: "/assets/img/icons/brands/youtube.png",
+                linkedin: "/assets/img/icons/brands/linkedin.png",
+            };
+
+            function badgeStatus(hasConnected) {
+                return hasConnected
+                    ? `<span class="badge bg-label-success">CONECTADO</span>`
+                    : `<span class="badge bg-label-secondary">SEM CONEXÃO</span>`;
+            }
+
+            function renderPlatformIcons(integrations) {
+                const connected = (integrations || []).filter(i => (i.status || "").toLowerCase() === "connected");
+                if (!connected.length) return "";
+
+                // garantir ícones únicos por plataforma
+                const uniquePlatforms = [...new Set(connected.map(i => i.platform))];
+
+                return uniquePlatforms
+                    .map(p => {
+                        const src = platformIconMap[p];
+                        if (!src) return "";
+                        return `<img class="platform-mini-icon" src="${src}" alt="${p}">`;
+                    })
+                    .join("");
+            }
+
+            function safeText(v) {
+                return (v === null || v === undefined || String(v).trim() === "") ? "-" : String(v);
+            }
+
+            async function loadCustomers() {
+                tbody.innerHTML = "";
+
+                const resp = await fetch("/customer/list");
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6" class="text-center text-danger py-4">Erro ao carregar clientes</td></tr>
+                    `;
+                    return;
+                }
+
+                const customers = data.customers || [];
+                if (!customers.length) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum cliente cadastrado</td></tr>
+                    `;
+                    return;
+                }
+
+                customers.forEach((c, idx) => {
+                    const node = tpl.content.cloneNode(true);
+
+                    // ids do collapse
+                    const collapseId = `customerPlatforms-${c.id_customer || idx}`;
+                    const expandBtn = node.querySelector(".customer-expand");
+                    const collapseEl = node.querySelector(".collapse");
+
+                    if (expandBtn) {
+                        expandBtn.setAttribute("data-bs-target", `#${collapseId}`);
+                        expandBtn.setAttribute("aria-controls", collapseId);
+                    }
+                    if (collapseEl) collapseEl.id = collapseId;
+
+                    // Linha principal TDs (na ordem: cliente, telefone, email, plataformas, status)
+                    const tds = node.querySelectorAll("tr:first-child td");
+                    const customerNameEl = node.querySelector("tr:first-child .fw-medium");
+                    if (customerNameEl) customerNameEl.textContent = safeText(c.name);
+
+                    if (tds[1]) tds[1].innerHTML = safeText(c.phone);
+                    if (tds[2]) tds[2].innerHTML = safeText(c.email);
+
+                    const iconsWrap = node.querySelector("tr:first-child td:nth-child(4) .d-inline-flex");
+                    if (iconsWrap) iconsWrap.innerHTML = renderPlatformIcons(c.integrations);
+
+                    const hasConnected = (c.integrations || []).some(i => (i.status || "").toLowerCase() === "connected");
+                    if (tds[4]) tds[4].innerHTML = badgeStatus(hasConnected);
+
+                    // Detalhe (por enquanto só placeholder, porque “plataformas” não é parte dessa task)
+                    const details = node.querySelector(".customer-platforms-container");
+                    if (details) {
+                        details.innerHTML = `
+                        <div class="alert alert-light border mb-0 py-2">
+                            <small class="text-muted">As conexões de plataformas serão configuradas na próxima task.</small>
+                        </div>
+                        `;
+                    }
+
+                    tbody.appendChild(node);
+                });
+            }
+
+            loadCustomers().catch(() => {
+                tbody.innerHTML = `
+                <tr><td colspan="6" class="text-center text-danger py-4">Erro ao carregar clientes</td></tr>
+                `;
             });
         });
     </script>

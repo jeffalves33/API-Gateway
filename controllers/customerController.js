@@ -1,5 +1,5 @@
 // Arquivo: controllers/customerController.js
-const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer } = require('../repositories/customerRepository');
+const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 
@@ -37,7 +37,7 @@ const addCustomer = async (req, res) => {
     const { name, company, email, phone } = req.body;
 
     if (!name || !email) return res.status(400).json({ success: false, message: 'Nome e email são obrigatórios.' });
-    
+
     const customer = await createCustomer(id_user, name, company || null, email, phone || null);
 
     return res.status(201).json({
@@ -84,6 +84,17 @@ const getCustomersByUser = async (req, res) => {
   } catch (error) {
     console.error('Erro ao buscar clientes:', error);
     res.status(500).json({ success: false, message: 'Erro ao buscar clientes' });
+  }
+};
+
+const getCustomersList = async (req, res) => {
+  try {
+    const idUser = req.user.id;
+    const customers = await getCustomersListByUserId(idUser);
+    return res.status(200).json({ success: true, customers });
+  } catch (error) {
+    console.error('Erro ao buscar clientes (list):', error);
+    return res.status(500).json({ success: false, message: 'Erro ao buscar clientes' });
   }
 };
 
@@ -156,4 +167,4 @@ const updateCustomerById = async (req, res) => {
   }
 };
 
-module.exports = { addCustomer, deleteCustomerById, getCustomerById, getCustomersByUser, refreshCustomerKeys, removePlatformCustomer, updateCustomerById };
+module.exports = { addCustomer, deleteCustomerById, getCustomerById, getCustomersByUser, getCustomersList, refreshCustomerKeys, removePlatformCustomer, updateCustomerById };

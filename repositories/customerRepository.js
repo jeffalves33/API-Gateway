@@ -67,6 +67,39 @@ const getCustomersByUserId = async (id_user) => {
   return result.rows;
 };
 
+const getCustomersListByUserId = async (id_user) => {
+  const result = await pool.query(
+    `
+    SELECT
+      c.id_customer,
+      c.name,
+      c.email,
+      c.phone,
+      c.created_at,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'platform', ci.platform,
+            'status', ci.status,
+            'expires_at', ci.expires_at
+          )
+          ORDER BY ci.platform
+        ) FILTER (WHERE ci.id IS NOT NULL),
+        '[]'::json
+      ) AS integrations
+    FROM customer c
+    LEFT JOIN customer_integrations ci
+      ON ci.id_customer = c.id_customer
+    WHERE c.id_user = $1
+    GROUP BY c.id_customer
+    ORDER BY c.created_at DESC
+    `,
+    [id_user]
+  );
+
+  return result.rows;
+};
+
 const removePlatformFromCustomer = async (platform, customer, id_user) => {
   try {
     const { id_customer } = customer;
@@ -109,4 +142,4 @@ const updateCustomer = async (id_customer, name, email) => {
   return result.rows[0];
 };
 
-module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer };
+module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, getCustomersListByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer };
