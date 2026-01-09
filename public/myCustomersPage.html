@@ -312,7 +312,17 @@
                 </nav>
 
                 <div class="container pt-4">
-                    <h4 class="py-2"><span class="text-muted fw-light">Plataformas & Páginas /</span> Meus Clientes</h4>
+                    <div class="d-flex align-items-center justify-content-between py-2">
+                        <h4 class="mb-0">
+                            <span class="text-muted fw-light">Plataformas & Páginas /</span> Meus Clientes
+                        </h4>
+
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#modalAddCustomer">
+                            <i class="bx bx-plus me-1"></i> Novo Cliente
+                        </button>
+                    </div>
+
                     <div id="alert-container"></div>
                     <!-- Hoverable Table rows -->
                     <div class="card">
@@ -547,7 +557,8 @@
                                                                             <div
                                                                                 class="d-flex align-items-center flex-wrap gap-2">
                                                                                 <h6 class="mb-0">LinkdIn</h6>
-                                                                                <span class="badge bg-label-danger">Não conectado</span>
+                                                                                <span class="badge bg-label-danger">Não
+                                                                                    conectado</span>
                                                                             </div>
 
                                                                             <small
@@ -788,6 +799,83 @@
                     </div>
                 </div>
 
+                <!-- Modal: Novo Cliente -->
+                <div class="modal fade" id="modalAddCustomer" aria-labelledby="modalAddCustomerLabel" tabindex="-1"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalAddCustomerLabel">Novo Cliente</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Fechar"></button>
+                            </div>
+
+                            <form id="addCustomerForm">
+                                <div class="modal-body">
+
+                                    <div class="alert alert-info py-2">
+                                        <small>
+                                            Crie o cliente agora. E conecte as plataformas após a criação.
+                                        </small>
+                                    </div>
+
+                                    <!-- Baseado no customersPage.html (form original), só que em modal -->
+                                    <div class="mb-3">
+                                        <label class="form-label" for="addCustomerName">Nome</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-user"></i></span>
+                                            <input type="text" class="form-control" id="addCustomerName"
+                                                placeholder="Fulano Silva" required />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="addCustomerCompany">Empresa</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-buildings"></i></span>
+                                            <input type="text" class="form-control" id="addCustomerCompany"
+                                                placeholder="XPTO Inc." />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="addCustomerEmail">Email</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-envelope"></i></span>
+                                            <input type="email" class="form-control" id="addCustomerEmail"
+                                                placeholder="fulano@exemplo.com" required />
+                                        </div>
+                                        <div class="form-text">Você pode usar letras, números e pontos</div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <label class="form-label" for="addCustomerPhone">Telefone</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-phone"></i></span>
+                                            <input type="text" class="form-control" id="addCustomerPhone"
+                                                placeholder="(00) 0 0000-0000" />
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-label-secondary"
+                                        data-bs-dismiss="modal">Cancelar</button>
+
+                                    <button type="submit" class="btn btn-primary" id="btnCreateCustomer">
+                                        <span class="btn-text">Criar Cliente</span>
+                                        <span class="spinner-border spinner-border-sm ms-2 d-none"
+                                            id="createCustomerSpinner" role="status" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <!-- / Layout page -->
         </div>
@@ -875,6 +963,82 @@
     <script src="/assets/js/notifications.js"></script>
     <!-- Page JS -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("addCustomerForm");
+            const modalEl = document.getElementById("modalAddCustomer");
+            const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+            const alertContainer = document.getElementById("alert-container");
+
+            const btn = document.getElementById("btnCreateCustomer");
+            const spinner = document.getElementById("createCustomerSpinner");
+            const btnText = btn ? btn.querySelector(".btn-text") : null;
+
+            function showAlert(type, message) {
+                if (!alertContainer) return;
+                alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                `;
+            }
+
+            function setLoading(isLoading) {
+                if (!btn) return;
+                btn.disabled = isLoading;
+                if (spinner) spinner.classList.toggle("d-none", !isLoading);
+                if (btnText) btnText.textContent = isLoading ? "Criando..." : "Criar Cliente";
+            }
+
+            if (!form) return;
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById("addCustomerName")?.value?.trim();
+                const company = document.getElementById("addCustomerCompany")?.value?.trim() || null;
+                const email = document.getElementById("addCustomerEmail")?.value?.trim();
+                const phone = document.getElementById("addCustomerPhone")?.value?.trim() || null;
+
+                if (!name || !email) {
+                    showAlert("danger", "Nome e email são obrigatórios.");
+                    return;
+                }
+
+                setLoading(true);
+
+                try {
+                    const resp = await fetch("/customer/add", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name, company, email, phone })
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.success) {
+                        throw new Error(data.message || "Erro ao criar cliente.");
+                    }
+
+                    // fecha modal + limpa form
+                    form.reset();
+                    if (modal) modal.hide();
+
+                    showAlert("success", "Cliente criado com sucesso!");
+
+                    // simples e suficiente por agora
+                    setTimeout(() => location.reload(), 600);
+                } catch (err) {
+                    showAlert("danger", err.message || "Erro ao criar cliente.");
+                } finally {
+                    setLoading(false);
+                }
+            });
+        });
+    </script>
 
 </body>
 

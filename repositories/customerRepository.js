@@ -15,12 +15,12 @@ const checkCustomerBelongsToUser = async (id_customer, id_user) => {
   return result.rows.length > 0;
 };
 
-const createCustomer = async (id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property, id_linkedin_organization) => {
+const createCustomer = async (id_user, name, company, email, phone) => {
   const result = await pool.query(
-    'INSERT INTO customer(id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property, id_linkedin_organization) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id_customer',
-    [id_user, name, company, email, phone, id_facebook_page, access_token_page_facebook, id_instagram_page, access_token_page_instagram, id_googleanalytics_property, id_linkedin_organization]
+    'INSERT INTO customer (id_user, name, company, email, phone) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [id_user, name, company, email, phone]
   );
-  return result.rows[0]['id_customer'];
+  return result.rows[0];
 };
 
 const deleteCustomer = async (id_customer) => {

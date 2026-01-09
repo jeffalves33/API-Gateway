@@ -3,7 +3,7 @@ const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByU
 const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 
-const addCustomer = async (req, res) => {
+/*const addCustomer = async (req, res) => {
   try {
     const id_user = req.user.id;
     const { name, company, email, phone, platforms } = req.body;
@@ -25,6 +25,26 @@ const addCustomer = async (req, res) => {
     await metricsOrchestrator.processCustomerMetrics(id_user, id_customer, platforms, google, linkedin);
 
     return res.status(200).json({ success: true, message: 'Cliente e métricas adicionados com sucesso.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};*/
+
+const addCustomer = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+    const { name, company, email, phone } = req.body;
+
+    if (!name || !email) return res.status(400).json({ success: false, message: 'Nome e email são obrigatórios.' });
+    
+    const customer = await createCustomer(id_user, name, company || null, email, phone || null);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Cliente criado com sucesso.',
+      customer
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: error.message });
