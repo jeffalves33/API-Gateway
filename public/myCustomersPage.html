@@ -48,6 +48,49 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="/assets/js/config.js"></script>
+
+    <style>
+        /* Linha “detalhes” do accordion dentro da tabela */
+        .customer-details-row td {
+            padding: 0 !important;
+            border-top: 0 !important;
+        }
+
+        /* Botão de expandir com rotação do ícone */
+        .customer-expand i {
+            transition: transform .18s ease;
+        }
+
+        .customer-expand[aria-expanded="true"] i {
+            transform: rotate(180deg);
+        }
+
+        /* Lista de plataformas mais “compacta” dentro do accordion */
+        .customer-platform-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(67, 89, 113, 0.12);
+        }
+
+        .customer-platform-item:last-child {
+            border-bottom: 0;
+        }
+
+        /* Ícones das plataformas no resumo */
+        .platform-mini-icon {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+            display: inline-block;
+        }
+
+        .customer-platform-actions .form-check {
+            margin: 0;
+        }
+
+        .customer-platform-actions .btn {
+            line-height: 1;
+        }
+    </style>
 </head>
 
 <body>
@@ -285,7 +328,369 @@
                                     </tr>
                                 </thead>
                                 <tbody class="table-border-bottom-0" id="clients-table-body">
+
+                                    <!-- =========================
+                                    EXEMPLO VISUAL (UI)
+                                    Depois você remove quando o JS começar a injetar.
+                                    ========================= -->
+                                    <!-- Cliente (linha principal) -->
+                                    <tr>
+                                        <td class="align-middle">
+                                            <button type="button"
+                                                class="btn btn-sm btn-icon btn-outline-secondary me-2 customer-expand"
+                                                data-bs-toggle="collapse" data-bs-target="#customerPlatforms-demo-1"
+                                                aria-expanded="false" aria-controls="customerPlatforms-demo-1"
+                                                title="Ver plataformas do cliente">
+                                                <i class="bx bx-chevron-down"></i>
+                                            </button>
+                                            <span class="fw-medium">ho.ko Comunicação</span>
+                                        </td>
+
+                                        <td class="align-middle">hoko@comunicacao.com.br</td>
+
+                                        <td class="align-middle">
+                                            <div class="d-inline-flex align-items-center gap-1">
+                                                <img class="platform-mini-icon"
+                                                    src="/assets/img/icons/brands/facebook.png" alt="Facebook">
+                                                <img class="platform-mini-icon"
+                                                    src="/assets/img/icons/brands/instagram.png" alt="Instagram">
+                                                <img class="platform-mini-icon"
+                                                    src="/assets/img/icons/brands/google.png" alt="Google Analytics">
+                                                <img class="platform-mini-icon"
+                                                    src="/assets/img/icons/brands/linkedin.png" alt="LinkedIn">
+                                            </div>
+                                        </td>
+
+                                        <td class="align-middle">
+                                            <span class="badge bg-label-success">CONECTADO</span>
+                                        </td>
+
+                                        <td class="align-middle">
+                                            <div class="dropdown">
+                                                <button class="btn p-0" type="button" data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i
+                                                                class="bx bx-edit-alt me-2"></i>Editar</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i
+                                                                class="bx bx-trash me-2"></i>Remover</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Cliente (accordion: detalhes) -->
+                                    <tr class="customer-details-row">
+                                        <td colspan="5">
+                                            <div class="collapse" id="customerPlatforms-demo-1"
+                                                data-bs-parent="#clients-table-body">
+                                                <div class="p-3 pt-0">
+                                                    <div class="card shadow-none border mb-0">
+                                                        <div class="card-body">
+                                                            <!-- Lista (reaproveita o layout do platformsPage) -->
+                                                            <div>
+                                                                <!-- Facebook -->
+                                                                <div class="d-flex customer-platform-item">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="/assets/img/icons/brands/facebook.png"
+                                                                            alt="facebook" class="me-3" height="30" />
+                                                                    </div>
+
+                                                                    <div class="flex-grow-1 row align-items-center">
+                                                                        <div class="col-9">
+                                                                            <div
+                                                                                class="d-flex align-items-center flex-wrap gap-2">
+                                                                                <h6 class="mb-0">Facebook</h6>
+                                                                                <span
+                                                                                    class="badge bg-label-success">Conectado</span>
+                                                                                <span
+                                                                                    class="badge bg-label-warning">Expira
+                                                                                    em 3d</span>
+                                                                            </div>
+
+                                                                            <small
+                                                                                class="text-muted d-block">Páginas</small>
+                                                                            <small
+                                                                                class="text-muted d-block">Selecionado:
+                                                                                Página “ho.ko Comunicação”</small>
+                                                                        </div>
+
+                                                                        <div
+                                                                            class="col-3 text-end customer-platform-actions">
+                                                                            <div
+                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
+                                                                                <!-- Botão renovar (aparece quando expira/está perto de expirar) -->
+                                                                                <button type="button"
+                                                                                    class="btn btn-sm btn-icon btn-outline-warning"
+                                                                                    title="Renovar conexão">
+                                                                                    <i class="bx bx-refresh"></i>
+                                                                                </button>
+
+                                                                                <div class="form-check form-switch">
+                                                                                    <input
+                                                                                        class="form-check-input float-end"
+                                                                                        type="checkbox" role="switch"
+                                                                                        checked>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <!-- Google Analytics -->
+                                                                <div class="d-flex customer-platform-item">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="/assets/img/icons/brands/google.png"
+                                                                            alt="google" class="me-3" height="30" />
+                                                                    </div>
+
+                                                                    <div class="flex-grow-1 row align-items-center">
+                                                                        <div class="col-9">
+                                                                            <div
+                                                                                class="d-flex align-items-center flex-wrap gap-2">
+                                                                                <h6 class="mb-0">Google Analytics</h6>
+                                                                                <span
+                                                                                    class="badge bg-label-success">Conectado</span>
+                                                                                <span
+                                                                                    class="badge bg-label-warning">Expira
+                                                                                    em 12d</span>
+                                                                            </div>
+
+                                                                            <small
+                                                                                class="text-muted d-block">Properties</small>
+                                                                            <small
+                                                                                class="text-muted d-block">Selecionado:
+                                                                                Property “GA4 - ho.ko”</small>
+                                                                        </div>
+
+                                                                        <div
+                                                                            class="col-3 text-end customer-platform-actions">
+                                                                            <div
+                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
+                                                                                <button type="button"
+                                                                                    class="btn btn-sm btn-icon btn-outline-warning"
+                                                                                    title="Renovar conexão">
+                                                                                    <i class="bx bx-refresh"></i>
+                                                                                </button>
+
+                                                                                <div class="form-check form-switch">
+                                                                                    <input
+                                                                                        class="form-check-input float-end"
+                                                                                        type="checkbox" role="switch"
+                                                                                        checked>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <!-- Instagram -->
+                                                                <div class="d-flex customer-platform-item">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="/assets/img/icons/brands/instagram.png"
+                                                                            alt="instagram" class="me-3" height="30" />
+                                                                    </div>
+
+                                                                    <div class="flex-grow-1 row align-items-center">
+                                                                        <div class="col-9">
+                                                                            <div
+                                                                                class="d-flex align-items-center flex-wrap gap-2">
+                                                                                <h6 class="mb-0">Instagram</h6>
+                                                                                <span
+                                                                                    class="badge bg-label-success">Conectado</span>
+                                                                                <span
+                                                                                    class="badge bg-label-warning">Expira
+                                                                                    em 3d</span>
+                                                                            </div>
+
+                                                                            <small
+                                                                                class="text-muted d-block">Contas</small>
+                                                                            <small
+                                                                                class="text-muted d-block">Selecionado:
+                                                                                @hokocomunicacao</small>
+                                                                        </div>
+
+                                                                        <div
+                                                                            class="col-3 text-end customer-platform-actions">
+                                                                            <div
+                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
+                                                                                <button type="button"
+                                                                                    class="btn btn-sm btn-icon btn-outline-warning"
+                                                                                    title="Renovar conexão">
+                                                                                    <i class="bx bx-refresh"></i>
+                                                                                </button>
+
+                                                                                <div class="form-check form-switch">
+                                                                                    <input
+                                                                                        class="form-check-input float-end"
+                                                                                        type="checkbox" role="switch"
+                                                                                        checked>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- LinkedIn -->
+                                                                <div class="d-flex customer-platform-item">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="/assets/img/icons/brands/linkedin.png"
+                                                                            alt="youtube" class="me-3" height="30" />
+                                                                    </div>
+
+                                                                    <div class="flex-grow-1 row align-items-center">
+                                                                        <div class="col-9">
+                                                                            <div
+                                                                                class="d-flex align-items-center flex-wrap gap-2">
+                                                                                <h6 class="mb-0">LinkdIn</h6>
+                                                                                <span class="badge bg-label-danger">Não conectado</span>
+                                                                            </div>
+
+                                                                            <small
+                                                                                class="text-muted d-block">Organizações</small>
+                                                                            <small class="text-muted d-block">Selecione
+                                                                                uma organização após conectar</small>
+                                                                        </div>
+
+                                                                        <div
+                                                                            class="col-3 text-end customer-platform-actions">
+                                                                            <div
+                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
+                                                                                <div class="form-check form-switch">
+                                                                                    <input
+                                                                                        class="form-check-input float-end"
+                                                                                        type="checkbox" role="switch">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- YouTube -->
+                                                                <div class="d-flex customer-platform-item">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="/assets/img/icons/brands/youtube.png"
+                                                                            alt="youtube" class="me-3" height="30" />
+                                                                    </div>
+
+                                                                    <div class="flex-grow-1 row align-items-center">
+                                                                        <div class="col-9">
+                                                                            <div
+                                                                                class="d-flex align-items-center flex-wrap gap-2">
+                                                                                <h6 class="mb-0">YouTube</h6>
+                                                                                <span class="badge bg-label-danger">Não
+                                                                                    conectado</span>
+                                                                            </div>
+
+                                                                            <small
+                                                                                class="text-muted d-block">Canais</small>
+                                                                            <small class="text-muted d-block">Selecione
+                                                                                um canal após conectar</small>
+                                                                        </div>
+
+                                                                        <div
+                                                                            class="col-3 text-end customer-platform-actions">
+                                                                            <div
+                                                                                class="d-inline-flex align-items-center gap-2 justify-content-end">
+                                                                                <div class="form-check form-switch">
+                                                                                    <input
+                                                                                        class="form-check-input float-end"
+                                                                                        type="checkbox" role="switch">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                            <!-- /Lista -->
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- =========================
+                                    TEMPLATE (para o JS clonar depois)
+                                    Mantém o seu padrão: tabela + accordion.
+                                    ========================= -->
+                                    <template id="customerRowTemplate">
+                                        <tr>
+                                            <td class="align-middle">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-icon btn-outline-secondary me-2 customer-expand"
+                                                    data-bs-toggle="collapse" data-bs-target="#__CUSTOMER_COLLAPSE_ID__"
+                                                    aria-expanded="false" aria-controls="__CUSTOMER_COLLAPSE_ID__">
+                                                    <i class="bx bx-chevron-down"></i>
+                                                </button>
+                                                <span class="fw-medium">__CUSTOMER_NAME__</span>
+                                            </td>
+
+                                            <td class="align-middle">__CUSTOMER_EMAIL__</td>
+
+                                            <td class="align-middle">
+                                                <div class="d-inline-flex align-items-center gap-1">
+                                                    <!-- JS injeta ícones conforme integrações -->
+                                                </div>
+                                            </td>
+
+                                            <td class="align-middle">
+                                                <span class="badge bg-label-secondary">SEM PLATAFORMAS</span>
+                                            </td>
+
+                                            <td class="align-middle">
+                                                <div class="dropdown">
+                                                    <button class="btn p-0" type="button" data-bs-toggle="dropdown"
+                                                        aria-expanded="false">
+                                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i
+                                                                    class="bx bx-edit-alt me-2"></i>Editar</a></li>
+                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i
+                                                                    class="bx bx-trash me-2"></i>Remover</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <tr class="customer-details-row">
+                                            <td colspan="5">
+                                                <div class="collapse" id="__CUSTOMER_COLLAPSE_ID__"
+                                                    data-bs-parent="#clients-table-body">
+                                                    <div class="p-3 pt-0">
+                                                        <div class="card shadow-none border mb-0">
+                                                            <div class="card-body">
+                                                                <div
+                                                                    class="d-flex align-items-start justify-content-between mb-3">
+                                                                    <div>
+                                                                        <h6 class="mb-1">Plataformas do cliente</h6>
+                                                                        <small class="text-muted">Conecte a conta
+                                                                            (OAuth) e selecione 1 recurso por
+                                                                            plataforma.</small>
+                                                                    </div>
+                                                                    <span
+                                                                        class="badge bg-label-secondary">Integrações</span>
+                                                                </div>
+
+                                                                <!-- JS injeta aqui a lista das plataformas no mesmo layout -->
+                                                                <div class="customer-platforms-container"></div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
@@ -465,7 +870,7 @@
 
     <!-- Main JS -->
     <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/myCustomerPage.js"></script>
+    <!--<script src="/assets/js/myCustomerPage.js"></script>-->
     <script src="/assets/js/checkPayments.js"></script>
     <script src="/assets/js/notifications.js"></script>
     <!-- Page JS -->
