@@ -141,7 +141,7 @@ const updateCustomerById = async (req, res) => {
   try {
     const id_user = req.user.id;
     const id_customer = req.params.id_customer;
-    const { name, email } = req.body;
+    const { name, email, company, phone } = req.body;
 
     // Validar se os campos obrigatórios foram enviados
     if (!name || !email) {
@@ -152,11 +152,12 @@ const updateCustomerById = async (req, res) => {
     }
 
     // Você precisará criar esta função no repository
-    await updateCustomer(id_customer, name, email);
+    const updated = await updateCustomer(id_customer, id_user, name, email, company || null, phone || null);
 
     res.status(200).json({
       success: true,
-      message: 'Cliente atualizado com sucesso'
+      message: 'Cliente atualizado com sucesso',
+      customer: updated
     });
   } catch (error) {
     console.error('Erro ao atualizar cliente:', error);

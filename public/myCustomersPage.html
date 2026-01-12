@@ -377,12 +377,14 @@
 
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         <li>
-                                                            <a class="dropdown-item" href="javascript:void(0);">
+                                                            <a class="dropdown-item edit_client"
+                                                                href="javascript:void(0);" data-id="">
                                                                 <i class="bx bx-edit-alt me-2"></i>Editar
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a class="dropdown-item" href="javascript:void(0);">
+                                                            <a class="dropdown-item remove-client"
+                                                                href="javascript:void(0);" data-id="">
                                                                 <i class="bx bx-trash me-2"></i>Remover
                                                             </a>
                                                         </li>
@@ -469,21 +471,49 @@
                             </div>
                             <div class="modal-body">
                                 <form id="editClientForm">
+                                    <input type="hidden" id="editClientId" />
                                     <div class="mb-3">
-                                        <label for="editClientName" class="form-label">Nome</label>
-                                        <input type="text" class="form-control" id="editClientName" required>
+                                        <label class="form-label" for="editClientName">Nome</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-user"></i></span>
+                                            <input type="text" class="form-control" id="editClientName" required />
+                                        </div>
                                     </div>
+
                                     <div class="mb-3">
-                                        <label for="editClientEmail" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="editClientEmail" required>
+                                        <label class="form-label" for="editClientCompany">Empresa</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-buildings"></i></span>
+                                            <input type="text" class="form-control" id="editClientCompany" />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="editClientEmail">Email</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-envelope"></i></span>
+                                            <input type="email" class="form-control" id="editClientEmail" required />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <label class="form-label" for="editClientPhone">Telefone</label>
+                                        <div class="input-group input-group-merge">
+                                            <span class="input-group-text"><i class="bx bx-phone"></i></span>
+                                            <input type="text" class="form-control" id="editClientPhone"
+                                                placeholder="(00) 0 0000-0000" />
+                                        </div>
                                     </div>
                                 </form>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary"
                                     data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-primary" id="confirmEditClient">Confirmar
-                                    Modificação</button>
+                                <button type="button" class="btn btn-primary" id="confirmEditClient">
+                                    <span class="btn-text">Confirmar Modificação</span>
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="editCustomerSpinner"
+                                        role="status" aria-hidden="true"></span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -764,6 +794,7 @@
             });
         });
     </script>
+    <!-- myCustomerPage.html -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const tbody = document.getElementById("clients-table-body");
@@ -833,6 +864,11 @@
                     const collapseId = `customerPlatforms-${c.id_customer || idx}`;
                     const expandBtn = node.querySelector(".customer-expand");
                     const collapseEl = node.querySelector(".collapse");
+                    const editLink = node.querySelector(".edit_client");
+                    const removeLink = node.querySelector(".remove-client");
+                    if (editLink) editLink.dataset.id = c.id_customer;
+                    if (removeLink) removeLink.dataset.id = c.id_customer;
+
 
                     if (expandBtn) {
                         expandBtn.setAttribute("data-bs-target", `#${collapseId}`);
@@ -875,7 +911,137 @@
             });
         });
     </script>
+    <!-- myCustomersEditCustomer.js -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const modalEl = document.getElementById("modalEditClient");
+            if (!modalEl) return;
 
+            const modal = new bootstrap.Modal(modalEl);
+
+            const idEl = document.getElementById("editClientId");
+            const nameEl = document.getElementById("editClientName");
+            const companyEl = document.getElementById("editClientCompany");
+            const emailEl = document.getElementById("editClientEmail");
+            const phoneEl = document.getElementById("editClientPhone");
+
+            const btn = document.getElementById("confirmEditClient");
+            const spinner = document.getElementById("editCustomerSpinner");
+            const btnText = btn ? btn.querySelector(".btn-text") : null;
+
+            const alertContainer = document.getElementById("alert-container");
+
+            function showAlert(type, message) {
+                if (!alertContainer) return;
+                alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                `;
+            }
+
+            function setLoading(isLoading) {
+                if (!btn) return;
+                btn.disabled = isLoading;
+                if (spinner) spinner.classList.toggle("d-none", !isLoading);
+                if (btnText) btnText.textContent = isLoading ? "Salvando..." : "Confirmar Modificação";
+            }
+
+            let original = null;
+
+            // Abrir modal ao clicar em Editar
+            document.addEventListener("click", async (event) => {
+                const edit = event.target.closest(".edit_client");
+                if (!edit) return;
+
+                event.preventDefault();
+                const id_customer = edit.dataset.id;
+                if (!id_customer) return;
+
+                try {
+                    const resp = await fetch(`/customer/get/${id_customer}`);
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.success || !data.customer?.length) {
+                        throw new Error(data.message || "Erro ao carregar cliente.");
+                    }
+
+                    const c = data.customer[0];
+                    original = {
+                        id_customer,
+                        name: c.name || "",
+                        company: c.company || "",
+                        email: c.email || "",
+                        phone: c.phone || ""
+                    };
+
+                    idEl.value = id_customer;
+                    nameEl.value = original.name;
+                    companyEl.value = original.company;
+                    emailEl.value = original.email;
+                    phoneEl.value = original.phone;
+
+                    modal.show();
+                } catch (err) {
+                    showAlert("danger", err.message || "Erro ao carregar cliente.");
+                }
+            });
+
+            // Confirmar edição
+            btn?.addEventListener("click", async () => {
+                const id_customer = idEl.value;
+                const payload = {
+                    name: nameEl.value.trim(),
+                    company: companyEl.value.trim() || null,
+                    email: emailEl.value.trim(),
+                    phone: phoneEl.value.trim() || null
+                };
+
+                if (!payload.name || !payload.email) {
+                    showAlert("danger", "Nome e email são obrigatórios.");
+                    return;
+                }
+
+                // Se não mudou nada
+                if (
+                    original &&
+                    payload.name === original.name &&
+                    (payload.company || "") === (original.company || "") &&
+                    payload.email === original.email &&
+                    (payload.phone || "") === (original.phone || "")
+                ) {
+                    modal.hide();
+                    showAlert("info", "Nenhuma alteração foi detectada.");
+                    return;
+                }
+
+                setLoading(true);
+
+                try {
+                    const resp = await fetch(`/customer/edit/${id_customer}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.success) {
+                        throw new Error(data.message || "Erro ao atualizar cliente.");
+                    }
+
+                    modal.hide();
+                    showAlert("success", "Cliente atualizado com sucesso!");
+                    setTimeout(() => location.reload(), 400);
+                } catch (err) {
+                    showAlert("danger", err.message || "Erro ao atualizar cliente.");
+                } finally {
+                    setLoading(false);
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

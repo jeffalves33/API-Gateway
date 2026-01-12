@@ -129,17 +129,15 @@ const removePlatformFromUser = async (platform, id_user) => {
   }
 };
 
-const updateCustomer = async (id_customer, name, email) => {
+const updateCustomer = async (id_customer, id_user, name, email, company, phone) => {
   const result = await pool.query(
-    'UPDATE customer SET name = $1, email = $2 WHERE id_customer = $3 RETURNING *',
-    [name, email, id_customer]
+    'UPDATE customer SET name = $1, email = $2, company = $3, phone = $4 WHERE id_customer = $5 AND id_user = $6 RETURNING *',
+    [name, email, company, phone, id_customer, id_user]
   );
 
-  if (result.rows.length === 0) {
-    throw new Error('Cliente não encontrado');
-  }
-
+  if (result.rows.length === 0) throw new Error('Cliente não encontrado');
   return result.rows[0];
 };
+
 
 module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, getCustomersListByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer };
