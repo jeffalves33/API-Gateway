@@ -81,7 +81,10 @@ const getCustomersListByUserId = async (id_user) => {
           json_build_object(
             'platform', ci.platform,
             'status', ci.status,
-            'expires_at', ci.expires_at
+            'expires_at', ci.expires_at,
+            'resource_id', ci.resource_id,
+            'resource_name', ci.resource_name,
+            'resource_type', ci.resource_type
           )
           ORDER BY ci.platform
         ) FILTER (WHERE ci.id IS NOT NULL),

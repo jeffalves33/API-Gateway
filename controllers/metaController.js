@@ -1,202 +1,344 @@
-// Arquivo: controllers/metaController.js
+// controllers/metaController.js
 const axios = require('axios');
 const querystring = require('querystring');
 const { pool } = require('../config/db');
-require('dotenv').config();
+const { checkCustomerBelongsToUser, } = require('../repositories/customerRepository');
+const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 
-const META_APP_ID = '1832737137219562';//process.env.META_APP_ID;
-const META_APP_SECRET = 'b14bc1778c11a716e69ac80c52199798';//process.env.META_APP_SECRET;
+const APP_ID = '1832737137219562';//process.env.META_APP_ID;
+const APP_SECRET = 'b14bc1778c11a716e69ac80c52199798';//process.env.META_APP_SECRET;
 const REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/meta/auth/callback';
 
-exports.startOAuth = (req, res) => {
-  const scopes = [
-    'ads_management',
-    'business_management',
-    'instagram_basic',
-    'instagram_manage_insights',
-    'read_insights',
-    'pages_read_engagement',
-    'pages_read_user_content',
-    'pages_show_list',
-  ];
+const SCOPES = [
+  'public_profile',
+  'email',
+  'pages_show_list',
+  'pages_read_engagement',
+  'pages_manage_metadata',
+  'pages_read_user_content',
+  'read_insights',
+  'instagram_basic',
+  'instagram_manage_insights',
+  'instagram_manage_comments',
+];
 
-  const authUrl = `https://www.facebook.com/v22.0/dialog/oauth?${querystring.stringify({
-    client_id: META_APP_ID,
-    redirect_uri: REDIRECT_URI,
-    state: req.user.id, // associar com o id do usuário logado
-    scope: scopes.join(',')
-  })}`;
+function encodeState(obj) {
+  return Buffer.from(JSON.stringify(obj)).toString('base64');
+}
 
-  res.redirect(authUrl);
+function decodeState(state) {
+  const json = Buffer.from(String(state || ''), 'base64').toString('utf8');
+  return JSON.parse(json);
+}
+
+async function getMetaTokenForCustomer(id_customer) {
+  // token é o mesmo pro Meta, então pega o primeiro que existir (facebook/instagram)
+  const r = await pool.query(
+    `
+    SELECT access_token, expires_at
+    FROM customer_integrations
+    WHERE id_customer = $1
+      AND platform IN ('facebook','instagram')
+      AND access_token IS NOT NULL
+    ORDER BY CASE platform WHEN 'facebook' THEN 0 ELSE 1 END
+    LIMIT 1
+    `,
+    [id_customer]
+  );
+
+  return r.rows[0] || null;
+}
+
+async function upsertAuthForCustomer({ id_customer, oauth_account_id, access_token, expires_at, scopes }) {
+  const scopesStr = Array.isArray(scopes) ? scopes.join(',') : (scopes || null);
+
+  // grava/atualiza facebook e instagram juntos (exigência do seu fluxo)
+  const platforms = ['facebook', 'instagram'];
+
+  for (const platform of platforms) {
+    await pool.query(
+      `
+      INSERT INTO customer_integrations
+        (id_customer, platform, oauth_account_id, access_token, expires_at, scopes, status)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, 'authorized')
+      ON CONFLICT (id_customer, platform)
+      DO UPDATE SET
+        oauth_account_id = EXCLUDED.oauth_account_id,
+        access_token     = EXCLUDED.access_token,
+        expires_at       = EXCLUDED.expires_at,
+        scopes           = EXCLUDED.scopes,
+        status           = CASE
+                           WHEN customer_integrations.resource_id IS NOT NULL THEN 'connected'
+                           ELSE 'authorized'
+                           END
+      `,
+      [id_customer, platform, oauth_account_id, access_token, expires_at, scopesStr]
+    );
+  }
+}
+
+exports.startOAuth = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+    const { id_customer } = req.query;
+
+    if (!id_customer) {
+      return res.status(400).send('id_customer é obrigatório');
+    }
+
+    const ok = await checkCustomerBelongsToUser(id_customer, id_user);
+    if (!ok) return res.status(403).send('Cliente não pertence ao usuário');
+
+    const state = encodeState({ id_user, id_customer });
+
+    const params = querystring.stringify({
+      client_id: APP_ID,
+      redirect_uri: REDIRECT_URI,
+      state,
+      scope: SCOPES.join(','),
+      response_type: 'code',
+    });
+
+    return res.redirect(`https://www.facebook.com/v19.0/dialog/oauth?${params}`);
+  } catch (err) {
+    console.error('startOAuth error:', err);
+    return res.status(500).send('Erro ao iniciar OAuth Meta');
+  }
 };
 
 exports.handleOAuthCallback = async (req, res) => {
-  const { code, state: id_user } = req.query;
-
   try {
-    const tokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
+    const { code, state } = req.query;
+    if (!code || !state) return res.status(400).send('Code/state ausentes');
+
+    const { id_user, id_customer } = decodeState(state);
+
+    // segurança: garante que o cliente é do usuário
+    const ok = await checkCustomerBelongsToUser(id_customer, id_user);
+    if (!ok) return res.status(403).send('Cliente não pertence ao usuário');
+
+    // troca code por short-lived token
+    const tokenRes = await axios.get('https://graph.facebook.com/v19.0/oauth/access_token', {
       params: {
-        client_id: META_APP_ID,
-        client_secret: META_APP_SECRET,
+        client_id: APP_ID,
+        client_secret: APP_SECRET,
         redirect_uri: REDIRECT_URI,
-        code
-      }
+        code,
+      },
     });
+
     const shortLivedToken = tokenRes.data.access_token;
 
-    const longTokenRes = await axios.get('https://graph.facebook.com/v22.0/oauth/access_token', {
+    // troca por long-lived token
+    const longRes = await axios.get('https://graph.facebook.com/v19.0/oauth/access_token', {
       params: {
         grant_type: 'fb_exchange_token',
-        client_id: META_APP_ID,
-        client_secret: META_APP_SECRET,
-        fb_exchange_token: shortLivedToken
-      }
+        client_id: APP_ID,
+        client_secret: APP_SECRET,
+        fb_exchange_token: shortLivedToken,
+      },
     });
-    const longLivedToken = longTokenRes.data.access_token;
-    const llExpiresIn = Number(longTokenRes.data.expires_in);
 
-    let metaExpiresAt = null;
-    try {
-      const dbg = await axios.get('https://graph.facebook.com/v22.0/debug_token', {
-        params: {
-          input_token: longLivedToken,
-          access_token: `${META_APP_ID}|${META_APP_SECRET}`
-        }
-      });
-      const d = dbg.data?.data || {};
-      if (d.data_access_expires_at) {
-        metaExpiresAt = new Date(d.data_access_expires_at * 1000);
-      } else if (!Number.isNaN(llExpiresIn) && llExpiresIn > 0) {
-        metaExpiresAt = new Date(Date.now() + llExpiresIn * 1000);
-      }
-    } catch (_) {
-      if (!Number.isNaN(llExpiresIn) && llExpiresIn > 0) {
-        metaExpiresAt = new Date(Date.now() + llExpiresIn * 1000);
-      }
-    }
+    const longLivedToken = longRes.data.access_token;
+    const grantedScopes = (longRes.data.scope || '').split(',').filter(Boolean);
 
-    const meRes = await axios.get('https://graph.facebook.com/v22.0/me', {
-      params: { access_token: longLivedToken }
+    // pega meta user id
+    const meRes = await axios.get('https://graph.facebook.com/v19.0/me', {
+      params: { access_token: longLivedToken },
     });
-    const metakUserId = meRes.data.id;
+    const metaUserId = meRes.data.id;
 
-    await pool.query(
-      `INSERT INTO user_keys (
-         id_user, id_user_facebook, access_token_facebook,
-         id_user_instagram, access_token_instagram,
-         expires_at_facebook, expires_at_instagram
-       ) VALUES ($1,$2,$3,$4,$5,$6,$6)
-       ON CONFLICT (id_user) DO UPDATE SET
-         id_user_facebook       = EXCLUDED.id_user_facebook,
-         access_token_facebook  = EXCLUDED.access_token_facebook,
-         id_user_instagram      = EXCLUDED.id_user_instagram,
-         access_token_instagram = EXCLUDED.access_token_instagram,
-         expires_at_facebook    = COALESCE(EXCLUDED.expires_at_facebook, user_keys.expires_at_facebook),
-         expires_at_instagram   = COALESCE(EXCLUDED.expires_at_instagram, user_keys.expires_at_instagram)`,
-      [id_user, metakUserId, longLivedToken, metakUserId, longLivedToken, metaExpiresAt]
-    );
+    // calcula expires_at (debug_token)
+    const debugRes = await axios.get('https://graph.facebook.com/debug_token', {
+      params: {
+        input_token: longLivedToken,
+        access_token: `${APP_ID}|${APP_SECRET}`,
+      },
+    });
 
-    return res.redirect('/platformsPage.html');
-  } catch (error) {
-    if (error.response) {
-      console.error('Erro na resposta da API:', error.response.status, error.response.data);
-    } else if (error.request) {
-      console.error('Nenhuma resposta recebida:', error.request);
-    } else {
-      console.error('Erro ao configurar a requisição:', error.message);
-    }
-    return res.status(500).send('Erro ao conectar com o Facebook.');
+    const expires_at = debugRes.data?.data?.expires_at;
+    const longLivedExpiresAt = expires_at ? new Date(expires_at * 1000).toISOString() : null;
+
+    await pool.query('BEGIN');
+    await upsertAuthForCustomer({
+      id_customer,
+      oauth_account_id: metaUserId,
+      access_token: longLivedToken,
+      expires_at: longLivedExpiresAt,
+      scopes: grantedScopes,
+    });
+    await pool.query('COMMIT');
+
+    // volta pro acordeão do cliente (platformsPage não entra mais)
+    return res.redirect(`/myCustomersPage.html?open=${encodeURIComponent(id_customer)}`);
+  } catch (err) {
+    try { await pool.query('ROLLBACK'); } catch (_) { }
+    console.error('handleOAuthCallback error:', err);
+    return res.status(500).send('Erro no callback OAuth Meta');
   }
 };
 
 exports.getMetaPages = async (req, res) => {
   try {
-    const { id } = req.user;
-    const result = await pool.query('SELECT access_token_facebook FROM user_keys WHERE id_user = $1', [id]);
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Token do usuário não encontrado' });
-    const access_token = result.rows[0].access_token_facebook;
+    const id_user = req.user.id;
+    const { id_customer } = req.query;
 
-    // ================= FACEBOOK =================
-    const fbRes = await axios.get('https://graph.facebook.com/v22.0/me/accounts', {
-      params: { access_token }
+    if (!id_customer) return res.status(400).json({ success: false, message: 'id_customer é obrigatório' });
+
+    const ok = await checkCustomerBelongsToUser(id_customer, id_user);
+    if (!ok) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário' });
+
+    const tokenRow = await getMetaTokenForCustomer(id_customer);
+    if (!tokenRow?.access_token) {
+      return res.status(400).json({ success: false, message: 'Cliente não possui OAuth Meta autorizado' });
+    }
+
+    const userAccessToken = tokenRow.access_token;
+
+    // 1) páginas Facebook
+    const pagesRes = await axios.get('https://graph.facebook.com/v19.0/me/accounts', {
+      params: { access_token: userAccessToken },
     });
 
-    const fbPages = fbRes.data.data.map(fbPage => ({
-      name: fbPage.name,
-      id_page: fbPage.id,
-      access_token: fbPage.access_token
+    const pages = pagesRes.data?.data || [];
+
+    const facebook = pages.map(p => ({
+      id_page: p.id,
+      name: p.name,
+      access_token: p.access_token, // page token
     }));
 
-    // ================= INSTAGRAM =================
-    const igPages = [];
-    for (const fbPage of fbRes.data.data) {
+    // 2) contas Instagram Business (varre páginas e pega ig business)
+    const instagram = [];
+    for (const p of pages) {
       try {
-        const igRes = await axios.get(
-          `https://graph.facebook.com/v22.0/${fbPage.id}`,
-          {
-            params: {
-              access_token: fbPage.access_token,
-              fields: 'instagram_business_account{name,username,id}'
-            }
-          }
-        );
+        const igRes = await axios.get(`https://graph.facebook.com/v19.0/${p.id}`, {
+          params: {
+            fields: 'instagram_business_account{id,username,name}',
+            access_token: p.access_token, // page token
+          },
+        });
 
-        const igAccount = igRes.data.instagram_business_account;
-        if (igAccount) {
-          igPages.push({
-            name: igAccount.name || igAccount.username,
-            id_page: igAccount.id,
-            access_token: fbPage.access_token
+        const ig = igRes.data?.instagram_business_account;
+        if (ig?.id) {
+          instagram.push({
+            id_page: ig.id,
+            name: ig.username ? `@${ig.username}` : (ig.name || ig.id),
+            access_token: p.access_token, // usa o page token
           });
         }
-      } catch (err) {
-        console.warn(`Página ${fbPage.id} sem conta IG vinculada ou erro ao buscar IG.`, err.response?.data || err.message);
-        continue;
+      } catch (_) {
+        // ignora páginas sem IG business
       }
     }
 
-    res.json({ facebook: fbPages, instagram: igPages });
-  } catch (error) {
-    console.error('Erro ao buscar páginas:', error.response?.data || error.message);
-    res.status(500).json({ message: 'Erro ao buscar páginas do Facebook/Instagram' });
+    return res.json({ success: true, facebook, instagram });
+  } catch (err) {
+    console.error('getMetaPages error:', err);
+    return res.status(500).json({ success: false, message: 'Erro ao listar páginas Meta' });
   }
 };
 
-exports.checkMetaStatus = async (req, res) => {
-  const id_user = req.user.id;
-
+exports.connectResource = async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT access_token_facebook, access_token_instagram, expires_at_facebook, expires_at_instagram FROM user_keys WHERE id_user = $1`,
-      [id_user]
+    const id_user = req.user.id;
+    const {
+      id_customer,
+      platform, // 'facebook' | 'instagram'
+      resource_id,
+      resource_name,
+      resource_access_token, // page token
+    } = req.body;
+
+    if (!id_customer || !platform || !resource_id || !resource_access_token) {
+      return res.status(400).json({ success: false, message: 'Campos obrigatórios: id_customer, platform, resource_id, resource_access_token' });
+    }
+
+    if (!['facebook', 'instagram'].includes(String(platform).toLowerCase())) {
+      return res.status(400).json({ success: false, message: 'platform inválida' });
+    }
+
+    const ok = await checkCustomerBelongsToUser(id_customer, id_user);
+    if (!ok) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário' });
+
+    const resource_type = platform === 'facebook' ? 'facebook_page' : 'instagram_business_account';
+
+    await pool.query(
+      `
+      INSERT INTO customer_integrations
+        (id_customer, platform, resource_id, resource_name, resource_type, resource_access_token, status)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, 'connected')
+      ON CONFLICT (id_customer, platform)
+      DO UPDATE SET
+        resource_id           = EXCLUDED.resource_id,
+        resource_name         = EXCLUDED.resource_name,
+        resource_type         = EXCLUDED.resource_type,
+        resource_access_token = EXCLUDED.resource_access_token,
+        status                = 'connected'
+      `,
+      [id_customer, platform, resource_id, resource_name || null, resource_type, resource_access_token]
     );
 
-    const row = result.rows[0] || {};
-    const facebookConnected = row.access_token_facebook !== null && row.access_token_facebook !== undefined;
-    const instagramConnected = row.access_token_instagram !== null && row.access_token_instagram !== undefined;
-
-    let facebookDaysLeft = null, needsReauthFacebook = false;
-    if (row.expires_at_facebook) {
-      const diff = new Date(row.expires_at_facebook) - Date.now();
-      facebookDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
-      needsReauthFacebook = facebookDaysLeft <= 7;
+    // dispara o processo antigo para trazer históricos
+    const platforms = [];
+    if (platform === 'facebook') {
+      platforms.push({ type: 'facebook', id_facebook_page: resource_id, access_token: resource_access_token });
+    } else {
+      platforms.push({ type: 'instagram', id_instagram_page: resource_id, access_token: resource_access_token });
     }
 
-    let instagramDaysLeft = null, needsReauthInstagram = false;
-    if (row.expires_at_instagram) {
-      const diffIG = new Date(row.expires_at_instagram) - Date.now();
-      instagramDaysLeft = Math.ceil(diffIG / (1000 * 60 * 60 * 24));
-      needsReauthInstagram = instagramDaysLeft <= 7;
+    await metricsOrchestrator.processCustomerMetrics(id_user, id_customer, platforms, null, null);
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('connectResource error:', err);
+    return res.status(500).json({ success: false, message: 'Erro ao conectar recurso Meta' });
+  }
+};
+
+// opcional/legado
+exports.checkMetaStatus = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+    const { id_customer } = req.query;
+
+    if (id_customer) {
+      const ok = await checkCustomerBelongsToUser(id_customer, id_user);
+      if (!ok) return res.status(403).json({ success: false });
+
+      const r = await pool.query(
+        `
+        SELECT platform, status, expires_at
+        FROM customer_integrations
+        WHERE id_customer = $1 AND platform IN ('facebook','instagram')
+        `,
+        [id_customer]
+      );
+
+      const map = Object.fromEntries(r.rows.map(x => [x.platform, x]));
+      return res.json({
+        facebookConnected: (map.facebook?.status || '').toLowerCase() === 'connected',
+        instagramConnected: (map.instagram?.status || '').toLowerCase() === 'connected',
+        needsReauthFacebook: false,
+        needsReauthInstagram: false,
+        facebookDaysLeft: null,
+        instagramDaysLeft: null,
+      });
     }
 
-    res.json({
-      facebookConnected, instagramConnected,
-      facebookDaysLeft, needsReauthFacebook,
-      instagramDaysLeft, needsReauthInstagram
+    // se chamar sem id_customer, retorna "não aplicável" na nova arquitetura
+    return res.json({
+      facebookConnected: false,
+      instagramConnected: false,
+      needsReauthFacebook: false,
+      needsReauthInstagram: false,
+      facebookDaysLeft: null,
+      instagramDaysLeft: null,
     });
-
-  } catch (error) {
-    console.error('Erro ao verificar status do Meta:', error);
-    res.status(500).json({ facebookConnected: false, instagramConnected: false });
+  } catch (err) {
+    console.error('checkMetaStatus error:', err);
+    return res.status(500).json({ success: false });
   }
 };

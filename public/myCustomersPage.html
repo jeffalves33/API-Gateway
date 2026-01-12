@@ -694,6 +694,33 @@
         </div>
     </div>
 
+    <!-- Modal: Selecionar recurso Meta (Página FB / Conta IG) -->
+    <div class="modal fade" id="metaResourceModal" tabindex="-1" aria-labelledby="metaResourceModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="metaResourceModalLabel">Conectar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" id="metaResourceLabel">Selecione</label>
+                    <select class="form-select" id="metaResourceSelect"></select>
+                    <div id="metaResourceError" class="text-danger small mt-2 d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="metaResourceSaveBtn">
+                        <span class="btn-text">Conectar</span>
+                        <span class="spinner-border spinner-border-sm ms-2 d-none" id="metaResourceSaveSpinner"
+                            role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Jeferson: container para mensagem -->
     <div id="alert-container"></div>
 
@@ -800,87 +827,254 @@
             const tbody = document.getElementById("clients-table-body");
             const tpl = document.getElementById("customerRowTemplate");
 
-            if (!tbody || !tpl) return;
-
-            const platformIconMap = {
-                facebook: "/assets/img/icons/brands/facebook.png",
-                instagram: "/assets/img/icons/brands/instagram.png",
-                google_analytics: "/assets/img/icons/brands/google.png",
-                youtube: "/assets/img/icons/brands/youtube.png",
-                linkedin: "/assets/img/icons/brands/linkedin.png",
+            const platformIcons = {
+                facebook: "facebook.png",
+                instagram: "instagram.png",
+                linkedin: "linkedin.png",
+                googleanalytics: "google-analytics.png"
             };
 
-            function badgeStatus(hasConnected) {
-                return hasConnected
-                    ? `<span class="badge bg-label-success">CONECTADO</span>`
-                    : `<span class="badge bg-label-secondary">SEM CONEXÃO</span>`;
+            function safeText(v) {
+                return (v === null || v === undefined || v === "") ? "-" : String(v);
+            }
+
+            function badgeStatus(connected) {
+                return connected
+                    ? '<span class="badge bg-label-success me-1">Conectado</span>'
+                    : '<span class="badge bg-label-secondary me-1">Pendente</span>';
+            }
+
+            function integrationOf(integrations, name) {
+                return (integrations || []).find(i => (i.platform || "").toLowerCase() === name);
             }
 
             function renderPlatformIcons(integrations) {
                 const connected = (integrations || []).filter(i => (i.status || "").toLowerCase() === "connected");
-                if (!connected.length) return "";
-
-                // garantir ícones únicos por plataforma
                 const uniquePlatforms = [...new Set(connected.map(i => i.platform))];
 
-                return uniquePlatforms
-                    .map(p => {
-                        const src = platformIconMap[p];
-                        if (!src) return "";
-                        return `<img class="platform-mini-icon" src="${src}" alt="${p}">`;
-                    })
-                    .join("");
+                if (!uniquePlatforms.length) {
+                    return '<span class="text-muted small">—</span>';
+                }
+
+                return uniquePlatforms.map(p => {
+                    const key = String(p).toLowerCase();
+                    const icon = platformIcons[key];
+                    if (!icon) return "";
+                    return `
+                    <span class="me-1" title="${key}">
+                        <img class="platform-mini-icon" src="./assets/img/icons/brands/${icon}" alt="${key}">
+                    </span>
+                    `;
+                }).join("");
             }
 
-            function safeText(v) {
-                return (v === null || v === undefined || String(v).trim() === "") ? "-" : String(v);
+            function badgeForIntegrationStatus(status) {
+                const s = (status || "").toLowerCase();
+                if (s === "connected") return '<span class="badge bg-label-success">Conectado</span>';
+                if (s === "authorized") return '<span class="badge bg-label-info">Autorizado</span>';
+                return '<span class="badge bg-label-secondary">Não autorizado</span>';
             }
+
+            function renderMetaRow(customer, platform) {
+                const integ = integrationOf(customer.integrations, platform);
+                const status = (integ?.status || "").toLowerCase();
+
+                const connectedName = integ?.resource_name ? `Conectado: <strong>${integ.resource_name}</strong>` : "";
+                const subtitle =
+                    status === "connected" ? connectedName :
+                        status === "authorized" ? "OAuth OK. Falta selecionar o recurso." :
+                            "Faça o OAuth para habilitar a seleção.";
+
+                const action =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-primary js-meta-select"
+                                data-customer="${customer.id_customer}"
+                                data-platform="${platform}">
+                                ${status === "connected" ? "Trocar" : "Conectar"}
+                                </button>`
+                        : `<button class="btn btn-sm btn-primary js-meta-authorize"
+                                data-customer="${customer.id_customer}">
+                            Autorizar
+                            </button>`
+                    ;
+
+                const label = platform === "facebook" ? "Facebook" : "Instagram";
+
+                return `
+                    <div class="customer-platform-item">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                        <img class="platform-mini-icon" style="width:22px;height:22px"
+                            src="./assets/img/icons/brands/${platformIcons[platform]}" alt="${label}">
+                        <div>
+                            <div class="fw-semibold">${label}</div>
+                            <small class="text-muted">${subtitle || ""}</small>
+                        </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                        ${badgeForIntegrationStatus(integ?.status)}
+                        ${action}
+                        </div>
+                    </div>
+                    </div>
+                `;
+            }
+
+            function renderIntegrationsPanel(customer) {
+                return `
+                    <div class="alert alert-light border mb-3 py-2">
+                    <small class="text-muted">
+                        Fluxo: 1) Autorizar (OAuth) &rarr; 2) Selecionar recurso no modal &rarr; 3) Salvar e puxar históricos.
+                    </small>
+                    </div>
+
+                    <h6 class="mb-2">Meta (Facebook / Instagram)</h6>
+                    ${renderMetaRow(customer, "facebook")}
+                    ${renderMetaRow(customer, "instagram")}
+                `;
+            }
+
+            // Modal Meta
+            const metaModalEl = document.getElementById("metaResourceModal");
+            const metaModal = metaModalEl ? new bootstrap.Modal(metaModalEl) : null;
+            const metaSelect = document.getElementById("metaResourceSelect");
+            const metaTitle = document.getElementById("metaResourceModalLabel");
+            const metaLabel = document.getElementById("metaResourceLabel");
+            const metaError = document.getElementById("metaResourceError");
+            const metaSaveBtn = document.getElementById("metaResourceSaveBtn");
+            const metaSaveSpinner = document.getElementById("metaResourceSaveSpinner");
+            const metaSaveText = metaSaveBtn ? metaSaveBtn.querySelector(".btn-text") : null;
+
+            function setMetaLoading(loading, text) {
+                if (metaSaveBtn) metaSaveBtn.disabled = loading;
+                if (metaSaveSpinner) metaSaveSpinner.classList.toggle("d-none", !loading);
+                if (metaSaveText && text) metaSaveText.textContent = text;
+            }
+
+            function showMetaError(msg) {
+                if (!metaError) return;
+                metaError.textContent = msg || "";
+                metaError.classList.toggle("d-none", !msg);
+            }
+
+            async function openMetaResourceModal(id_customer, platform) {
+                if (!metaModal) return;
+
+                showMetaError("");
+                metaSelect.innerHTML = "";
+                setMetaLoading(true, "Carregando...");
+
+                metaTitle.textContent = platform === "facebook" ? "Conectar Página do Facebook" : "Conectar Conta do Instagram";
+                metaLabel.textContent = platform === "facebook" ? "Selecione a página" : "Selecione a conta";
+
+                metaModal.show();
+
+                try {
+                    const resp = await fetch(`/api/meta/pages?id_customer=${encodeURIComponent(id_customer)}`);
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao listar recursos Meta");
+
+                    const list = platform === "facebook" ? (data.facebook || []) : (data.instagram || []);
+                    if (!list.length) {
+                        metaSelect.innerHTML = `<option value="">Nenhum recurso encontrado</option>`;
+                        setMetaLoading(false, "Conectar");
+                        return;
+                    }
+
+                    metaSelect.innerHTML = list.map(item => `
+                        <option
+                            value="${item.id_page}"
+                            data-name="${(item.name || "").replace(/"/g, "&quot;")}"
+                            data-token="${(item.access_token || "").replace(/"/g, "&quot;")}"
+                        >${item.name}</option>
+                        `).join("");
+
+                    setMetaLoading(false, "Conectar");
+
+                    metaSaveBtn.onclick = async () => {
+                        showMetaError("");
+                        const opt = metaSelect.options[metaSelect.selectedIndex];
+                        const resource_id = opt?.value;
+                        const resource_name = opt?.dataset?.name || opt?.textContent || null;
+                        const resource_access_token = opt?.dataset?.token;
+
+                        if (!resource_id || !resource_access_token) {
+                            showMetaError("Seleção inválida.");
+                            return;
+                        }
+
+                        try {
+                            setMetaLoading(true, "Conectando...");
+
+                            const r = await fetch("/api/meta/connect", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    id_customer,
+                                    platform,
+                                    resource_id,
+                                    resource_name,
+                                    resource_access_token
+                                })
+                            });
+
+                            const j = await r.json();
+                            if (!r.ok || !j.success) throw new Error(j.message || "Erro ao conectar");
+
+                            metaModal.hide();
+                            window.location.href = `/myCustomersPage.html?open=${encodeURIComponent(id_customer)}`;
+                        } catch (e) {
+                            showMetaError(e.message || "Erro ao conectar.");
+                        } finally {
+                            setMetaLoading(false, "Conectar");
+                        }
+                    };
+                } catch (e) {
+                    showMetaError(e.message || "Erro ao carregar recursos.");
+                    setMetaLoading(false, "Conectar");
+                }
+            }
+
+            // Click handlers (event delegation)
+            document.addEventListener("click", (e) => {
+                const authBtn = e.target.closest(".js-meta-authorize");
+                if (authBtn) {
+                    const id_customer = authBtn.dataset.customer;
+                    if (!id_customer) return;
+                    // OAuth Meta (vale pra FB e IG junto)
+                    window.location.href = `/api/meta/auth?id_customer=${encodeURIComponent(id_customer)}`;
+                    return;
+                }
+
+                const selectBtn = e.target.closest(".js-meta-select");
+                if (selectBtn) {
+                    const id_customer = selectBtn.dataset.customer;
+                    const platform = selectBtn.dataset.platform;
+                    if (!id_customer || !platform) return;
+                    openMetaResourceModal(id_customer, platform);
+                }
+            });
 
             async function loadCustomers() {
-                tbody.innerHTML = "";
-
                 const resp = await fetch("/customer/list");
                 const data = await resp.json();
-
-                if (!resp.ok || !data.success) {
-                    tbody.innerHTML = `
-                        <tr><td colspan="6" class="text-center text-danger py-4">Erro ao carregar clientes</td></tr>
-                    `;
-                    return;
-                }
-
                 const customers = data.customers || [];
+                console.log("🚀 ~ loadCustomers ~ customers1: ", customers)
+
+                tbody.innerHTML = "";
+
                 if (!customers.length) {
-                    tbody.innerHTML = `
-                        <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum cliente cadastrado</td></tr>
-                    `;
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Nenhum cliente encontrado</td></tr>`;
                     return;
                 }
 
-                customers.forEach((c, idx) => {
-                    const node = tpl.content.cloneNode(true);
+                customers.forEach(c => {
+                    const node = document.importNode(tpl.content, true);
 
-                    // ids do collapse
-                    const collapseId = `customerPlatforms-${c.id_customer || idx}`;
-                    const expandBtn = node.querySelector(".customer-expand");
-                    const collapseEl = node.querySelector(".collapse");
-                    const editLink = node.querySelector(".edit_client");
-                    const removeLink = node.querySelector(".remove-client");
-                    if (editLink) editLink.dataset.id = c.id_customer;
-                    if (removeLink) removeLink.dataset.id = c.id_customer;
-
-
-                    if (expandBtn) {
-                        expandBtn.setAttribute("data-bs-target", `#${collapseId}`);
-                        expandBtn.setAttribute("aria-controls", collapseId);
-                    }
-                    if (collapseEl) collapseEl.id = collapseId;
-
-                    // Linha principal TDs (na ordem: cliente, telefone, email, plataformas, status)
-                    const tds = node.querySelectorAll("tr:first-child td");
                     const customerNameEl = node.querySelector("tr:first-child .fw-medium");
                     if (customerNameEl) customerNameEl.textContent = safeText(c.name);
 
+                    const tds = node.querySelectorAll("tr:first-child td");
                     if (tds[1]) tds[1].innerHTML = safeText(c.phone);
                     if (tds[2]) tds[2].innerHTML = safeText(c.email);
 
@@ -890,24 +1084,38 @@
                     const hasConnected = (c.integrations || []).some(i => (i.status || "").toLowerCase() === "connected");
                     if (tds[4]) tds[4].innerHTML = badgeStatus(hasConnected);
 
-                    // Detalhe (por enquanto só placeholder, porque “plataformas” não é parte dessa task)
-                    const details = node.querySelector(".customer-platforms-container");
-                    if (details) {
-                        details.innerHTML = `
-                        <div class="alert alert-light border mb-0 py-2">
-                            <small class="text-muted">As conexões de plataformas serão configuradas na próxima task.</small>
-                        </div>
-                        `;
+                    // define ids do acordeão
+                    const btnExpand = node.querySelector(".customer-expand");
+                    const collapseEl = node.querySelector(".customer-details-row .collapse");
+                    const detailsCol = node.querySelector(".customer-details-col");
+                    if (btnExpand && collapseEl && c.id_customer) {
+                        const collapseId = `customerPlatforms-${c.id_customer}`;
+
+                        collapseEl.id = collapseId;
+
+                        btnExpand.setAttribute("data-bs-target", `#${collapseId}`);
+                        btnExpand.setAttribute("aria-controls", collapseId);
                     }
+                    if (detailsCol) detailsCol.id = `customerPlatforms-${c.id_customer}-col`;
+                    const details = node.querySelector(".customer-platforms-container");
+                    if (details) details.innerHTML = renderIntegrationsPanel(c);
+                    // seta ids no botão editar já existente
+                    const editBtn = node.querySelector(".edit_client");
+                    if (editBtn && c.id_customer) editBtn.dataset.id = c.id_customer;
 
                     tbody.appendChild(node);
                 });
+
+                // abre automaticamente o accordion se veio do callback (?open=...)
+                const openId = new URLSearchParams(window.location.search).get("open");
+                if (openId) {
+                    const collapseEl = document.getElementById(`customerPlatforms-${openId}`);
+                    if (collapseEl) bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
+                }
             }
 
             loadCustomers().catch(() => {
-                tbody.innerHTML = `
-                <tr><td colspan="6" class="text-center text-danger py-4">Erro ao carregar clientes</td></tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Erro ao carregar clientes</td></tr>`;
             });
         });
     </script>
