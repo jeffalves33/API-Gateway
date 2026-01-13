@@ -904,7 +904,7 @@
                     <div class="d-flex align-items-center justify-content-between gap-2">
                         <div class="d-flex align-items-center gap-2">
                             <img class="platform-mini-icon" style="width:22px;height:22px"
-                                src="./assets/img/icons/brands/${platformIcons[platform]}" alt="${label}">
+                                src="/assets/img/icons/brands/${platformIcons[platform]}" alt="${label}">
                         <div>
                             <div class="fw-semibold">${label}</div>
                             <small class="text-muted">${subtitle || ""}</small>
@@ -964,6 +964,47 @@
                 `;
             }
 
+            function renderGaRow(customer) {
+                const integ = integrationOf(customer.integrations, "google_analytics");
+                const status = (integ?.status || "").toLowerCase();
+
+                const daysLeft = integ?.expires_at ? Math.ceil((new Date(integ.expires_at) - Date.now()) / 86400000) : null;
+                const expBadge = daysLeft !== null && daysLeft <= 7 ? `<span class="badge bg-label-warning">Expira em ${daysLeft}d</span>` : "";
+                const renewBtn = daysLeft !== null && daysLeft <= 7 && (status === "authorized" || status === "connected")
+                    ? `<button class="btn btn-sm btn-icon btn-outline-warning js-ga-renew" title="Renovar" data-customer="${customer.id_customer}"><i class="bx bx-refresh"></i></button>`
+                    : `<button class="btn btn-sm btn-icon btn-outline-warning" style="visibility:hidden;"><i class="bx bx-refresh"></i></button>`;
+
+                let subtitle = "Faça a autorização para listar properties.";
+                if (status === "authorized") subtitle = "OAuth autorizado. Falta selecionar a property.";
+                else if (status === "connected") subtitle = integ?.resource_name ? `Conectado: <strong>${integ.resource_name}</strong>` : "Conectado.";
+
+                const action =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-primary js-ga-select" data-customer="${customer.id_customer}">${status === "connected" ? "Trocar" : "Conectar"}</button>`
+                        : `<button class="btn btn-sm btn-primary js-ga-authorize" data-customer="${customer.id_customer}">Autorizar</button>`;
+
+                return `
+                    <div class="customer-platform-item">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                        <img class="platform-mini-icon" style="width:22px;height:22px" src="/assets/img/icons/brands/${platformIcons.google_analytics}" alt="Google Analytics">
+                        <div>
+                            <div class="fw-semibold">Google Analytics</div>
+                            <small class="text-muted">${subtitle}</small>
+                        </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                        ${badgeForIntegrationStatus(integ?.status)}
+                        ${expBadge}
+                        ${renewBtn}
+                        ${action}
+                        </div>
+                    </div>
+                    </div>
+                `;
+            }
+
             function renderIntegrationsPanel(customer) {
                 return `
                     <div class="alert alert-light border mb-3 py-2">
@@ -975,6 +1016,10 @@
                     <h6 class="mb-2">Meta (Facebook / Instagram)</h6>
                     ${renderMetaRow(customer, "facebook")}
                     ${renderMetaRow(customer, "instagram")}
+
+                    <h6 class="mb-2 mt-4">Google</h6>
+                    ${renderGaRow(customer)}
+
                     <h6 class="mb-2 mt-4">LinkedIn</h6>
                     ${renderLinkedinRow(customer)}
 
@@ -1158,14 +1203,80 @@
                 }
             }
 
+            async function openGaPropertyModal(id_customer) {
+                if (!metaModal) return;
+
+                showMetaError("");
+                metaSelect.innerHTML = "";
+                setMetaLoading(true, "Carregando...");
+
+                metaTitle.textContent = "Conectar Property do Google Analytics";
+                metaLabel.textContent = "Selecione a property";
+
+                metaModal.show();
+
+                try {
+                    const resp = await fetch(`/api/googleAnalytics/properties?id_customer=${encodeURIComponent(id_customer)}`);
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao listar properties");
+
+                    if (!data.properties || !data.properties.length) {
+                        metaSelect.innerHTML = `<option value="">Nenhuma property encontrada</option>`;
+                        setMetaLoading(false, "Conectar");
+                        return;
+                    }
+
+                    metaSelect.innerHTML = data.properties.map(p => `
+                    <option value="${p.id_property}" data-name="${(p.displayName || "").replace(/"/g, "&quot;")}">
+                        ${p.displayName} (ID: ${p.propertyIdNumber})
+                    </option>
+                    `).join("");
+
+                    setMetaLoading(false, "Conectar");
+
+                    metaSaveBtn.onclick = async () => {
+                        const opt = metaSelect.options[metaSelect.selectedIndex];
+                        const resource_id = opt?.value;
+                        const resource_name = opt?.dataset?.name || opt?.textContent || null;
+
+                        if (!resource_id) { showMetaError("Selecione uma property válida."); return; }
+
+                        try {
+                            setMetaLoading(true, "Conectando...");
+
+                            const r = await fetch("/api/googleAnalytics/connect", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ id_customer, resource_id, resource_name })
+                            });
+
+                            const j = await r.json();
+                            if (!r.ok || !j.success) throw new Error(j.message || "Erro ao conectar GA");
+
+                            metaModal.hide();
+                            window.location.href = `/myCustomersPage.html?open=${encodeURIComponent(id_customer)}`;
+                        } catch (err) {
+                            showMetaError(err.message || "Erro ao conectar.");
+                        } finally {
+                            setMetaLoading(false, "Conectar");
+                        }
+                    };
+                } catch (err) {
+                    showMetaError(err.message || "Erro ao carregar properties.");
+                    setMetaLoading(false, "Conectar");
+                }
+            }
+
             // Click handlers (event delegation)
             document.addEventListener("click", (e) => {
-                const metaAuthBtn = e.target.closest(".js-meta-authorize");
+                const gaAuthBtn = e.target.closest(".js-ga-authorize");
                 const linkedinAuthBtn = e.target.closest(".js-linkedin-authorize");
-                if (metaAuthBtn) {
-                    const id_customer = metaAuthBtn.dataset.customer;
+                const metaAuthBtn = e.target.closest(".js-meta-authorize");
+
+                if (gaAuthBtn) {
+                    const id_customer = gaAuthBtn.dataset.customer;
                     if (!id_customer) return;
-                    window.location.href = `/api/meta/auth?id_customer=${encodeURIComponent(id_customer)}`;
+                    window.location.href = `/api/googleAnalytics/auth?id_customer=${encodeURIComponent(id_customer)}`;
                     return;
                 }
                 if (linkedinAuthBtn) {
@@ -1174,13 +1285,19 @@
                     window.location.href = `/api/linkedin/auth?id_customer=${encodeURIComponent(id_customer)}`;
                     return;
                 }
+                if (metaAuthBtn) {
+                    const id_customer = metaAuthBtn.dataset.customer;
+                    if (!id_customer) return;
+                    window.location.href = `/api/meta/auth?id_customer=${encodeURIComponent(id_customer)}`;
+                    return;
+                }
 
-                const metaSelectBtn = e.target.closest(".js-meta-select");
-                if (metaSelectBtn) {
-                    const id_customer = metaSelectBtn.dataset.customer;
-                    const platform = metaSelectBtn.dataset.platform;
-                    if (!id_customer || !platform) return;
-                    openMetaResourceModal(id_customer, platform);
+                const gaSelectBtn = e.target.closest(".js-ga-select");
+                if (gaSelectBtn) {
+                    const id_customer = gaSelectBtn.dataset.customer;
+                    if (!id_customer) return;
+                    openGaPropertyModal(id_customer);
+                    return;
                 }
                 const linkedinSelectBtn = e.target.closest(".js-linkedin-select");
                 if (linkedinSelectBtn) {
@@ -1190,6 +1307,14 @@
                     openLinkedinOrganizationModal(id_customer);
                     return;
                 }
+                const metaSelectBtn = e.target.closest(".js-meta-select");
+                if (metaSelectBtn) {
+                    const id_customer = metaSelectBtn.dataset.customer;
+                    const platform = metaSelectBtn.dataset.platform;
+                    if (!id_customer || !platform) return;
+                    openMetaResourceModal(id_customer, platform);
+                }
+
             });
 
             async function loadCustomers() {

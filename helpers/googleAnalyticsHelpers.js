@@ -56,4 +56,36 @@ async function getValidAccessToken(userId) {
     }
 }
 
-module.exports = { getValidAccessToken };
+async function getValidAccessTokenCustomer(id_customer) {
+    const result = await pool.query(
+        "SELECT access_token, refresh_token, expires_at FROM customer_integrations WHERE id_customer = $1 AND platform = 'google_analytics'",
+        [id_customer]
+    );
+
+    if (result.rows.length === 0) throw new Error('Credenciais não encontradas para este cliente');
+
+    const { access_token, refresh_token, expires_at } = result.rows[0];
+    const now = new Date();
+
+    if (expires_at && new Date(expires_at) > now) return access_token;
+
+    oauth2Client.setCredentials({ refresh_token });
+
+    try {
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        const newAccessToken = credentials.access_token;
+        const newExpiresAt = new Date(Date.now() + (credentials.expiry_date ? (credentials.expiry_date - Date.now()) : (credentials.expires_in * 1000)));
+
+        await pool.query(
+            "UPDATE customer_integrations SET access_token = $1, expires_at = $2 WHERE id_customer = $3 AND platform = 'google_analytics'",
+            [newAccessToken, newExpiresAt, id_customer]
+        );
+
+        return newAccessToken;
+    } catch (err) {
+        console.error('Erro ao fazer refresh do token (GA customer):', err.response?.data || err.message);
+        throw new Error('Não foi possível atualizar o token');
+    }
+}
+
+module.exports = { getValidAccessToken, getValidAccessTokenCustomer };
