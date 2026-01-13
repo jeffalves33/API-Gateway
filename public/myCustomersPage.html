@@ -1005,6 +1005,47 @@
                 `;
             }
 
+            function renderYoutubeRow(customer) {
+                const integ = integrationOf(customer.integrations, "youtube");
+                const status = (integ?.status || "").toLowerCase();
+
+                const daysLeft = integ?.expires_at ? Math.ceil((new Date(integ.expires_at) - Date.now()) / 86400000) : null;
+                const expBadge = daysLeft !== null && daysLeft <= 7 ? `<span class="badge bg-label-warning">Expira em ${daysLeft}d</span>` : "";
+                const renewBtn = daysLeft !== null && daysLeft <= 7 && (status === "authorized" || status === "connected")
+                    ? `<button class="btn btn-sm btn-icon btn-outline-warning js-yt-renew" title="Renovar" data-customer="${customer.id_customer}"><i class="bx bx-refresh"></i></button>`
+                    : `<button class="btn btn-sm btn-icon btn-outline-warning" style="visibility:hidden;"><i class="bx bx-refresh"></i></button>`;
+
+                let subtitle = "Faça a autorização para listar canais.";
+                if (status === "authorized") subtitle = "OAuth autorizado. Falta selecionar o canal.";
+                else if (status === "connected") subtitle = integ?.resource_name ? `Conectado: <strong>${integ.resource_name}</strong>` : "Conectado.";
+
+                const action =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-primary js-yt-select" data-customer="${customer.id_customer}">${status === "connected" ? "Trocar" : "Conectar"}</button>`
+                        : `<button class="btn btn-sm btn-primary js-yt-authorize" data-customer="${customer.id_customer}">Autorizar</button>`;
+
+                return `
+                    <div class="customer-platform-item">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                        <img class="platform-mini-icon" style="width:22px;height:22px" src="/assets/img/icons/brands/${platformIcons.youtube}" alt="YouTube">
+                        <div>
+                            <div class="fw-semibold">YouTube</div>
+                            <small class="text-muted">${subtitle}</small>
+                        </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                        ${badgeForIntegrationStatus(integ?.status)}
+                        ${expBadge}
+                        ${renewBtn}
+                        ${action}
+                        </div>
+                    </div>
+                    </div>
+                `;
+            }
+
             function renderIntegrationsPanel(customer) {
                 return `
                     <div class="alert alert-light border mb-3 py-2">
@@ -1019,6 +1060,7 @@
 
                     <h6 class="mb-2 mt-4">Google</h6>
                     ${renderGaRow(customer)}
+                    ${renderYoutubeRow(customer)}
 
                     <h6 class="mb-2 mt-4">LinkedIn</h6>
                     ${renderLinkedinRow(customer)}
@@ -1267,11 +1309,76 @@
                 }
             }
 
+            async function openYoutubeChannelModal(id_customer) {
+                if (!metaModal) return;
+
+                showMetaError("");
+                metaSelect.innerHTML = "";
+                setMetaLoading(true, "Carregando...");
+
+                metaTitle.textContent = "Conectar Canal do YouTube";
+                metaLabel.textContent = "Selecione o canal";
+
+                metaModal.show();
+
+                try {
+                    const resp = await fetch(`/api/youtube/channels?id_customer=${encodeURIComponent(id_customer)}`);
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao listar canais");
+
+                    if (!data.channels || !data.channels.length) {
+                        metaSelect.innerHTML = `<option value="">Nenhum canal encontrado</option>`;
+                        setMetaLoading(false, "Conectar");
+                        return;
+                    }
+
+                    metaSelect.innerHTML = data.channels.map(c => `
+                    <option value="${c.id_channel}" data-name="${(c.title || "").replace(/"/g, "&quot;")}">
+                        ${c.title || c.id_channel}
+                    </option>
+                    `).join("");
+
+                    setMetaLoading(false, "Conectar");
+
+                    metaSaveBtn.onclick = async () => {
+                        const opt = metaSelect.options[metaSelect.selectedIndex];
+                        const resource_id = opt?.value;
+                        const resource_name = opt?.dataset?.name || opt?.textContent || null;
+
+                        if (!resource_id) { showMetaError("Selecione um canal válido."); return; }
+
+                        try {
+                            setMetaLoading(true, "Conectando...");
+
+                            const r = await fetch("/api/youtube/connect", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ id_customer, resource_id, resource_name })
+                            });
+
+                            const j = await r.json();
+                            if (!r.ok || !j.success) throw new Error(j.message || "Erro ao conectar YouTube");
+
+                            metaModal.hide();
+                            window.location.href = `/myCustomersPage.html?open=${encodeURIComponent(id_customer)}`;
+                        } catch (err) {
+                            showMetaError(err.message || "Erro ao conectar.");
+                        } finally {
+                            setMetaLoading(false, "Conectar");
+                        }
+                    };
+                } catch (err) {
+                    showMetaError(err.message || "Erro ao carregar canais.");
+                    setMetaLoading(false, "Conectar");
+                }
+            }
+
             // Click handlers (event delegation)
             document.addEventListener("click", (e) => {
                 const gaAuthBtn = e.target.closest(".js-ga-authorize");
                 const linkedinAuthBtn = e.target.closest(".js-linkedin-authorize");
                 const metaAuthBtn = e.target.closest(".js-meta-authorize");
+                const ytAuthBtn = e.target.closest(".js-yt-authorize");
 
                 if (gaAuthBtn) {
                     const id_customer = gaAuthBtn.dataset.customer;
@@ -1289,6 +1396,27 @@
                     const id_customer = metaAuthBtn.dataset.customer;
                     if (!id_customer) return;
                     window.location.href = `/api/meta/auth?id_customer=${encodeURIComponent(id_customer)}`;
+                    return;
+                }
+                if (ytAuthBtn) {
+                    const id_customer = ytAuthBtn.dataset.customer;
+                    if (!id_customer) return;
+                    window.location.href = `/api/youtube/auth?id_customer=${encodeURIComponent(id_customer)}`;
+                    return;
+                }
+
+                const gaRenewBtn = e.target.closest(".js-ga-renew");
+                if (gaRenewBtn) {
+                    const id_customer = gaRenewBtn.dataset.customer;
+                    if (!id_customer) return;
+                    window.location.href = `/api/googleAnalytics/auth?id_customer=${encodeURIComponent(id_customer)}`;
+                    return;
+                }
+                const ytRenewBtn = e.target.closest(".js-yt-renew");
+                if (ytRenewBtn) {
+                    const id_customer = ytRenewBtn.dataset.customer;
+                    if (!id_customer) return;
+                    window.location.href = `/api/youtube/auth?id_customer=${encodeURIComponent(id_customer)}`;
                     return;
                 }
 
@@ -1313,6 +1441,13 @@
                     const platform = metaSelectBtn.dataset.platform;
                     if (!id_customer || !platform) return;
                     openMetaResourceModal(id_customer, platform);
+                }
+                const ytSelectBtn = e.target.closest(".js-yt-select");
+                if (ytSelectBtn) {
+                    const id_customer = ytSelectBtn.dataset.customer;
+                    if (!id_customer) return;
+                    openYoutubeChannelModal(id_customer);
+                    return;
                 }
 
             });
