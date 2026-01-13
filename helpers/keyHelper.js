@@ -1,6 +1,6 @@
 // Arquivo: helpers/keyHelper.js
-const { checkCustomerBelongsToUser } = require('../repositories/customerRepository');
-const { getCustomerKeys } = require('../repositories/customerRepository');
+const { pool } = require('../config/db');
+const { checkCustomerBelongsToUser, getCustomerKeys } = require('../repositories/customerRepository');
 const { getUserKeys } = require('../repositories/userRepository');
 const { getValidAccessToken } = require('./googleAnalyticsHelpers');
 const cache = new Map();
@@ -125,25 +125,29 @@ const getFacebookCustomerKey = async (id_user, id_customer) => {
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
   try {
-    const customerFacebookKeys = await getCustomerKeys(id_customer);
+    const { rows } = await pool.query(
+      `
+      SELECT resource_id, resource_access_token, access_token
+      FROM customer_integrations
+      WHERE id_customer = $1 AND platform = 'facebook'
+      LIMIT 1
+      `,
+      [id_customer]
+    );
 
-    if (!customerFacebookKeys || !customerFacebookKeys.id_facebook_page || !customerFacebookKeys.access_token_page_facebook) {
-      return null;
-    }
+    const row = rows[0];
+    if (!row || !row.resource_id) return null;
 
-    const facebookKeys = {
-      page_id: customerFacebookKeys.id_facebook_page,
-      access_token: customerFacebookKeys.access_token_page_facebook
-    };
+    const token = row.resource_access_token || row.access_token;
+    if (!token) return null;
 
-    cache.set(cacheKey, {
-      data: facebookKeys,
-      expires: Date.now() + 1000 * 60 * 5
-    });
+    const facebookKeys = { page_id: row.resource_id, access_token: token };
+
+    cache.set(cacheKey, { data: facebookKeys, expires: Date.now() + 1000 * 60 * 5 });
 
     return facebookKeys;
   } catch (error) {
-    console.error('Erro ao buscar chaves do Facebook:', error);
+    console.error('Erro ao buscar chaves do Facebook (customer_integrations):', error);
     return null;
   }
 };

@@ -34,7 +34,7 @@ exports.getImpressions = async (pageId, accessToken, startDate, endDate, period 
   for (const [since, until] of splitDateRange(startDate, endDate, 30)) {
     const response = await axios.get(`${BASE_URL}/${pageId}/insights`, {
       params: {
-        metric: 'page_impressions',
+        metric: 'page_views_total',
         access_token: accessToken,
         period,
         since: formatDate(since),
