@@ -831,7 +831,8 @@
                 facebook: "facebook.png",
                 instagram: "instagram.png",
                 linkedin: "linkedin.png",
-                googleanalytics: "google-analytics.png"
+                google_analytics: "google-analytics.png",
+                youtube: "youtube.png"
             };
 
             function safeText(v) {
@@ -852,9 +853,7 @@
                 const connected = (integrations || []).filter(i => (i.status || "").toLowerCase() === "connected");
                 const uniquePlatforms = [...new Set(connected.map(i => i.platform))];
 
-                if (!uniquePlatforms.length) {
-                    return '<span class="text-muted small">—</span>';
-                }
+                if (!uniquePlatforms.length) return '<span class="text-muted small">—</span>';
 
                 return uniquePlatforms.map(p => {
                     const key = String(p).toLowerCase();
@@ -862,7 +861,7 @@
                     if (!icon) return "";
                     return `
                     <span class="me-1" title="${key}">
-                        <img class="platform-mini-icon" src="./assets/img/icons/brands/${icon}" alt="${key}">
+                        <img class="platform-mini-icon" src="/assets/img/icons/brands/${icon}" alt="${key}">
                     </span>
                     `;
                 }).join("");
@@ -904,13 +903,58 @@
                     <div class="customer-platform-item">
                     <div class="d-flex align-items-center justify-content-between gap-2">
                         <div class="d-flex align-items-center gap-2">
-                        <img class="platform-mini-icon" style="width:22px;height:22px"
-                            src="./assets/img/icons/brands/${platformIcons[platform]}" alt="${label}">
+                            <img class="platform-mini-icon" style="width:22px;height:22px"
+                                src="./assets/img/icons/brands/${platformIcons[platform]}" alt="${label}">
                         <div>
                             <div class="fw-semibold">${label}</div>
                             <small class="text-muted">${subtitle || ""}</small>
                         </div>
                         </div>
+                        <div class="d-flex align-items-center gap-2">
+                        ${badgeForIntegrationStatus(integ?.status)}
+                        ${action}
+                        </div>
+                    </div>
+                    </div>
+                `;
+            }
+
+            function renderLinkedinRow(customer) {
+                const integ = integrationOf(customer.integrations, "linkedin");
+                const status = (integ?.status || "").toLowerCase();
+
+                let subtitle = "Faça a autorização para conectar uma organização.";
+                if (status === "authorized") {
+                    subtitle = "OAuth autorizado. Falta selecionar a organização.";
+                } else if (status === "connected") {
+                    subtitle = integ?.resource_name
+                        ? `Conectado: <strong>${integ.resource_name}</strong>`
+                        : "Conectado.";
+                }
+
+                const action =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-primary js-linkedin-select"
+                            data-customer="${customer.id_customer}">
+                            ${status === "connected" ? "Trocar" : "Conectar"}
+                            </button>`
+                        : `<button class="btn btn-sm btn-primary js-linkedin-authorize"
+                            data-customer="${customer.id_customer}">
+                            Autorizar
+                        </button>`;
+
+                return `
+                    <div class="customer-platform-item">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                        <img class="platform-mini-icon" style="width:22px;height:22px"
+                            src="/assets/img/icons/brands/${platformIcons.linkedin}" alt="LinkedIn">
+                        <div>
+                            <div class="fw-semibold">LinkedIn</div>
+                            <small class="text-muted">${subtitle}</small>
+                        </div>
+                        </div>
+
                         <div class="d-flex align-items-center gap-2">
                         ${badgeForIntegrationStatus(integ?.status)}
                         ${action}
@@ -931,6 +975,9 @@
                     <h6 class="mb-2">Meta (Facebook / Instagram)</h6>
                     ${renderMetaRow(customer, "facebook")}
                     ${renderMetaRow(customer, "instagram")}
+                    <h6 class="mb-2 mt-4">LinkedIn</h6>
+                    ${renderLinkedinRow(customer)}
+
                 `;
             }
 
@@ -1035,23 +1082,113 @@
                 }
             }
 
+            async function openLinkedinOrganizationModal(id_customer) {
+                if (!metaModal) return;
+
+                showMetaError("");
+                metaSelect.innerHTML = "";
+                setMetaLoading(true, "Carregando...");
+
+                metaTitle.textContent = "Conectar Página do LinkedIn";
+                metaLabel.textContent = "Selecione a página";
+
+                metaModal.show();
+
+                try {
+                    const resp = await fetch(`/api/linkedin/organizations?id_customer=${encodeURIComponent(id_customer)}`);
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao listar páginas LinkedIn");
+
+                    if (!data.organizations || !data.organizations.length) {
+                        metaSelect.innerHTML =
+                            `<option value="">Nenhuma página encontrada</option>`;
+                        setMetaLoading(false, "Conectar");
+                        return;
+                    }
+
+                    metaSelect.innerHTML = data.organizations.map(org => `
+                    <option
+                        value="${org.id}"
+                        data-name="${org.name.replace(/"/g, "&quot;")}"
+                    >
+                        ${org.name}
+                    </option>
+                    `).join("");
+
+                    setMetaLoading(false, "Conectar");
+
+                    metaSaveBtn.onclick = async () => {
+                        const opt = metaSelect.options[metaSelect.selectedIndex];
+                        const resource_id = opt?.value;
+                        const resource_name = opt?.dataset?.name;
+
+                        if (!resource_id) {
+                            showMetaError("Selecione uma página válida.");
+                            return;
+                        }
+
+                        try {
+                            setMetaLoading(true, "Conectando...");
+
+                            const r = await fetch("/api/linkedin/connect", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    id_customer,
+                                    resource_id,
+                                    resource_name
+                                })
+                            });
+
+                            const j = await r.json();
+                            if (!r.ok || !j.success) throw new Error(j.message || "Erro ao conectar LinkedIn");
+
+                            metaModal.hide();
+                            window.location.href = `/myCustomersPage.html?open=${encodeURIComponent(id_customer)}`;
+                        } catch (err) {
+                            showMetaError(err.message || "Erro ao conectar.");
+                        } finally {
+                            setMetaLoading(false, "Conectar");
+                        }
+                    };
+                } catch (err) {
+                    showMetaError(err.message || "Erro ao carregar páginas.");
+                    setMetaLoading(false, "Conectar");
+                }
+            }
+
             // Click handlers (event delegation)
             document.addEventListener("click", (e) => {
-                const authBtn = e.target.closest(".js-meta-authorize");
-                if (authBtn) {
-                    const id_customer = authBtn.dataset.customer;
+                const metaAuthBtn = e.target.closest(".js-meta-authorize");
+                const linkedinAuthBtn = e.target.closest(".js-linkedin-authorize");
+                if (metaAuthBtn) {
+                    const id_customer = metaAuthBtn.dataset.customer;
                     if (!id_customer) return;
-                    // OAuth Meta (vale pra FB e IG junto)
                     window.location.href = `/api/meta/auth?id_customer=${encodeURIComponent(id_customer)}`;
                     return;
                 }
+                if (linkedinAuthBtn) {
+                    const id_customer = linkedinAuthBtn.dataset.customer;
+                    if (!id_customer) return;
+                    window.location.href = `/api/linkedin/auth?id_customer=${encodeURIComponent(id_customer)}`;
+                    return;
+                }
 
-                const selectBtn = e.target.closest(".js-meta-select");
-                if (selectBtn) {
-                    const id_customer = selectBtn.dataset.customer;
-                    const platform = selectBtn.dataset.platform;
+                const metaSelectBtn = e.target.closest(".js-meta-select");
+                if (metaSelectBtn) {
+                    const id_customer = metaSelectBtn.dataset.customer;
+                    const platform = metaSelectBtn.dataset.platform;
                     if (!id_customer || !platform) return;
                     openMetaResourceModal(id_customer, platform);
+                }
+                const linkedinSelectBtn = e.target.closest(".js-linkedin-select");
+                if (linkedinSelectBtn) {
+                    const id_customer = linkedinSelectBtn.dataset.customer;
+                    if (!id_customer) return;
+
+                    openLinkedinOrganizationModal(id_customer);
+                    return;
                 }
             });
 
@@ -1059,7 +1196,6 @@
                 const resp = await fetch("/customer/list");
                 const data = await resp.json();
                 const customers = data.customers || [];
-                console.log("🚀 ~ loadCustomers ~ customers1: ", customers)
 
                 tbody.innerHTML = "";
 

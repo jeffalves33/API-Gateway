@@ -11,15 +11,24 @@ const LINKEDIN_REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/linkedin/au
 
 // 1) Início do OAuth
 exports.startOAuth = (req, res) => {
-    const scopes = [
-        'r_organization_social', 'rw_organization_admin', 'r_basicprofile'
-    ];
+    console.log("startOAuth")
+    const { id_customer } = req.query;
+    if (!id_customer) return res.status(400).send('id_customer é obrigatório');
+
+    const scopes = ['r_organization_social', 'rw_organization_admin', 'r_basicprofile'];
+
+    const state = Buffer.from(
+        JSON.stringify({
+            id_user: req.user.id,
+            id_customer
+        })
+    ).toString('base64');
 
     const authUrl = `https://www.linkedin.com/oauth/v2/authorization?` + querystring.stringify({
         response_type: 'code',
         client_id: LINKEDIN_CLIENT_ID,
         redirect_uri: LINKEDIN_REDIRECT_URI,
-        state: req.user.id,
+        state: state,
         scope: scopes.join(' ')
     });
 
@@ -29,8 +38,11 @@ exports.startOAuth = (req, res) => {
 // 2) Callback do OAuth
 exports.handleOAuthCallback = async (req, res) => {
     const { code, state, error, error_description } = req.query;
-    const id_user = state || req.user?.id;
     if (error) return res.redirect(`/platformsPage.html?li_error=${encodeURIComponent(error_description || error)}`);
+    const payload = JSON.parse(
+        Buffer.from(state, 'base64').toString('utf8')
+    );
+    const { id_user, id_customer } = payload;
 
     try {
         const tokenRes = await axios.post(
@@ -57,23 +69,37 @@ exports.handleOAuthCallback = async (req, res) => {
         const id_user_linkedin = meRes.data.id;
 
         await pool.query(
-            `INSERT INTO user_keys(
-                id_user,
+            `
+                INSERT INTO customer_integrations (
+                    id_customer,
+                    platform,
+                    oauth_account_id,
+                    access_token,
+                    refresh_token,
+                    expires_at,
+                    refresh_expires_at,
+                    status
+                ) VALUES ($1, 'linkedin', $2, $3, $4, $5, $6, 'authorized')
+                ON CONFLICT (id_customer, platform)
+                DO UPDATE SET
+                    oauth_account_id = EXCLUDED.oauth_account_id,
+                    access_token = EXCLUDED.access_token,
+                    refresh_token = EXCLUDED.refresh_token,
+                    expires_at = EXCLUDED.expires_at,
+                    refresh_expires_at = EXCLUDED.refresh_expires_at,
+                    status = 'authorized'
+            `,
+            [
+                id_customer,
                 id_user_linkedin,
-                access_token_linkedin,
-                refresh_token_linkedin,
-                expires_at_linkedin,
-                refresh_token_expires_at_linkedin
-            ) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (id_user) DO UPDATE SET
-                id_user_linkedin = EXCLUDED.id_user_linkedin,
-                access_token_linkedin = EXCLUDED.access_token_linkedin,
-                refresh_token_linkedin = EXCLUDED.refresh_token_linkedin,
-                expires_at_linkedin = EXCLUDED.expires_at_linkedin,
-                refresh_token_expires_at_linkedin = EXCLUDED.refresh_token_expires_at_linkedin`,
-            [id_user, id_user_linkedin, access_token, refresh_token, expires_at, refresh_token_expires_at]
+                access_token,
+                refresh_token,
+                expires_at,
+                refresh_token_expires_at
+            ]
         );
 
-        return res.redirect('/platformsPage.html');
+        return res.redirect(`/myCustomersPage.html?open=${id_customer}`);
     } catch (err) {
         return res.status(500).send('Erro ao autenticar com o LinkedIn');
     }
@@ -106,13 +132,27 @@ exports.checkStatus = async (req, res) => {
     }
 };
 
-// 4) Listar páginas (organizations) em que o usuário é ADMIN
+// 4) Listar organizations em que o usuário é ADMIN (por CLIENTE)
 exports.getOrganizations = async (req, res) => {
     try {
-        const id_user = req.user.id;
-        const token = await getValidLinkedInAccessToken(id_user);
+        const { id_customer } = req.query;
+        if (!id_customer) return res.status(400).json({ success: false, message: 'id_customer é obrigatório' });
 
-        // Passo A: buscar ACLs onde o membro é ADMINISTRATOR
+        const { rows } = await pool.query(
+            `
+                SELECT access_token, expires_at
+                FROM customer_integrations
+                WHERE id_customer = $1 AND platform = 'linkedin'
+            `,
+            [id_customer]
+        );
+
+        const row = rows[0];
+        if (!row?.access_token) return res.status(400).json({ success: false, message: 'LinkedIn não autorizado para este cliente.' });
+
+        const token = row.access_token;
+
+        // ACLs onde o membro é ADMINISTRATOR
         const aclsRes = await axios.get(
             'https://api.linkedin.com/rest/organizationAcls?q=roleAssignee&state=APPROVED',
             { headers: liHeaders(token) }
@@ -122,24 +162,53 @@ exports.getOrganizations = async (req, res) => {
             .map(e => e.organization)
             .filter(Boolean);
 
-        if (!orgUrns.length) return res.json({ organizations: [] });
+        if (!orgUrns.length) return res.json({ success: true, organizations: [] });
 
-        const ids = orgUrns.map(u => u.replace('urn:li:organization:', ''));
+        const ids = orgUrns.map(u => String(u).replace('urn:li:organization:', ''));
+
         const orgsData = await Promise.all(
-            ids.map(id => axios.get(`https://api.linkedin.com/rest/organizations/${id}`, { headers: liHeaders(token) }))
+            ids.map(id => axios.get(
+                `https://api.linkedin.com/rest/organizations/${id}`,
+                { headers: liHeaders(token) }
+            ))
         );
 
         const organizations = orgsData.map(({ data: o }) => ({
-            urn: `urn:li:organization:${o.id}`,
             id: o.id,
-            name: o.localizedName || o.vanityName || String(o.id),
-            vanityName: o.vanityName || null,
-            access_token: token
+            name: o.localizedName || o.vanityName || String(o.id)
         }));
 
-        res.json({ linkedin: organizations });
+        return res.json({ success: true, organizations });
     } catch (err) {
         console.error('Erro ao listar organizations do LinkedIn:', err.response?.data || err.message);
-        res.status(500).json({ message: 'Erro ao buscar páginas do LinkedIn' });
+        return res.status(500).json({ success: false, message: 'Erro ao buscar páginas do LinkedIn' });
+    }
+};
+
+
+exports.connectOrganization = async (req, res) => {
+    try {
+        const { id_customer, resource_id, resource_name } = req.body;
+
+        if (!id_customer || !resource_id) return res.status(400).json({ success: false, message: 'id_customer e resource_id são obrigatórios' });
+
+        await pool.query(
+            `
+                UPDATE customer_integrations
+                SET
+                resource_id = $1,
+                resource_name = $2,
+                resource_type = 'linkedin_organization',
+                status = 'connected'
+                WHERE id_customer = $3 AND platform = 'linkedin'
+            `,
+            [resource_id, resource_name || null, id_customer]
+        );
+
+        // Por agora: SEM ingestão (pra não quebrar o fluxo)
+        return res.json({ success: true });
+    } catch (err) {
+        console.error('Erro connect LinkedIn:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao conectar LinkedIn' });
     }
 };

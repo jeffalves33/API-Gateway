@@ -6,7 +6,12 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 
 router.get('/auth', authenticateToken, linkedinController.startOAuth);
 router.get('/auth/callback', linkedinController.handleOAuthCallback);
-router.get('/status', authenticateToken, linkedinController.checkStatus);
+
+// lista organizations para o cliente
 router.get('/organizations', authenticateToken, linkedinController.getOrganizations);
+
+// conecta organization escolhida
+router.post('/connect', authenticateToken, linkedinController.connectOrganization);
+
 
 module.exports = router;
