@@ -165,25 +165,29 @@ const getInstagramCustomerKey = async (id_user, id_customer) => {
   if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
 
   try {
-    const customerInstagramKeys = await getCustomerKeys(id_customer);
+    const { rows } = await pool.query(
+      `
+        SELECT resource_id, resource_access_token, access_token
+        FROM customer_integrations
+        WHERE id_customer = $1 AND platform = 'instagram'
+        LIMIT 1
+      `,
+      [id_customer]
+    );
 
-    if (!customerInstagramKeys || !customerInstagramKeys.id_instagram_page || !customerInstagramKeys.access_token_page_instagram) {
-      return null;
-    }
+    const row = rows[0];
+    if (!row || !row.resource_id) return null;
 
-    const instagramKeys = {
-      page_id: customerInstagramKeys.id_instagram_page,
-      access_token: customerInstagramKeys.access_token_page_instagram
-    };
+    const token = row.resource_access_token || row.access_token;
+    if (!token) return null;
 
-    cache.set(cacheKey, {
-      data: instagramKeys,
-      expires: Date.now() + 1000 * 60 * 5
-    });
+    const instagramKeys = { page_id: row.resource_id, access_token: token };
+
+    cache.set(cacheKey, { data: instagramKeys, expires: Date.now() + 1000 * 60 * 5 });
 
     return instagramKeys;
   } catch (error) {
-    console.error('Erro ao buscar chaves do Instagram:', error);
+    console.error('Erro ao buscar chaves do Instagram (customer_integrations):', error);
     return null;
   }
 };
