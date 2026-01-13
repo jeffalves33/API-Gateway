@@ -1,7 +1,7 @@
 // Arquivo: controllers/youtubeController.js
 const { google } = require('googleapis')
 const { pool } = require('../config/db');
-const { getValidYouTubeClient } = require('../helpers/youtubeHelpers');
+const { getValidYouTubeClientCustomer } = require('../helpers/youtubeHelpers');
 require('dotenv').config();
 
 const GOOGLE_CLIENT_ID = '950435540090-5afqh5jkq3b804ru5ej86s5q8g8gap20.apps.googleusercontent.com'
