@@ -631,6 +631,36 @@
                     </div>
                 </div>
 
+                <!-- Modal: Modal de Exclusão de Cliente -->
+                <div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Remover cliente</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Fechar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <input type="hidden" id="delete_id_customer" />
+                                <p class="mb-0">Tem certeza? Todos os dados e históricos deste cliente serão removidos.
+                                </p>
+                                <div id="deleteCustomerAlert" class="mt-3"></div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-danger" id="confirmDeleteCustomerBtn">
+                                    <span id="deleteCustomerBtnText">Remover</span>
+                                    <span id="deleteCustomerSpinner" class="spinner-border spinner-border-sm d-none"
+                                        role="status" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <!-- / Layout page -->
         </div>
@@ -1499,6 +1529,10 @@
                     const editBtn = node.querySelector(".edit_client");
                     if (editBtn && c.id_customer) editBtn.dataset.id = c.id_customer;
 
+                    // seta ids no botão remover já existente
+                    const removeBtn = node.querySelector(".remove-client");
+                    if (removeBtn && c.id_customer) removeBtn.dataset.id = c.id_customer;
+
                     tbody.appendChild(node);
                 });
 
@@ -1640,6 +1674,76 @@
                     setTimeout(() => location.reload(), 400);
                 } catch (err) {
                     showAlert("danger", err.message || "Erro ao atualizar cliente.");
+                } finally {
+                    setLoading(false);
+                }
+            });
+        });
+    </script>
+    <!-- Remover cliente -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const modalEl = document.getElementById("deleteCustomerModal");
+            const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+            const idEl = document.getElementById("delete_id_customer");
+            const btn = document.getElementById("confirmDeleteCustomerBtn");
+            const btnText = document.getElementById("deleteCustomerBtnText");
+            const spinner = document.getElementById("deleteCustomerSpinner");
+            const alertBox = document.getElementById("deleteCustomerAlert");
+
+            let rowMain = null;
+            let rowDetails = null;
+
+            const setLoading = (loading) => {
+                if (!btn) return;
+                btn.disabled = loading;
+                if (spinner) spinner.classList.toggle("d-none", !loading);
+                if (btnText) btnText.textContent = loading ? "Removendo..." : "Remover";
+            };
+
+            const showAlert = (type, msg) => {
+                if (!alertBox) return;
+                alertBox.innerHTML = `<div class="alert alert-${type} mb-0" role="alert">${msg}</div>`;
+            };
+
+            document.addEventListener("click", (e) => {
+                const a = e.target.closest(".remove-client");
+                if (!a) return;
+
+                e.preventDefault();
+
+                const id_customer = a.dataset.id;
+                if (!id_customer) return;
+
+                rowMain = a.closest("tr");
+                rowDetails = rowMain ? rowMain.nextElementSibling : null;
+
+                if (idEl) idEl.value = id_customer;
+                if (alertBox) alertBox.innerHTML = "";
+
+                modal?.show();
+            });
+
+            btn?.addEventListener("click", async () => {
+                const id_customer = idEl?.value;
+                if (!id_customer) return;
+
+                setLoading(true);
+
+                try {
+                    const resp = await fetch(`/customer/delete/${id_customer}`, { method: "DELETE" });
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao remover cliente.");
+
+                    modal?.hide();
+
+                    // remove da tela sem reload
+                    if (rowDetails && rowDetails.classList && rowDetails.classList.contains("customer-details-row")) rowDetails.remove();
+                    if (rowMain) rowMain.remove();
+                } catch (err) {
+                    showAlert("danger", err.message || "Erro ao remover cliente.");
                 } finally {
                     setLoading(false);
                 }
