@@ -1,6 +1,6 @@
 // Arquivo: controllers/customerController.js
-const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer } = require('../repositories/customerRepository');
-const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys } = require('../helpers/keyHelper');
+const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer, checkCustomerBelongsToUser } = require('../repositories/customerRepository');
+const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys, clearCacheForUser } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 
 /*const addCustomer = async (req, res) => {
@@ -56,7 +56,12 @@ const deleteCustomerById = async (req, res) => {
     const id_user = req.user.id;
     const id_customer = req.params.id_customer;
 
+    const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
+    if (!belongs) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário autenticado.' });
+
     await deleteCustomer(id_customer);
+
+    clearCacheForUser(id_user);
 
     res.status(200).json({ success: true, message: 'Cliente excluido com sucesso' });
   } catch (error) {
