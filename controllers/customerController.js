@@ -1,5 +1,5 @@
 // Arquivo: controllers/customerController.js
-const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer, checkCustomerBelongsToUser } = require('../repositories/customerRepository');
+const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removeCustomerPlatformAuth, updateCustomer, checkCustomerBelongsToUser } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys, clearCacheForUser } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
 
@@ -115,30 +115,26 @@ const refreshCustomerKeys = async (req, res) => {
   }
 };
 
-const removePlatformCustomer = async (req, res) => {
+const removePlatformCustomerById = async (req, res) => {
   try {
     const id_user = req.user.id;
-    const platform = req.params.platform.toLowerCase();
+    const id_customer = req.params.id_customer;
+    const platform = (req.params.platform || '').toLowerCase();
 
-    const customers = await getCustomersByUserId(id_user);
-    const hasCustomers = Array.isArray(customers) && customers.length > 0;
+    const allowed = ['facebook', 'instagram', 'linkedin', 'google_analytics', 'youtube'];
+    if (!allowed.includes(platform)) return res.status(400).json({ success: false, message: 'Plataforma inválida' });
 
-    if (hasCustomers) {
-      for (const customer of customers) {
-        await removePlatformFromCustomer(platform, customer, id_user);
-      }
-    }
+    const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
+    if (!belongs) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário autenticado.' });
 
-    await removePlatformFromUser(platform, id_user);
+    await removeCustomerPlatformAuth(id_customer, platform);
 
-    const msg = hasCustomers
-      ? 'Plataforma removida dos clientes e desconectada do usuário com sucesso'
-      : 'Plataforma desconectada do usuário com sucesso';
+    clearCacheForUser(id_user);
 
-    return res.status(200).json({ success: true, message: msg });
+    return res.status(200).json({ success: true, message: 'Plataforma desconectada do cliente com sucesso' });
   } catch (error) {
-    console.error('Erro ao remover plataforma do cliente/usuário:', error);
-    return res.status(500).json({ success: false, message: error.message || 'Erro ao remover plataforma' });
+    console.error('Erro ao desconectar plataforma do cliente:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Erro ao desconectar plataforma' });
   }
 };
 
@@ -173,4 +169,4 @@ const updateCustomerById = async (req, res) => {
   }
 };
 
-module.exports = { addCustomer, deleteCustomerById, getCustomerById, getCustomersByUser, getCustomersList, refreshCustomerKeys, removePlatformCustomer, updateCustomerById };
+module.exports = { addCustomer, deleteCustomerById, getCustomerById, getCustomersByUser, getCustomersList, refreshCustomerKeys, removePlatformCustomerById, updateCustomerById };

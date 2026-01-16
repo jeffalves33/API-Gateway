@@ -1467,6 +1467,30 @@
             const removePlatformModal = removePlatformModalEl ? new bootstrap.Modal(removePlatformModalEl) : null;
             const removePlatformCustomerId = document.getElementById("removePlatformCustomerId");
             const removePlatformName = document.getElementById("removePlatformName");
+            const removePlatformConfirmBtn = document.getElementById("removePlatformConfirmBtn");
+
+            removePlatformConfirmBtn?.addEventListener("click", async () => {
+                const id_customer = removePlatformCustomerId?.value;
+                const platform = removePlatformName?.value;
+                if (!id_customer || !platform) return;
+
+                removePlatformConfirmBtn.disabled = true;
+
+                try {
+                    const resp = await fetch(`/customer/remove/${encodeURIComponent(id_customer)}/${encodeURIComponent(platform)}`, { method: "DELETE" });
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao remover plataforma.");
+
+                    if (removePlatformModal) removePlatformModal.hide();
+
+                    window.location.href = `/myCustomersPage.html?open=${encodeURIComponent(id_customer)}`;
+                } catch (e) {
+                    alert(e.message || "Erro ao remover plataforma.");
+                } finally {
+                    removePlatformConfirmBtn.disabled = false;
+                }
+            });
 
             document.addEventListener("click", (e) => {
                 const gaAuthBtn = e.target.closest(".js-ga-authorize");

@@ -106,18 +106,45 @@ const getCustomersListByUserId = async (id_user) => {
   return result.rows;
 };
 
-const removePlatformFromCustomer = async (platform, customer, id_user) => {
+const removeCustomerPlatformAuth = async (id_customer, platform) => {
+  const client = await pool.connect();
   try {
-    const { id_customer } = customer;
+    await client.query('BEGIN');
 
-    if (platform === 'facebook') await clearFacebookDataCustomer(id_customer, id_user);
-    if (platform === 'google') await clearGoogleAnalyticsDataCustomer(id_customer, id_user);
-    if (platform === 'instagram') await clearInstagramDataCustomer(id_customer, id_user);
-    if (platform === 'linkedin') await clearLinkedinDataCustomer(id_customer, id_user);
+    // 1) Limpa auth + recurso (somente desta plataforma)
+    await client.query(
+      `
+      UPDATE customer_integrations
+      SET
+        oauth_account_id = NULL,
+        access_token = NULL,
+        refresh_token = NULL,
+        resource_access_token = NULL,
+        expires_at = NULL,
+        refresh_expires_at = NULL,
+        scopes = NULL,
+        resource_id = NULL,
+        resource_name = NULL,
+        resource_type = NULL,
+        status = 'not_authorized'
+      WHERE id_customer = $1 AND platform = $2
+      `,
+      [id_customer, platform]
+    );
 
-  } catch (error) {
-    console.error(`Erro ao limpar dados do cliente ${customer.id_customer}:`, error);
-    throw error;
+    // 2) Limpa dados históricos (somente da plataforma escolhida)
+    if (platform === 'facebook') await client.query('DELETE FROM facebook WHERE id_customer = $1', [id_customer]);
+    else if (platform === 'instagram') await client.query('DELETE FROM instagram WHERE id_customer = $1', [id_customer]);
+    else if (platform === 'linkedin') await client.query('DELETE FROM linkedin WHERE id_customer = $1', [id_customer]);
+    else if (platform === 'google_analytics') await client.query('DELETE FROM google_analytics WHERE id_customer = $1', [id_customer]);
+    else if (platform === 'youtube') await client.query('DELETE FROM youtube WHERE id_customer = $1', [id_customer]);
+
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
   }
 };
 
@@ -146,4 +173,4 @@ const updateCustomer = async (id_customer, id_user, name, email, company, phone)
 };
 
 
-module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, getCustomersListByUserId, removePlatformFromCustomer, removePlatformFromUser, updateCustomer };
+module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, getCustomersListByUserId, removeCustomerPlatformAuth, removePlatformFromUser, updateCustomer };
