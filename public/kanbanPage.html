@@ -347,6 +347,18 @@
                                                 <i class="bx bx-target-lock me-1"></i> Metas & Objetivos
                                             </button>
                                         </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tab-clientes" data-bs-toggle="tab"
+                                                data-bs-target="#pane-clientes" type="button" role="tab">
+                                                <i class="bx bx-buildings me-1"></i>Clientes
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tab-equipe" data-bs-toggle="tab"
+                                                data-bs-target="#pane-equipe" type="button" role="tab">
+                                                <i class="bx bx-group me-1"></i>Equipe
+                                            </button>
+                                        </li>
                                     </ul>
 
                                     <div class="tab-content" id="kanbanTabsContent">
@@ -493,14 +505,14 @@
                                                                 <div class="d-flex align-items-center gap-2">
                                                                     <span class="badge bg-label-secondary"><i
                                                                             class="bx bi-box"></i></span>
-                                                                    <div class="fw-medium">Backlog</div>
+                                                                    <div class="fw-medium">A Produzir</div>
                                                                     <span class="text-muted"
-                                                                        id="count-backlog">(0)</span>
+                                                                        id="count-produce">(0)</span>
                                                                 </div>
                                                                 <small class="text-muted">Briefing</small>
                                                             </div>
                                                             <div class="card-body pt-2">
-                                                                <div class="kb-dropzone" data-status="backlog"></div>
+                                                                <div class="kb-dropzone" data-status="produce"></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -624,116 +636,292 @@
                                             </div>
                                         </div>
 
-                                    </div>
+                                        <!-- =================== METAS =================== -->
+                                        <div class="tab-pane fade" id="pane-metas" role="tabpanel"
+                                            aria-labelledby="tab-metas" tabindex="0">
 
-                                    <!-- =================== METAS =================== -->
-                                    <div class="tab-pane fade" id="pane-metas" role="tabpanel"
-                                        aria-labelledby="tab-metas" tabindex="0">
+                                            <div class="row g-3">
+                                                <div class="col-12 col-xl-4">
+                                                    <div class="card border">
+                                                        <div class="card-header">
+                                                            <h5 class="mb-0"><i
+                                                                    class="bx bx-bar-chart-alt-2 me-2"></i>Visão
+                                                                do time
+                                                            </h5>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="mb-3">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span class="text-muted">Entregas no prazo
+                                                                        (meta)</span>
+                                                                    <span class="fw-medium" id="goal-team-ontime">0% /
+                                                                        90%</span>
+                                                                </div>
+                                                                <div class="progress mt-2" style="height: 10px;">
+                                                                    <div id="bar-team-ontime" class="progress-bar"
+                                                                        role="progressbar" style="width: 0%"></div>
+                                                                </div>
+                                                            </div>
 
-                                        <div class="row g-3">
-                                            <div class="col-12 col-xl-4">
-                                                <div class="card border">
-                                                    <div class="card-header">
-                                                        <h5 class="mb-0"><i class="bx bx-bar-chart-alt-2 me-2"></i>Visão
-                                                            do time
-                                                        </h5>
+                                                            <div class="mb-3">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span class="text-muted">Qualidade média
+                                                                        (meta)</span>
+                                                                    <span class="fw-medium" id="goal-team-quality">0 /
+                                                                        85</span>
+                                                                </div>
+                                                                <div class="progress mt-2" style="height: 10px;">
+                                                                    <div id="bar-team-quality" class="progress-bar"
+                                                                        role="progressbar" style="width: 0%"></div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb-0">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span class="text-muted">Retrabalho (meta
+                                                                        máx.)</span>
+                                                                    <span class="fw-medium" id="goal-team-rework">0 /
+                                                                        10</span>
+                                                                </div>
+                                                                <div class="progress mt-2" style="height: 10px;">
+                                                                    <div id="bar-team-rework" class="progress-bar"
+                                                                        role="progressbar" style="width: 0%"></div>
+                                                                </div>
+                                                            </div>
+
+                                                            <hr />
+
+                                                            <div class="small text-muted">
+                                                                * “Qualidade” (mock) = 100 - retrabalho - atraso.
+                                                            </div>
+
+                                                            <hr class="my-3" />
+
+                                                            <div
+                                                                class="d-flex justify-content-between align-items-center mb-2">
+                                                                <div class="fw-semibold">Resultados por cliente</div>
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    id="kb-goals-config">
+                                                                    <i class="bx bx-cog me-1"></i>Definir metas
+                                                                </button>
+                                                            </div>
+                                                            <div id="kb-goals-clients" class="d-flex flex-column gap-2">
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div class="card-body">
-                                                        <div class="mb-3">
-                                                            <div class="d-flex justify-content-between">
-                                                                <span class="text-muted">Entregas no prazo
-                                                                    (meta)</span>
-                                                                <span class="fw-medium" id="goal-team-ontime">0% /
-                                                                    90%</span>
-                                                            </div>
-                                                            <div class="progress mt-2" style="height: 10px;">
-                                                                <div id="bar-team-ontime" class="progress-bar"
-                                                                    role="progressbar" style="width: 0%"></div>
-                                                            </div>
-                                                        </div>
+                                                </div>
 
-                                                        <div class="mb-3">
-                                                            <div class="d-flex justify-content-between">
-                                                                <span class="text-muted">Qualidade média
-                                                                    (meta)</span>
-                                                                <span class="fw-medium" id="goal-team-quality">0 /
-                                                                    85</span>
-                                                            </div>
-                                                            <div class="progress mt-2" style="height: 10px;">
-                                                                <div id="bar-team-quality" class="progress-bar"
-                                                                    role="progressbar" style="width: 0%"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-0">
-                                                            <div class="d-flex justify-content-between">
-                                                                <span class="text-muted">Retrabalho (meta
-                                                                    máx.)</span>
-                                                                <span class="fw-medium" id="goal-team-rework">0 /
-                                                                    10</span>
-                                                            </div>
-                                                            <div class="progress mt-2" style="height: 10px;">
-                                                                <div id="bar-team-rework" class="progress-bar"
-                                                                    role="progressbar" style="width: 0%"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <hr />
-
-                                                        <div class="small text-muted">
-                                                            * “Qualidade” (mock) = 100 - retrabalho - atraso.
-                                                        </div>
-
-                                                        <hr class="my-3" />
-
+                                                <div class="col-12 col-xl-8">
+                                                    <div class="card border">
                                                         <div
-                                                            class="d-flex justify-content-between align-items-center mb-2">
-                                                            <div class="fw-semibold">Resultados por cliente</div>
-                                                            <button class="btn btn-sm btn-outline-primary"
-                                                                id="kb-goals-config">
-                                                                <i class="bx bx-cog me-1"></i>Definir metas
+                                                            class="card-header d-flex align-items-center justify-content-between">
+                                                            <h5 class="mb-0"><i class="bx bx-user-check me-2"></i>Metas
+                                                                por pessoa</h5>
+                                                            <button class="btn btn-outline-secondary btn-sm"
+                                                                id="kb-reset-mock">
+                                                                <i class="bx bx-reset me-1"></i> Reset mock
                                                             </button>
                                                         </div>
-                                                        <div id="kb-goals-clients" class="d-flex flex-column gap-2">
+                                                        <div class="card-body">
+                                                            <div class="table-responsive text-nowrap">
+                                                                <table class="table table-hover align-middle">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Pessoa</th>
+                                                                            <th>On-time</th>
+                                                                            <th>Qualidade</th>
+                                                                            <th>Retrabalho</th>
+                                                                            <th>Tempo (estimado x real)</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="goals-table-body"></tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="col-12 col-xl-8">
-                                                <div class="card border">
-                                                    <div
-                                                        class="card-header d-flex align-items-center justify-content-between">
-                                                        <h5 class="mb-0"><i class="bx bx-user-check me-2"></i>Metas
-                                                            por pessoa</h5>
-                                                        <button class="btn btn-outline-secondary btn-sm"
-                                                            id="kb-reset-mock">
-                                                            <i class="bx bx-reset me-1"></i> Reset mock
-                                                        </button>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="table-responsive text-nowrap">
-                                                            <table class="table table-hover align-middle">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>Pessoa</th>
-                                                                        <th>On-time</th>
-                                                                        <th>Qualidade</th>
-                                                                        <th>Retrabalho</th>
-                                                                        <th>Tempo (estimado x real)</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="goals-table-body"></tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
 
                                         </div>
 
-                                    </div>
+                                        <!-- ============ TAB: CLIENTES ============ -->
+                                        <div class="tab-pane fade" id="pane-clientes" role="tabpanel"
+                                            aria-labelledby="tab-clientes">
+                                            <div class="row g-3">
+                                                <!-- Lista de clientes -->
+                                                <div class="col-lg-4">
+                                                    <div class="card h-100">
+                                                        <div
+                                                            class="card-header d-flex align-items-center justify-content-between">
+                                                            <h5 class="mb-0"><i
+                                                                    class="bx bx-buildings me-2"></i>Clientes</h5>
+                                                            <button class="btn btn-sm btn-outline-primary"
+                                                                id="client-btn-new" type="button">
+                                                                <i class="bx bx-plus me-1"></i>Novo
+                                                            </button>
+                                                        </div>
 
+                                                        <div class="card-body">
+                                                            <div class="list-group" id="clients-list">
+                                                                <!-- preenchido via JS -->
+                                                            </div>
+
+                                                            <div id="clients-empty" class="text-muted small mt-3"
+                                                                style="display:none;">
+                                                                Nenhum cliente cadastrado.
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Configuração do cliente -->
+                                                <div class="col-lg-8">
+                                                    <div class="card h-100">
+                                                        <div class="card-header">
+                                                            <h5 class="mb-0"><i class="bx bx-cog me-2"></i>Configuração
+                                                                do cliente</h5>
+                                                        </div>
+
+                                                        <div class="card-body">
+                                                            <input type="hidden" id="client-id" />
+
+                                                            <div class="row g-3">
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label" for="client-name">Nome do
+                                                                        cliente</label>
+                                                                    <input class="form-control" id="client-name"
+                                                                        maxlength="80"
+                                                                        placeholder="Ex: Café Carneiro" />
+                                                                </div>
+
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label"
+                                                                        for="client-approval-name">Responsável do
+                                                                        cliente (aprovação)</label>
+                                                                    <input class="form-control"
+                                                                        id="client-approval-name" maxlength="80"
+                                                                        placeholder="Ex: João (Marketing)" />
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <label class="form-label"
+                                                                        for="client-approval-emails">Emails do
+                                                                        responsável (notificações)</label>
+                                                                    <input class="form-control"
+                                                                        id="client-approval-emails" maxlength="180"
+                                                                        placeholder="Ex: joao@cliente.com, time@cliente.com" />
+                                                                    <div class="form-text">Pode ser 1 ou mais emails
+                                                                        separados por vírgula.</div>
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <hr class="my-2" />
+                                                                    <div class="fw-semibold mb-2">Responsáveis internos
+                                                                        (por cliente)</div>
+                                                                    <div class="row g-3">
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-briefing">Briefing</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-briefing"></select>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-design">Arte/Design</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-design"></select>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-text">Legenda/Copy</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-text"></select>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-schedule">Agendamento</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-schedule"></select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div
+                                                                    class="col-12 d-flex gap-2 justify-content-end mt-3">
+                                                                    <button class="btn btn-outline-danger"
+                                                                        id="client-btn-delete" type="button" disabled>
+                                                                        <i class="bx bx-trash me-1"></i>Excluir
+                                                                    </button>
+                                                                    <button class="btn btn-primary" id="client-btn-save"
+                                                                        type="button">
+                                                                        <i class="bx bx-save me-1"></i>Salvar
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <div id="client-form-hint" class="text-muted small">
+                                                                        Selecione um cliente na lista para editar, ou
+                                                                        clique em “+” para criar um novo.
+                                                                    </div>
+                                                                </div>
+                                                            </div><!-- /row -->
+                                                        </div><!-- /card-body -->
+                                                    </div><!-- /card -->
+                                                </div><!-- /col -->
+                                            </div><!-- /row -->
+                                        </div>
+
+                                        <!-- ============ TAB: EQUIPE ============ -->
+                                        <div class="tab-pane fade" id="pane-equipe" role="tabpanel"
+                                            aria-labelledby="tab-equipe">
+                                            <div class="card">
+                                                <div
+                                                    class="card-header d-flex align-items-center justify-content-between">
+                                                    <h5 class="mb-0"><i class="bx bx-group me-2"></i>Equipe do Kanban
+                                                    </h5>
+                                                    <small class="text-muted">Adicionar/remover nomes usados nos
+                                                        responsáveis</small>
+                                                </div>
+
+                                                <div class="card-body">
+                                                    <form id="team-form-add" class="row g-2 align-items-end">
+                                                        <div class="col-md-8">
+                                                            <label class="form-label" for="team-name">Nome</label>
+                                                            <input type="text" class="form-control" id="team-name"
+                                                                placeholder="Ex: Maria Souza" maxlength="60" />
+                                                        </div>
+                                                        <div class="col-md-4 d-grid">
+                                                            <button type="submit" class="btn btn-primary">
+                                                                <i class="bx bx-plus me-1"></i>Adicionar
+                                                            </button>
+                                                        </div>
+                                                    </form>
+
+                                                    <hr class="my-4" />
+
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 70%;">Nome</th>
+                                                                    <th class="text-end">Ações</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="team-table-body">
+                                                                <!-- preenchido via JS -->
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    <div id="team-empty" class="text-muted small" style="display:none;">
+                                                        Nenhum membro cadastrado.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
                                 </div>
 
                                 <!-- =================== MODAL: Criar/Editar =================== -->
@@ -774,23 +962,29 @@
                                                             <select id="kb-client" class="form-select"
                                                                 required></select>
                                                         </div>
-                                                        <div class="col-12 col-lg-4">
-                                                            <label class="form-label">Briefing (líder)</label>
-                                                            <select id="kb-briefing-owner" class="form-select"
-                                                                required></select>
+                                                        <div class="col-12">
+                                                            <div class="alert alert-info mb-0">
+                                                                <div class="fw-semibold mb-1">Responsáveis do cliente
+                                                                    (automático)</div>
+                                                                <div class="small">
+                                                                    Briefing: <span id="kb-auto-briefing">—</span><br />
+                                                                    Arte/Design: <span
+                                                                        id="kb-auto-design">—</span><br />
+                                                                    Legenda/Copy: <span id="kb-auto-text">—</span><br />
+                                                                    Agendamento: <span
+                                                                        id="kb-auto-schedule">—</span><br />
+                                                                    Aprovação (cliente): <span
+                                                                        id="kb-auto-approver">—</span>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <a href="javascript:void(0)"
+                                                                        id="kb-go-client-config" class="small">
+                                                                        Editar responsáveis desse cliente
+                                                                    </a>
+                                                                </div>
+                                                            </div>
                                                         </div>
 
-                                                        <div class="col-6 col-lg-2">
-                                                            <label class="form-label">Responsável: Arte</label>
-                                                            <select id="kb-role-design" class="form-select"
-                                                                required></select>
-                                                        </div>
-
-                                                        <div class="col-6 col-lg-2">
-                                                            <label class="form-label">Responsável: Legenda/Copy</label>
-                                                            <select id="kb-role-text" class="form-select"
-                                                                required></select>
-                                                        </div>
                                                         <div class="col-4 col-lg-2">
                                                             <label class="form-label">Est. Design (h)</label>
                                                             <input id="kb-est-design" type="number" min="0" step="0.5"
@@ -1459,7 +1653,7 @@
 
             // ========= STATUS (fluxo real ho.ko) =========
             const STATUS = [
-                { key: "backlog", label: "Backlog" },
+                { key: "produce", label: "A Produzir" },
                 { key: "doing", label: "Em andamento" },
                 { key: "approval", label: "Em aprovação" },
                 { key: "changes", label: "Alteração necessária" },
@@ -1476,7 +1670,7 @@
             };
 
             const STATUS_BADGE = {
-                backlog: "bg-label-secondary",
+                produce: "bg-label-secondary",
                 doing: "bg-label-primary",
                 approval: "bg-label-warning",
                 changes: "bg-label-danger",
@@ -1486,7 +1680,118 @@
             };
 
             // ========= MOCK DATA =========
-            const MOCK_CLIENTS = ["ho.ko Comunicação", "Café Carneiro", "Imunocamp", "CPN Engenharia"];
+            // ========= TEAM + CLIENTES (persistido) =========
+            const ADMIN_KEY = "hoko_kanban_admin_v1";
+
+            // mantém ids m1..m4 pra não quebrar cards mock antigos
+            const DEFAULT_TEAM = [
+                { id: "m1", name: "Duda (Briefing)" },
+                { id: "m2", name: "Ray (Design)" },
+                { id: "m3", name: "Scar (Texto)" },
+                { id: "m4", name: "Fe (Líder)" },
+            ];
+
+            const DEFAULT_CLIENTS = [
+                {
+                    id: "c1",
+                    name: "ho.ko Comunicação",
+                    approvalName: "Responsável cliente",
+                    approvalEmails: "cliente@exemplo.com",
+                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                },
+                {
+                    id: "c2",
+                    name: "Café Carneiro",
+                    approvalName: "Responsável cliente",
+                    approvalEmails: "cliente@exemplo.com",
+                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                },
+                {
+                    id: "c3",
+                    name: "Imunocamp",
+                    approvalName: "Responsável cliente",
+                    approvalEmails: "cliente@exemplo.com",
+                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                },
+                {
+                    id: "c4",
+                    name: "CPN Engenharia",
+                    approvalName: "Responsável cliente",
+                    approvalEmails: "cliente@exemplo.com",
+                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                },
+            ];
+
+            function safeJsonParse(raw, fallback) {
+                try {
+                    const v = JSON.parse(raw);
+                    return v ?? fallback;
+                } catch {
+                    return fallback;
+                }
+            }
+
+            function loadAdmin() {
+                const parsed = safeJsonParse(localStorage.getItem(ADMIN_KEY), {});
+                const team = Array.isArray(parsed.team) ? parsed.team : [];
+                const clients = Array.isArray(parsed.clients) ? parsed.clients : [];
+                return { team, clients };
+            }
+
+            function ensureAdminSeed() {
+                const a = loadAdmin();
+                let changed = false;
+
+                if (!a.team.length) { a.team = DEFAULT_TEAM; changed = true; }
+                if (!a.clients.length) { a.clients = DEFAULT_CLIENTS; changed = true; }
+
+                if (changed) localStorage.setItem(ADMIN_KEY, JSON.stringify(a));
+                return a;
+            }
+
+            function getTeam() {
+                const a = loadAdmin();
+                return a.team.length ? a.team : DEFAULT_TEAM;
+            }
+
+            function getClients() {
+                const a = loadAdmin();
+                return a.clients.length ? a.clients : DEFAULT_CLIENTS;
+            }
+
+            function clientNamesFromAdminAndCards() {
+                const adminClients = getClients().map(c => c.name).filter(Boolean);
+                const cardClients = (state.cards || []).map(c => c.client).filter(Boolean);
+                return Array.from(new Set([...adminClients, ...cardClients]));
+            }
+
+            function getClientByName(name) {
+                return getClients().find(c => c.name === name) || null;
+            }
+
+            function memberName(id) {
+                return getTeam().find(m => m.id === id)?.name || "—";
+            }
+
+            // garante seed logo no início
+            ensureAdminSeed();
+
+            function makeDefaultClientGoals() {
+                const goals = {};
+                clientNamesFromAdminAndCards().forEach(client => {
+                    goals[client] = { postsPerMonth: 12, ontimePct: 90, quality: 85, maxRework: 2 };
+                });
+                return goals;
+            }
+
+            function ensureClientGoals() {
+                if (!state.clientGoals || typeof state.clientGoals !== "object") state.clientGoals = {};
+                clientNamesFromAdminAndCards().forEach(client => {
+                    if (!state.clientGoals[client]) {
+                        state.clientGoals[client] = { postsPerMonth: 12, ontimePct: 90, quality: 85, maxRework: 2 };
+                    }
+                });
+            }
 
             function makeDefaultClientGoals() {
                 const goals = {};
@@ -1512,14 +1817,6 @@
                     };
                 });
             }
-
-
-            const MOCK_MEMBERS = [
-                { id: "m1", name: "Duda (Briefing)" },
-                { id: "m2", name: "Ray (Design)" },
-                { id: "m3", name: "Scar (Texto)" },
-                { id: "m4", name: "Fe (Líder)" },
-            ];
 
             // ========= Helpers =========
             const $ = (sel) => document.querySelector(sel);
@@ -1627,7 +1924,7 @@
                     const textDone = !!card.roles?.text?.doneAt;
                     return 30 + (designDone ? 20 : 0) + (textDone ? 20 : 0);
                 }
-                return 5; // backlog
+                return 5; // produce
             }
 
             // ========= State =========
@@ -1645,7 +1942,7 @@
                     briefingOwnerId: "m1",
                     designOwnerId: "m2",
                     textOwnerId: "m3",
-                    status: "backlog",
+                    status: "produce",
                 });
 
                 const c2 = makeCard({
@@ -1715,7 +2012,7 @@
                     title: payload.title || "",
                     client: payload.client || "",
                     priority: payload.priority || "P1",
-                    status: payload.status || "backlog",
+                    status: payload.status || "produce",
 
                     dueDate: payload.dueDate || null,
                     tags: payload.tags || [],
@@ -1752,7 +2049,7 @@
                             active: false,
                         },
                         schedule: {
-                            memberId: payload.briefingOwnerId || (MOCK_MEMBERS[0]?.id || "m1"),
+                            memberId: payload.scheduleOwnerId || payload.briefingOwnerId || "m1",
                             estimateHours: Number(payload.estSchedule ?? 0.5),
                             doneAt: null,
                             active: false,
@@ -1769,7 +2066,7 @@
 
                     history: [
                         { id: uid(), type: "created", at: nowIso, by: payload.briefingOwnerId || null },
-                        { id: uid(), type: "status", from: null, to: payload.status || "backlog", at: nowIso },
+                        { id: uid(), type: "status", from: null, to: payload.status || "produce", at: nowIso },
                     ],
                 };
 
@@ -2017,8 +2314,8 @@
             }
 
             function cardActiveMembers(card) {
-                // backlog: briefing
-                if (card.status === "backlog") return [card.owners?.briefing].filter(Boolean);
+                // produce: briefing
+                if (card.status === "produce") return [card.owners?.briefing].filter(Boolean);
 
                 // doing/changes: roles ativas
                 if (card.status === "doing" || card.status === "changes") {
@@ -2065,7 +2362,7 @@
 
                 // counts
                 const count = (k) => filtered.filter(c => c.status === k).length;
-                $("#count-backlog").textContent = `(${count("backlog")})`;
+                $("#count-produce").textContent = `(${count("produce")})`;
                 $("#count-doing").textContent = `(${count("doing")})`;
                 $("#count-approval").textContent = `(${count("approval")})`;
                 $("#count-changes").textContent = `(${count("changes")})`;
@@ -2198,8 +2495,8 @@
                         const card = state.cards.find(c => c.id === cardId);
                         if (!card) return;
 
-                        // só permitimos backlog -> doing (o resto é por botões / automações)
-                        if (!(card.status === "backlog" && toStatus === "doing")) {
+                        // só permitimos produce -> doing (o resto é por botões / automações)
+                        if (!(card.status === "produce" && toStatus === "doing")) {
                             showFeedback("Movimento bloqueado. Use os botões do fluxo (concluir/alterar/aprovar/agendar/publicar).", "info");
                             return;
                         }
@@ -2208,27 +2505,27 @@
                         enterStatus(card, "doing", atIso);
                         saveState();
                         render();
-                        showFeedback("Card iniciado: Backlog → Em andamento", "success");
+                        showFeedback("Card iniciado: A Produzir → Em andamento", "success");
                     });
                 });
             }
 
             // ========= Selects =========
             function fillSelects() {
+                const clientNames = clientNamesFromAdminAndCards();
+                const team = getTeam();
+
                 // filtros
                 fillOptions($("#kb-filter-client"), [{ value: "all", label: "Todos" }].concat(
-                    Array.from(new Set((state.cards || []).map(c => c.client).filter(Boolean))).map(c => ({ value: c, label: c }))
+                    clientNames.map(c => ({ value: c, label: c }))
                 ));
 
                 fillOptions($("#kb-filter-member"), [{ value: "all", label: "Todos" }].concat(
-                    MOCK_MEMBERS.map(m => ({ value: m.id, label: m.name }))
+                    team.map(m => ({ value: m.id, label: m.name }))
                 ));
 
-                // form create/edit
-                fillOptions($("#kb-client"), MOCK_CLIENTS.map(c => ({ value: c, label: c })));
-                fillOptions($("#kb-briefing-owner"), MOCK_MEMBERS.map(m => ({ value: m.id, label: m.name })));
-                fillOptions($("#kb-role-design"), MOCK_MEMBERS.map(m => ({ value: m.id, label: m.name })));
-                fillOptions($("#kb-role-text"), MOCK_MEMBERS.map(m => ({ value: m.id, label: m.name })));
+                // form create/edit (cliente)
+                fillOptions($("#kb-client"), clientNames.map(c => ({ value: c, label: c })));
             }
 
             // ========= Modals =========
@@ -2240,6 +2537,22 @@
             const modalDetails = modalDetailsEl ? new bootstrap.Modal(modalDetailsEl) : null;
             const modalGoals = modalGoalsEl ? new bootstrap.Modal(modalGoalsEl) : null;
 
+            function renderAutoClientRolesPreview(clientName) {
+                const c = getClientByName(clientName);
+
+                const roles = c?.roles || {};
+                const briefing = memberName(roles.briefing);
+                const design = memberName(roles.design);
+                const text = memberName(roles.text);
+                const schedule = memberName(roles.schedule);
+
+                $("#kb-auto-briefing").textContent = briefing;
+                $("#kb-auto-design").textContent = design;
+                $("#kb-auto-text").textContent = text;
+                $("#kb-auto-schedule").textContent = schedule;
+                $("#kb-auto-approver").textContent = c?.approvalName || "—";
+            }
+
             function openCreate(editCard = null) {
                 $("#kbModalCreateLabel").innerHTML = editCard
                     ? `<i class="bx bx-edit-alt me-2"></i>Editar card`
@@ -2250,12 +2563,11 @@
                 $("#kb-desc").value = editCard?.desc || "";
                 $("#kb-briefing").value = editCard?.briefing || "";
 
-                $("#kb-client").value = editCard?.client || (MOCK_CLIENTS[0] || "");
-                $("#kb-priority").value = editCard?.priority || "P1";
+                const clients = clientNamesFromAdminAndCards();
+                const fallbackClient = clients[0] || "";
+                $("#kb-client").value = editCard?.client || fallbackClient;
 
-                $("#kb-briefing-owner").value = editCard?.owners?.briefing || (MOCK_MEMBERS[0]?.id || "m1");
-                $("#kb-role-design").value = editCard?.owners?.design || (MOCK_MEMBERS[1]?.id || "m2");
-                $("#kb-role-text").value = editCard?.owners?.text || (MOCK_MEMBERS[2]?.id || "m3");
+                $("#kb-priority").value = editCard?.priority || "P1";
 
                 $("#kb-est-design").value = Number(editCard?.roles?.design?.estimateHours ?? 2);
                 $("#kb-est-text").value = Number(editCard?.roles?.text?.estimateHours ?? 1);
@@ -2264,6 +2576,8 @@
                 $("#kb-due").value = editCard?.dueDate || "";
                 $("#kb-rework").value = Number(editCard?.feedbackCount ?? 0);
                 $("#kb-tags").value = (editCard?.tags || []).join(", ");
+
+                renderAutoClientRolesPreview($("#kb-client").value);
 
                 modalCreate?.show();
             }
@@ -2399,7 +2713,7 @@
                 const id = escapeAttr(card.id);
                 const actions = [];
 
-                if (card.status === "backlog") {
+                if (card.status === "produce") {
                     actions.push(`<button class="btn btn-primary kb-start" data-id="${id}"><i class="bx bx-play me-1"></i>Iniciar produção</button>`);
                 }
 
@@ -2434,17 +2748,27 @@
                 const id = ($("#kb-id").value || "").trim();
                 const nowIso = new Date().toISOString();
 
+                const clientName = $("#kb-client").value;
+                const clientCfg = getClientByName(clientName);
+                if (!clientCfg) return showFeedback("Selecione um cliente válido na aba Clientes.", "danger");
+
+                const roles = clientCfg.roles || {};
+                const briefingOwnerId = roles.briefing || "m1";
+                const designOwnerId = roles.design || "m2";
+                const textOwnerId = roles.text || "m3";
+                const scheduleOwnerId = roles.schedule || briefingOwnerId || "m1";
+
                 const payload = {
                     title,
                     desc: ($("#kb-desc").value || "").trim(),
                     briefing: ($("#kb-briefing").value || "").trim(),
-
-                    client: $("#kb-client").value,
+                    client: clientName,
                     priority: $("#kb-priority").value,
 
-                    briefingOwnerId: $("#kb-briefing-owner").value,
-                    designOwnerId: $("#kb-role-design").value,
-                    textOwnerId: $("#kb-role-text").value,
+                    briefingOwnerId,
+                    designOwnerId,
+                    textOwnerId,
+                    scheduleOwnerId,
 
                     estDesign: Number($("#kb-est-design").value || 0),
                     estText: Number($("#kb-est-text").value || 0),
@@ -2458,7 +2782,6 @@
                     const card = state.cards.find(c => c.id === id);
                     if (!card) return;
 
-                    // atualiza dados base (não mexe no fluxo automaticamente)
                     card.title = payload.title;
                     card.desc = payload.desc;
                     card.briefing = payload.briefing;
@@ -2473,7 +2796,7 @@
 
                     card.roles.design.memberId = payload.designOwnerId;
                     card.roles.text.memberId = payload.textOwnerId;
-                    card.roles.schedule.memberId = payload.briefingOwnerId;
+                    card.roles.schedule.memberId = payload.scheduleOwnerId;
 
                     card.roles.design.estimateHours = payload.estDesign;
                     card.roles.text.estimateHours = payload.estText;
@@ -2481,10 +2804,11 @@
 
                     card.history.unshift({ id: uid(), type: "edited", at: nowIso });
                 } else {
-                    const card = makeCard({ ...payload, status: "backlog" });
+                    const card = makeCard({ ...payload, status: "produce" });
                     state.cards.unshift(card);
                 }
 
+                ensureClientGoals();
                 saveState();
                 render();
                 modalCreate?.hide();
@@ -2613,6 +2937,28 @@
                 $("#kb-goals-save")?.addEventListener("click", () => saveGoalsModal());
 
                 modalDetailsEl?.addEventListener("hidden.bs.modal", () => { selectedCardId = null; });
+
+                // modal create: trocar cliente atualiza preview de responsáveis
+                $("#kb-client")?.addEventListener("change", () => {
+                    renderAutoClientRolesPreview($("#kb-client").value);
+                });
+
+                // link "Editar responsáveis desse cliente" (vai para aba Clientes)
+                $("#kb-go-client-config")?.addEventListener("click", () => {
+                    const name = $("#kb-client")?.value;
+                    if (!name) return;
+
+                    // abre tab Clientes
+                    const tabBtn = document.querySelector('#tab-clientes');
+                    if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+
+                    // manda o admin selecionar esse cliente
+                    window.KanbanAdmin?.openClientByName?.(name);
+
+                    // fecha modal (senão fica em cima)
+                    modalCreate?.hide();
+                });
+
             }
 
             function bindCardEvents() {
@@ -2635,7 +2981,7 @@
                             return completeRole(btn.dataset.id, btn.dataset.role);
                         }
 
-                        // iniciar (backlog → doing)
+                        // iniciar (produce → doing)
                         if (btn.classList.contains("kb-start")) {
                             e.preventDefault();
                             const card = state.cards.find(c => c.id === btn.dataset.id);
@@ -2644,7 +2990,7 @@
                             enterStatus(card, "doing", atIso);
                             saveState();
                             render();
-                            showFeedback("Card iniciado: Backlog → Em andamento", "success");
+                            showFeedback("Card iniciado: A Produzir → Em andamento", "success");
                             if (selectedCardId === card.id) openDetails(card.id);
                             return;
                         }
@@ -2936,6 +3282,331 @@
         })();
     </script>
 
+    <script>
+        const ADMIN_KEY = "hoko_kanban_admin_v1";
+        const Roles = ['briefing', 'design', 'text', 'schedule'];
+
+        function safeJsonParse(raw, fallback) {
+            try { return JSON.parse(raw) ?? fallback; } catch { return fallback; }
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function uuid() {
+            return (crypto?.randomUUID) ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Date.now().toString(36));
+        }
+
+        function loadAdmin() {
+            const a = safeJsonParse(localStorage.getItem(ADMIN_KEY), {});
+            return {
+                team: Array.isArray(a.team) ? a.team : [],
+                clients: Array.isArray(a.clients) ? a.clients : [],
+            };
+        }
+
+        function saveAdmin(admin) {
+            localStorage.setItem(ADMIN_KEY, JSON.stringify(admin));
+            document.dispatchEvent(new CustomEvent("kanban-admin-changed"));
+        }
+
+        function ensureSeed() {
+            const a = loadAdmin();
+            let changed = false;
+
+            if (!a.team.length) {
+                a.team = [
+                    { id: "m1", name: "Duda (Briefing)" },
+                    { id: "m2", name: "Ray (Design)" },
+                    { id: "m3", name: "Scar (Texto)" },
+                    { id: "m4", name: "Fe (Líder)" },
+                ];
+                changed = true;
+            }
+
+            if (!a.clients.length) {
+                a.clients = [
+                    { id: "c1", name: "ho.ko Comunicação", approvalName: "Responsável cliente", approvalEmails: "cliente@exemplo.com", roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" } },
+                    { id: "c2", name: "Café Carneiro", approvalName: "Responsável cliente", approvalEmails: "cliente@exemplo.com", roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" } },
+                    { id: "c3", name: "Imunocamp", approvalName: "Responsável cliente", approvalEmails: "cliente@exemplo.com", roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" } },
+                    { id: "c4", name: "CPN Engenharia", approvalName: "Responsável cliente", approvalEmails: "cliente@exemplo.com", roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" } },
+                ];
+                changed = true;
+            }
+
+            if (changed) saveAdmin(a);
+        }
+
+        const AdminUI = {
+            selectedClientId: null
+        };
+
+        function renderTeam() {
+            const tbody = document.getElementById('team-table-body');
+            const empty = document.getElementById('team-empty');
+            const admin = loadAdmin();
+
+            tbody.innerHTML = '';
+
+            if (admin.team.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+
+            admin.team.forEach(member => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+        <td>${escapeHtml(member.name)}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-danger" data-id="${escapeHtml(member.id)}" type="button">
+            <i class="bx bx-trash"></i>
+          </button>
+        </td>
+      `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTeamSelects() {
+            const admin = loadAdmin();
+
+            Roles.forEach(role => {
+                const select = document.getElementById(`client-role-${role}`);
+                if (!select) return;
+
+                const current = select.value;
+                select.innerHTML = '<option value="">— selecione —</option>';
+
+                admin.team.forEach(member => {
+                    const opt = document.createElement('option');
+                    opt.value = member.id;
+                    opt.textContent = member.name;
+                    select.appendChild(opt);
+                });
+
+                // tenta manter valor anterior se ainda existir
+                if (admin.team.some(m => m.id === current)) select.value = current;
+            });
+        }
+
+        function clearClientForm() {
+            AdminUI.selectedClientId = null;
+            document.getElementById('client-id').value = '';
+            document.getElementById('client-name').value = '';
+            document.getElementById('client-approval-name').value = '';
+            document.getElementById('client-approval-emails').value = '';
+
+            Roles.forEach(r => {
+                const el = document.getElementById(`client-role-${r}`);
+                if (el) el.value = '';
+            });
+
+            document.getElementById('client-btn-delete').disabled = true;
+            renderClientsList();
+        }
+
+        function renderClientsList() {
+            const list = document.getElementById('clients-list');
+            const empty = document.getElementById('clients-empty');
+            const admin = loadAdmin();
+
+            list.innerHTML = '';
+
+            if (admin.clients.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+
+            admin.clients.forEach(c => {
+                const a = document.createElement('a');
+                a.href = "javascript:void(0)";
+                a.className = "list-group-item list-group-item-action" + (AdminUI.selectedClientId === c.id ? " active" : "");
+                a.dataset.id = c.id;
+
+                a.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="fw-medium">${escapeHtml(c.name)}</div>
+          <small class="${AdminUI.selectedClientId === c.id ? "text-white-50" : "text-muted"}">
+            ${escapeHtml(c.approvalName || "")}
+          </small>
+        </div>
+      `;
+
+                list.appendChild(a);
+            });
+        }
+
+        function loadClient(id) {
+            const admin = loadAdmin();
+            const client = admin.clients.find(c => c.id === id);
+            if (!client) return;
+
+            AdminUI.selectedClientId = id;
+
+            document.getElementById('client-id').value = client.id;
+            document.getElementById('client-name').value = client.name || '';
+            document.getElementById('client-approval-name').value = client.approvalName || '';
+            document.getElementById('client-approval-emails').value = client.approvalEmails || '';
+
+            Roles.forEach(role => {
+                const el = document.getElementById(`client-role-${role}`);
+                if (el) el.value = (client.roles && client.roles[role]) ? client.roles[role] : '';
+            });
+
+            document.getElementById('client-btn-delete').disabled = false;
+            renderClientsList();
+        }
+
+        function saveClientFromForm() {
+            const admin = loadAdmin();
+
+            const id = document.getElementById('client-id').value || AdminUI.selectedClientId || uuid();
+            const name = document.getElementById('client-name').value.trim();
+            if (!name) return alert("Nome do cliente é obrigatório.");
+
+            // nome único (case-insensitive)
+            const nameKey = name.toLowerCase();
+            const nameConflict = admin.clients.some(c => c.id !== id && (c.name || "").toLowerCase() === nameKey);
+            if (nameConflict) return alert("Já existe um cliente com esse nome.");
+
+            const approvalName = document.getElementById('client-approval-name').value.trim();
+            const approvalEmails = document.getElementById('client-approval-emails').value.trim();
+
+            const roles = {};
+            Roles.forEach(role => {
+                roles[role] = document.getElementById(`client-role-${role}`).value || '';
+            });
+
+            const client = { id, name, approvalName, approvalEmails, roles };
+
+            const exists = admin.clients.some(c => c.id === id);
+            if (exists) {
+                admin.clients = admin.clients.map(c => c.id === id ? client : c);
+            } else {
+                admin.clients.push(client);
+            }
+
+            AdminUI.selectedClientId = id;
+            document.getElementById('client-id').value = id;
+
+            saveAdmin(admin);
+            renderClientsList();
+            alert("Cliente salvo.");
+        }
+
+        function deleteSelectedClient() {
+            const admin = loadAdmin();
+            if (!AdminUI.selectedClientId) return;
+
+            const ok = confirm("Excluir este cliente?");
+            if (!ok) return;
+
+            admin.clients = admin.clients.filter(c => c.id !== AdminUI.selectedClientId);
+            saveAdmin(admin);
+            clearClientForm();
+        }
+
+        function addTeamMember(name) {
+            const admin = loadAdmin();
+
+            const n = (name || "").trim();
+            if (!n) return;
+
+            const exists = admin.team.some(m => (m.name || "").toLowerCase() === n.toLowerCase());
+            if (exists) return alert("Esse nome já existe na equipe.");
+
+            admin.team.push({ id: uuid(), name: n });
+
+            // saneia roles de clientes (se algum select ficar inválido depois, não explode)
+            admin.clients = admin.clients.map(c => {
+                c.roles = c.roles || {};
+                Roles.forEach(r => { if (c.roles[r] && !admin.team.some(m => m.id === c.roles[r])) c.roles[r] = ''; });
+                return c;
+            });
+
+            saveAdmin(admin);
+            renderTeam();
+            renderTeamSelects();
+        }
+
+        function removeTeamMember(memberId) {
+            const admin = loadAdmin();
+
+            const ok = confirm("Remover este membro da equipe?");
+            if (!ok) return;
+
+            admin.team = admin.team.filter(m => m.id !== memberId);
+
+            // remove dos clientes (roles)
+            admin.clients = admin.clients.map(c => {
+                c.roles = c.roles || {};
+                Roles.forEach(r => { if (c.roles[r] === memberId) c.roles[r] = ''; });
+                return c;
+            });
+
+            saveAdmin(admin);
+            renderTeam();
+            renderTeamSelects();
+
+            // se estiver editando um cliente, recarrega para refletir selects
+            if (AdminUI.selectedClientId) loadClient(AdminUI.selectedClientId);
+        }
+
+        // API mínima para o modal "Editar responsáveis desse cliente"
+        window.KanbanAdmin = {
+            openClientByName(name) {
+                const admin = loadAdmin();
+                const c = admin.clients.find(x => x.name === name);
+                if (!c) return;
+                loadClient(c.id);
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            ensureSeed();
+
+            // TEAM
+            renderTeam();
+            renderTeamSelects();
+
+            document.getElementById('team-form-add').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('team-name');
+                addTeamMember(input.value);
+                input.value = '';
+            });
+
+            document.getElementById('team-table-body').addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                removeTeamMember(btn.dataset.id);
+            });
+
+            // CLIENTES
+            renderClientsList();
+            clearClientForm();
+
+            document.getElementById('client-btn-new').addEventListener('click', () => clearClientForm());
+            document.getElementById('client-btn-save').addEventListener('click', () => saveClientFromForm());
+            document.getElementById('client-btn-delete').addEventListener('click', () => deleteSelectedClient());
+
+            document.getElementById('clients-list').addEventListener('click', (e) => {
+                const item = e.target.closest('.list-group-item');
+                if (!item) return;
+                loadClient(item.dataset.id);
+            });
+        });
+    </script>
 
 </body>
 
