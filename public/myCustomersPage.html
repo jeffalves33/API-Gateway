@@ -750,6 +750,26 @@
         </div>
     </div>
 
+    <!-- Modal: Remover plataforma -->
+    <div class="modal fade" id="removePlatformModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Remover plataforma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="removePlatformCustomerId">
+                    <input type="hidden" id="removePlatformName">
+                    <p class="mb-0">Confirma remover esta plataforma do cliente?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="removePlatformConfirmBtn">Remover</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Jeferson: container para mensagem -->
     <div id="alert-container"></div>
@@ -927,6 +947,16 @@
                             </button>`
                     ;
 
+                const removeBtn =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-danger js-platform-remove"
+                                data-customer="${customer.id_customer}"
+                                data-platform="${platform}">
+                                Remover
+                            </button>`
+                        : "";
+
+
                 const label = platform === "facebook" ? "Facebook" : "Instagram";
 
                 return `
@@ -941,8 +971,9 @@
                         </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                        ${badgeForIntegrationStatus(integ?.status)}
-                        ${action}
+                            ${badgeForIntegrationStatus(integ?.status)}
+                            ${removeBtn}
+                            ${action}
                         </div>
                     </div>
                     </div>
@@ -973,6 +1004,15 @@
                             Autorizar
                         </button>`;
 
+                const removeBtn =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-danger js-platform-remove"
+                                data-customer="${customer.id_customer}"
+                                data-platform="linkedin">
+                                Remover
+                            </button>`
+                        : "";
+
                 return `
                     <div class="customer-platform-item">
                     <div class="d-flex align-items-center justify-content-between gap-2">
@@ -987,6 +1027,7 @@
 
                         <div class="d-flex align-items-center gap-2">
                         ${badgeForIntegrationStatus(integ?.status)}
+                        ${removeBtn}
                         ${action}
                         </div>
                     </div>
@@ -1012,7 +1053,14 @@
                     status === "connected" || status === "authorized"
                         ? `<button class="btn btn-sm btn-outline-primary js-ga-select" data-customer="${customer.id_customer}">${status === "connected" ? "Trocar" : "Conectar"}</button>`
                         : `<button class="btn btn-sm btn-primary js-ga-authorize" data-customer="${customer.id_customer}">Autorizar</button>`;
-
+                const removeBtn =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-danger js-platform-remove"
+                                data-customer="${customer.id_customer}"
+                                data-platform="google_analytics">
+                                Remover
+                            </button>`
+                        : "";
                 return `
                     <div class="customer-platform-item">
                     <div class="d-flex align-items-center justify-content-between gap-2">
@@ -1028,6 +1076,7 @@
                         ${badgeForIntegrationStatus(integ?.status)}
                         ${expBadge}
                         ${renewBtn}
+                        ${removeBtn}
                         ${action}
                         </div>
                     </div>
@@ -1054,6 +1103,15 @@
                         ? `<button class="btn btn-sm btn-outline-primary js-yt-select" data-customer="${customer.id_customer}">${status === "connected" ? "Trocar" : "Conectar"}</button>`
                         : `<button class="btn btn-sm btn-primary js-yt-authorize" data-customer="${customer.id_customer}">Autorizar</button>`;
 
+                const removeBtn =
+                    status === "connected" || status === "authorized"
+                        ? `<button class="btn btn-sm btn-outline-danger js-platform-remove"
+                                data-customer="${customer.id_customer}"
+                                data-platform="youtube">
+                                Remover
+                            </button>`
+                        : "";
+
                 return `
                     <div class="customer-platform-item">
                     <div class="d-flex align-items-center justify-content-between gap-2">
@@ -1069,6 +1127,7 @@
                         ${badgeForIntegrationStatus(integ?.status)}
                         ${expBadge}
                         ${renewBtn}
+                        ${removeBtn}
                         ${action}
                         </div>
                     </div>
@@ -1404,6 +1463,11 @@
             }
 
             // Click handlers (event delegation)
+            const removePlatformModalEl = document.getElementById("removePlatformModal");
+            const removePlatformModal = removePlatformModalEl ? new bootstrap.Modal(removePlatformModalEl) : null;
+            const removePlatformCustomerId = document.getElementById("removePlatformCustomerId");
+            const removePlatformName = document.getElementById("removePlatformName");
+
             document.addEventListener("click", (e) => {
                 const gaAuthBtn = e.target.closest(".js-ga-authorize");
                 const linkedinAuthBtn = e.target.closest(".js-linkedin-authorize");
@@ -1479,6 +1543,20 @@
                     openYoutubeChannelModal(id_customer);
                     return;
                 }
+
+                const removeBtn = e.target.closest(".js-platform-remove");
+                if (removeBtn) {
+                    const id_customer = removeBtn.dataset.customer;
+                    const platform = removeBtn.dataset.platform;
+                    if (!id_customer || !platform) return;
+
+                    if (removePlatformCustomerId) removePlatformCustomerId.value = id_customer;
+                    if (removePlatformName) removePlatformName.value = platform;
+
+                    if (removePlatformModal) removePlatformModal.show();
+                    return;
+                }
+
 
             });
 
