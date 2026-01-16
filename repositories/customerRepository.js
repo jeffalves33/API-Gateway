@@ -23,30 +23,33 @@ const createCustomer = async (id_user, name, company, email, phone) => {
   return result.rows[0];
 };
 
-const deleteCustomer = async (id_customer) => {
-  await pool.query(
-    'DELETE FROM facebook WHERE id_customer = $1',
-    [id_customer]
-  );
-  await pool.query(
-    'DELETE FROM instagram WHERE id_customer = $1',
-    [id_customer]
-  );
-  await pool.query(
-    'DELETE FROM linkedin WHERE id_customer = $1',
-    [id_customer]
-  );
-  /*
-  não preciso mais da exclusão do analytics pois a tabela já é exclusiva (devo modificar todas as outras para isso também)
-  await pool.query(
-    'DELETE FROM google_analytics WHERE id_customer = $1',
-    [id_customer]
-  );*/
-  await pool.query(
-    'DELETE FROM customer WHERE id_customer = $1',
-    [id_customer]
-  );
-}
+const deleteCustomer = async (id_customer, id_user) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { rows } = await client.query('SELECT 1 FROM customer WHERE id_customer = $1 AND id_user = $2 FOR UPDATE', [id_customer, id_user]);
+    if (!rows.length) throw new Error('Cliente não encontrado para este usuário');
+
+    // tokens + recursos
+    await client.query('DELETE FROM customer_integrations WHERE id_customer = $1', [id_customer]);
+
+    // históricos por plataforma
+    await client.query('DELETE FROM facebook WHERE id_customer = $1', [id_customer]);
+    await client.query('DELETE FROM instagram WHERE id_customer = $1', [id_customer]);
+    await client.query('DELETE FROM linkedin WHERE id_customer = $1', [id_customer]);
+
+    // por fim, o cliente
+    await client.query('DELETE FROM customer WHERE id_customer = $1', [id_customer]);
+
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+};
 
 const getCustomerByIdCustomer = async (id_customer) => {
   const result = await pool.query('SELECT * FROM customer WHERE id_customer = $1', [id_customer]);

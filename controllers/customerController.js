@@ -59,7 +59,7 @@ const deleteCustomerById = async (req, res) => {
     const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
     if (!belongs) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário autenticado.' });
 
-    await deleteCustomer(id_customer);
+    await deleteCustomer(id_customer, id_user);
 
     clearCacheForUser(id_user);
 
