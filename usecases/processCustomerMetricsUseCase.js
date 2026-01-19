@@ -68,9 +68,8 @@ async function processCustomerMetrics(id_user, id_customer, platforms, google, l
 async function processCustomerMetricsPlatform(id_customer, platform) {
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 1);
-    const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const since = fmt(start);
-    const endDate = fmt(now);
+    const since = start;
+    const endDate = now;
 
     const { rows } = await pool.query(
         `SELECT resource_id, resource_access_token, access_token
