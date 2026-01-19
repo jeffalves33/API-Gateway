@@ -3,6 +3,7 @@ const axios = require('axios');
 const querystring = require('querystring');
 const { pool } = require('../config/db');
 const { getValidLinkedInAccessToken, liHeaders } = require('../helpers/linkedinHelpers');
+const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
 
 const LINKEDIN_CLIENT_ID = '77b662p87zgthq';
 const LINKEDIN_CLIENT_SECRET = 'WPL_AP1.xnVHxAwFB1tPCa0Y.D3jxLA==';
@@ -204,6 +205,8 @@ exports.connectOrganization = async (req, res) => {
             `,
             [resource_id, resource_name || null, id_customer]
         );
+
+        await processCustomerMetricsPlatform(id_customer, 'linkedin');
 
         // Por agora: SEM ingestão (pra não quebrar o fluxo)
         return res.json({ success: true });

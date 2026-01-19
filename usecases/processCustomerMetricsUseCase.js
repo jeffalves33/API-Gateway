@@ -88,14 +88,10 @@ async function processCustomerMetricsPlatform(id_customer, platform) {
 
     let rowsToInsert = [];
 
-    if (platform === 'facebook')
-        rowsToInsert = await facebookService.getAllMetricsRows(id_customer, integ.resource_id, token, since, endDate);
-    else if (platform === 'instagram')
-        rowsToInsert = await instagramService.getAllMetricsRows(id_customer, integ.resource_id, token, since, endDate);
-    else if (platform === 'google_analytics')
-        rowsToInsert = await googleService.getAllMetricsRows(id_customer, { property_id: integ.resource_id, access_token: token }, since, endDate);
-    else if (platform === 'linkedin')
-        rowsToInsert = await linkedinService.getAllMetricsRows(id_customer, { organization_id: integ.resource_id, access_token: token }, since, endDate);
+    if (platform === 'facebook') rowsToInsert = await facebookService.getAllMetricsRows(id_customer, integ.resource_id, token, since, endDate);
+    else if (platform === 'instagram') rowsToInsert = await instagramService.getAllMetricsRows(id_customer, integ.resource_id, token, since, endDate);
+    else if (platform === 'google_analytics') rowsToInsert = await googleService.getAllMetricsRows(id_customer, { property_id: integ.resource_id, access_token: token }, since, endDate);
+    else if (platform === 'linkedin') rowsToInsert = await linkedinService.getAllMetricsRows(id_customer, { organization_id: integ.resource_id, access_token: token }, since, endDate);
     else return;
 
     if (platform === 'facebook') return metricsRepo.insertFacebookMetrics(rowsToInsert);

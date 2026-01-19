@@ -3,7 +3,7 @@ const axios = require('axios');
 const querystring = require('querystring');
 const { pool } = require('../config/db');
 const { checkCustomerBelongsToUser, } = require('../repositories/customerRepository');
-const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
+const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
 
 const APP_ID = '1832737137219562';//process.env.META_APP_ID;
 const APP_SECRET = 'b14bc1778c11a716e69ac80c52199798';//process.env.META_APP_SECRET;
@@ -262,7 +262,8 @@ exports.connectResource = async (req, res) => {
     const ok = await checkCustomerBelongsToUser(id_customer, id_user);
     if (!ok) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário' });
 
-    const resource_type = platform === 'facebook' ? 'facebook_page' : 'instagram_business_account';
+    const p = String(platform).toLowerCase();
+    const resource_type = p === 'facebook' ? 'facebook_page' : 'instagram_business_account';
 
     await pool.query(
       `
@@ -278,18 +279,11 @@ exports.connectResource = async (req, res) => {
         resource_access_token = EXCLUDED.resource_access_token,
         status                = 'connected'
       `,
-      [id_customer, platform, resource_id, resource_name || null, resource_type, resource_access_token]
+      [id_customer, p, resource_id, resource_name || null, resource_type, resource_access_token]
     );
 
-    // dispara o processo antigo para trazer históricos
-    const platforms = [];
-    if (platform === 'facebook') {
-      platforms.push({ type: 'facebook', id_facebook_page: resource_id, access_token: resource_access_token });
-    } else {
-      platforms.push({ type: 'instagram', id_instagram_page: resource_id, access_token: resource_access_token });
-    }
-
-    await metricsOrchestrator.processCustomerMetrics(id_user, id_customer, platforms, null, null);
+    if (p === 'facebook') await processCustomerMetricsPlatform(id_customer, 'facebook');
+    else await processCustomerMetricsPlatform(id_customer, 'instagram');
 
     return res.json({ success: true });
   } catch (err) {

@@ -3,6 +3,8 @@ const { google } = require('googleapis')
 const axios = require('axios');
 const { pool } = require('../config/db');
 const { getValidAccessTokenCustomer } = require('../helpers/googleAnalyticsHelpers');
+const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
+
 require('dotenv').config();
 
 const GOOGLE_CLIENT_ID = '950435540090-5afqh5jkq3b804ru5ej86s5q8g8gap20.apps.googleusercontent.com'
@@ -140,6 +142,8 @@ exports.connectProperty = async (req, res) => {
             `,
             [resource_id, resource_name || null, id_customer]
         );
+
+        await processCustomerMetricsPlatform(id_customer, 'google_analytics');
 
         return res.json({ success: true });
     } catch (error) {

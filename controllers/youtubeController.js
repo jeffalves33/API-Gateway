@@ -2,6 +2,7 @@
 const { google } = require('googleapis')
 const { pool } = require('../config/db');
 const { getValidYouTubeClientCustomer } = require('../helpers/youtubeHelpers');
+const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
 require('dotenv').config();
 
 const GOOGLE_CLIENT_ID = '950435540090-5afqh5jkq3b804ru5ej86s5q8g8gap20.apps.googleusercontent.com'
@@ -132,6 +133,8 @@ exports.connectChannel = async (req, res) => {
             `,
             [resource_id, resource_name || null, id_customer]
         );
+
+        await processCustomerMetricsPlatform(id_customer, 'youtube');
 
         return res.json({ success: true });
     } catch (error) {
