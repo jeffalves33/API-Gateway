@@ -145,31 +145,10 @@
                     </li>
 
                     <li class="menu-item">
-                        <a href="/platformsPage.html" class="menu-link">
-                            <i class="menu-icon tf-icons bi bi-link-45deg"></i>
-                            <div data-i18n="Chat">Plataformas</div>
-                        </a>
-                    </li>
-
-                    <!-- Layouts -->
-                    <li class="menu-item">
-                        <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <a href="myCustomersPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-people"></i>
-                            <div data-i18n="Chat">Clientes</div>
+                            <div data-i18n="Without menu">Meus Clientes</div>
                         </a>
-
-                        <ul class="menu-sub">
-                            <li class="menu-item">
-                                <a href="myCustomersPage.html" class="menu-link">
-                                    <div data-i18n="Without menu">Meus Clientes</div>
-                                </a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="customersPage.html" class="menu-link">
-                                    <div data-i18n="Without navbar">Adicionar Clientes</div>
-                                </a>
-                            </li>
-                        </ul>
                     </li>
 
                     <li class="menu-header small text-uppercase">
@@ -240,27 +219,6 @@
                     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
 
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
-                            <li class="nav-item lh-1 me-3">
-                                <div class="dropdown">
-                                    <button
-                                        class="btn border d-flex align-items-center justify-content-between w-100 py-2"
-                                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
-                                            <path fill-rule="evenodd"
-                                                d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
-                                        </svg>
-                                        <span id="selected-customer-name" class="mx-3">Cliente</span>
-                                    </button>
-                                    <ul class="dropdown-menu w-100" id="dropdown-customer-list">
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="#">Adicionar cliente</a></li>
-                                    </ul>
-                                </div>
-                            </li>
-
                             <!-- User -->
                             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
@@ -405,9 +363,11 @@
                                                 </div>
 
                                                 <div class="col-6 col-md-2 col-xxl-2 text-md-end">
-                                                    <button class="btn btn-primary w-100" id="kb-open-create">
-                                                        <i class="bx bx-plus me-1"></i> Novo card
+                                                    <button id="kb-open-create" type="button" class="btn btn-primary"
+                                                        data-bs-toggle="modal" data-bs-target="#kbModalCreate">
+                                                        <i class="bx bx-plus me-1"></i> Novo Card
                                                     </button>
+
                                                 </div>
                                             </div>
 
@@ -535,6 +495,24 @@
                                                         </div>
                                                     </div>
 
+                                                    <!-- Em Review -->
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-warning"><i
+                                                                            class="bx bx-search-alt"></i></span>
+                                                                    <div class="fw-medium">Em Review</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-review">(0)</span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body kb-dropzone" data-status="review"
+                                                                id="list-review"></div>
+                                                        </div>
+                                                    </div>
+
                                                     <div class="kb-col">
                                                         <div class="card border kb-col-card">
                                                             <div
@@ -640,6 +618,16 @@
                                         <div class="tab-pane fade" id="pane-metas" role="tabpanel"
                                             aria-labelledby="tab-metas" tabindex="0">
 
+                                            <!-- Toolbar do mês (FILTRO MACRO da aba Metas) -->
+                                            <div class="d-flex justify-content-end align-items-end gap-2 mb-3">
+                                                <div>
+                                                    <label class="form-label mb-1"
+                                                        style="font-size: .85rem;">Mês</label>
+                                                    <select id="kb-goals-month" class="form-select form-select-sm"
+                                                        style="width: 140px;"></select>
+                                                </div>
+                                            </div>
+
                                             <div class="row g-3">
                                                 <div class="col-12 col-xl-4">
                                                     <div class="card border">
@@ -689,17 +677,12 @@
                                                                 </div>
                                                             </div>
 
-                                                            <hr />
-
-                                                            <div class="small text-muted">
-                                                                * “Qualidade” (mock) = 100 - retrabalho - atraso.
-                                                            </div>
-
                                                             <hr class="my-3" />
 
-                                                            <div
-                                                                class="d-flex justify-content-between align-items-center mb-2">
-                                                                <div class="fw-semibold">Resultados por cliente</div>
+                                                            <div class="d-flex gap-2 align-items-center">
+                                                                <span class="badge bg-label-secondary"
+                                                                    id="kb-goals-month-label">Clientes</span>
+
                                                                 <button class="btn btn-sm btn-outline-primary"
                                                                     id="kb-goals-config">
                                                                     <i class="bx bx-cog me-1"></i>Definir metas
@@ -820,6 +803,11 @@
                                                                     <div class="fw-semibold mb-2">Responsáveis internos
                                                                         (por cliente)</div>
                                                                     <div class="row g-3">
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label">Aprovações</label>
+                                                                            <select id="client-role-review"
+                                                                                class="form-select"></select>
+                                                                        </div>
                                                                         <div class="col-md-6">
                                                                             <label class="form-label"
                                                                                 for="client-role-briefing">Briefing</label>
@@ -973,6 +961,8 @@
                                                                     Legenda/Copy: <span id="kb-auto-text">—</span><br />
                                                                     Agendamento: <span
                                                                         id="kb-auto-schedule">—</span><br />
+                                                                    Review (interno): <span
+                                                                        id="kb-auto-review">—</span><br />
                                                                     Aprovação (cliente): <span
                                                                         id="kb-auto-approver">—</span>
                                                                 </div>
@@ -1475,7 +1465,6 @@
                                     }
                                 </style>
 
-
                             </div>
                         </div>
                     </div>
@@ -1598,8 +1587,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <!-- Jeferson: dados do cliente logado -->
-    <script src="/assets/js/foodModelPage.js"></script>
     <!-- Jeferson: Check pagamentos -->
     <script src="/assets/js/checkPayments.js"></script>
 
@@ -1655,6 +1642,7 @@
             const STATUS = [
                 { key: "produce", label: "A Produzir" },
                 { key: "doing", label: "Em andamento" },
+                { key: "review", label: "Em Review" },
                 { key: "approval", label: "Em aprovação" },
                 { key: "changes", label: "Alteração necessária" },
                 { key: "approved", label: "Aprovados" },
@@ -1672,6 +1660,7 @@
             const STATUS_BADGE = {
                 produce: "bg-label-secondary",
                 doing: "bg-label-primary",
+                review: "bg-label-warning",
                 approval: "bg-label-warning",
                 changes: "bg-label-danger",
                 approved: "bg-label-success",
@@ -1697,28 +1686,28 @@
                     name: "ho.ko Comunicação",
                     approvalName: "Responsável cliente",
                     approvalEmails: "cliente@exemplo.com",
-                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                    roles: { briefing: "m1", design: "m2", text: "m3", review: "m4", schedule: "m4" },
                 },
                 {
                     id: "c2",
                     name: "Café Carneiro",
                     approvalName: "Responsável cliente",
                     approvalEmails: "cliente@exemplo.com",
-                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                    roles: { briefing: "m1", design: "m2", text: "m3", review: "m4", schedule: "m4" },
                 },
                 {
                     id: "c3",
                     name: "Imunocamp",
                     approvalName: "Responsável cliente",
                     approvalEmails: "cliente@exemplo.com",
-                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                    roles: { briefing: "m1", design: "m2", text: "m3", review: "m4", schedule: "m4" },
                 },
                 {
                     id: "c4",
                     name: "CPN Engenharia",
                     approvalName: "Responsável cliente",
                     approvalEmails: "cliente@exemplo.com",
-                    roles: { briefing: "m1", design: "m2", text: "m3", schedule: "m4" },
+                    roles: { briefing: "m1", design: "m2", text: "m3", review: "m4", schedule: "m4" }
                 },
             ];
 
@@ -1761,7 +1750,13 @@
 
             function clientNamesFromAdminAndCards() {
                 const adminClients = getClients().map(c => c.name).filter(Boolean);
-                const cardClients = (state.cards || []).map(c => c.client).filter(Boolean);
+
+                // NÃO encosta em "state" aqui (TDZ). Puxa do localStorage direto.
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const parsed = safeJsonParse(raw, null);
+                const cards = (parsed && Array.isArray(parsed.cards)) ? parsed.cards : [];
+
+                const cardClients = cards.map(c => c.client).filter(Boolean);
                 return Array.from(new Set([...adminClients, ...cardClients]));
             }
 
@@ -1776,46 +1771,94 @@
             // garante seed logo no início
             ensureAdminSeed();
 
+            function currentMonthKey() {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            }
+
+            function monthLabel(key) {
+                const [y, m] = key.split("-").map(Number);
+                const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                return `${months[(m - 1) || 0]}/${y}`;
+            }
+
+            function listLastMonthKeys(n = 12) {
+                const out = [];
+                const d = new Date();
+                d.setDate(1);
+                for (let i = 0; i < n; i++) {
+                    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+                    d.setMonth(d.getMonth() - 1);
+                }
+                return out;
+            }
+
+            function getGoalsMonthKey() {
+                return state?.goalsMonthKey || currentMonthKey();
+            }
+
+            function monthBounds(key) {
+                const [y, m] = key.split("-").map(Number);
+                const start = new Date(y, m - 1, 1);
+                const end = new Date(y, m, 1);
+                return { start, end };
+            }
+
+            function isDateInMonth(iso, key) {
+                if (!iso) return false;
+                const d = new Date(iso);
+                const { start, end } = monthBounds(key);
+                return d >= start && d < end;
+            }
+
+            function cardDateForGoals(card) {
+                return card.publishedAt || card.dueDate || null;
+            }
+
+            function filterCardsByMonth(cards, key) {
+                return (cards || []).filter(c => isDateInMonth(cardDateForGoals(c), key));
+            }
+
+            // metas por cliente AGORA = por mes: state.clientGoals["YYYY-MM"][client]
             function makeDefaultClientGoals() {
+                const month = currentMonthKey();
                 const goals = {};
                 clientNamesFromAdminAndCards().forEach(client => {
                     goals[client] = { postsPerMonth: 12, ontimePct: 90, quality: 85, maxRework: 2 };
                 });
-                return goals;
+                return { [month]: goals };
             }
 
             function ensureClientGoals() {
+                if (!state.goalsMonthKey) state.goalsMonthKey = currentMonthKey();
+
                 if (!state.clientGoals || typeof state.clientGoals !== "object") state.clientGoals = {};
+
+                // MIGRA formato antigo: state.clientGoals[client] -> state.clientGoals[month][client]
+                const keys = Object.keys(state.clientGoals || {});
+                const hasMonthKeys = keys.some(k => /^\d{4}-\d{2}$/.test(k));
+                if (!hasMonthKeys && keys.length) {
+                    state.clientGoals = { [state.goalsMonthKey]: state.clientGoals };
+                }
+
+                if (!state.clientGoals[state.goalsMonthKey]) state.clientGoals[state.goalsMonthKey] = {};
+
                 clientNamesFromAdminAndCards().forEach(client => {
-                    if (!state.clientGoals[client]) {
-                        state.clientGoals[client] = { postsPerMonth: 12, ontimePct: 90, quality: 85, maxRework: 2 };
+                    if (!state.clientGoals[state.goalsMonthKey][client]) {
+                        state.clientGoals[state.goalsMonthKey][client] = { postsPerMonth: 12, ontimePct: 90, quality: 85, maxRework: 2 };
                     }
                 });
             }
 
-            function makeDefaultClientGoals() {
-                const goals = {};
-                MOCK_CLIENTS.forEach(client => {
-                    goals[client] = {
-                        postsPerMonth: 12,
-                        ontimePct: 90,
-                        quality: 85,
-                        maxRework: 2,
-                    };
-                });
-                return goals;
-            }
+            function initGoalsMonthSelect() {
+                const sel = $("#kb-goals-month");
+                if (!sel) return;
 
-            function ensureClientGoals() {
-                if (!state.clientGoals || typeof state.clientGoals !== "object") state.clientGoals = {};
-                MOCK_CLIENTS.forEach(client => {
-                    if (!state.clientGoals[client]) state.clientGoals[client] = {
-                        postsPerMonth: 12,
-                        ontimePct: 90,
-                        quality: 85,
-                        maxRework: 2,
-                    };
-                });
+                const keys = listLastMonthKeys(12);
+                sel.innerHTML = keys.map(k => `<option value="${k}">${monthLabel(k)}</option>`).join("");
+
+                const cur = getGoalsMonthKey();
+                sel.value = keys.includes(cur) ? cur : keys[0];
             }
 
             // ========= Helpers =========
@@ -1875,10 +1918,6 @@
                 showFeedback._t = setTimeout(() => { el.style.display = "none"; }, 2600);
             }
 
-            function memberName(id) {
-                return MOCK_MEMBERS.find(m => m.id === id)?.name || "—";
-            }
-
             function statusLabel(key) {
                 return STATUS.find(s => s.key === key)?.label || key;
             }
@@ -1918,6 +1957,7 @@
                 if (s === "scheduled") return 95;
                 if (s === "approved") return 85;
                 if (s === "approval") return 75;
+                if (s === "review") return 70;
                 if (s === "changes") return 65;
                 if (s === "doing") {
                     const designDone = !!card.roles?.design?.doneAt;
@@ -1989,6 +2029,7 @@
                     const parsed = JSON.parse(raw);
                     if (!parsed || !Array.isArray(parsed.cards)) return defaultMock();
                     if (!parsed.clientGoals) parsed.clientGoals = makeDefaultClientGoals();
+                    if (!parsed.goalsMonthKey) parsed.goalsMonthKey = currentMonthKey();
                     return parsed;
                 } catch {
                     return defaultMock();
@@ -2029,24 +2070,30 @@
 
                     // papéis fixos do card (quem foi designado na criação)
                     owners: {
-                        briefing: payload.briefingOwnerId || (MOCK_MEMBERS[0]?.id || "m1"),
-                        design: payload.designOwnerId || (MOCK_MEMBERS[1]?.id || "m2"),
-                        text: payload.textOwnerId || (MOCK_MEMBERS[2]?.id || "m3"),
+                        briefing: payload.briefingOwnerId || (getTeam()[0]?.id || "m1"),
+                        design: payload.designOwnerId || (getTeam()[1]?.id || "m2"),
+                        text: payload.textOwnerId || (getTeam()[2]?.id || "m3"),
                     },
 
                     // roles com estado (ativo / concluído / estimativas)
                     roles: {
                         design: {
-                            memberId: payload.designOwnerId || (MOCK_MEMBERS[1]?.id || "m2"),
+                            memberId: payload.designOwnerId || (getTeam()[1]?.id || "m2"),
                             estimateHours: Number(payload.estDesign ?? 2),
                             doneAt: null,
                             active: false,
                         },
                         text: {
-                            memberId: payload.textOwnerId || (MOCK_MEMBERS[2]?.id || "m3"),
+                            memberId: payload.textOwnerId || (getTeam()[2]?.id || "m3"),
                             estimateHours: Number(payload.estText ?? 1),
                             doneAt: null,
                             active: false,
+                        },
+                        review: {
+                            memberId: payload.reviewOwnerId || (getTeam()[0]?.id || "m1"),
+                            estimateHours: Number(payload.estReview ?? 0),
+                            active: false,
+                            doneAt: payload.reviewDoneAt || null,
                         },
                         schedule: {
                             memberId: payload.scheduleOwnerId || payload.briefingOwnerId || "m1",
@@ -2089,6 +2136,10 @@
                 if (newStatus === "doing") {
                     activateRole(card, "design", atIso);
                     activateRole(card, "text", atIso);
+                }
+
+                if (newStatus === "review") {
+                    activateRole(card, "review", atIso);
                 }
 
                 if (newStatus === "changes") {
@@ -2152,15 +2203,15 @@
                 card.history.unshift({ id: uid(), type: "role_done", role: roleKey, memberId: role.memberId, at: atIso });
 
                 // se estamos em doing/changes e não há mais roles ativas => automações de fluxo
-                if ((card.status === "doing" || card.status === "changes") && !hasActiveRoles(card, ["design", "text"])) {
-                    // do doing: vai pra aprovação
-                    if (card.status === "doing") {
-                        enterStatus(card, "approval", atIso);
-                    } else {
-                        // do changes: volta pra aprovação
-                        enterStatus(card, "approval", atIso);
-                        card.changeTargets = [];
-                    }
+                const prevStatus = card.status;
+
+                if ((prevStatus === "doing" || prevStatus === "changes") && designDone && textDone) {
+                    enterStatus(card, "review", atIso);
+                    if (prevStatus === "changes") card.changeTargets = [];
+                }
+
+                if (prevStatus === "review" && roleKey === "review") {
+                    enterStatus(card, "approval", atIso);
                 }
 
                 // se estamos em approved (agendamento) e schedule terminou => vai pra scheduled
@@ -2194,7 +2245,7 @@
 
             function requestChange(cardId, targets) {
                 const card = state.cards.find(c => c.id === cardId);
-                if (!card || card.status !== "approval") return;
+                if (!card || card.status !== "approval" && card.status !== "review") return;
 
                 const atIso = new Date().toISOString();
 
@@ -2325,6 +2376,13 @@
                     return act.filter(Boolean);
                 }
 
+                // review: role review ativa
+                if (card.status === "review") {
+                    const act = [];
+                    if (card.roles?.review?.active) act.push(card.roles.review.memberId);
+                    return act.filter(Boolean);
+                }
+
                 // approved: schedule role ativo
                 if (card.status === "approved" && card.roles?.schedule?.active) return [card.roles.schedule.memberId];
 
@@ -2364,6 +2422,7 @@
                 const count = (k) => filtered.filter(c => c.status === k).length;
                 $("#count-produce").textContent = `(${count("produce")})`;
                 $("#count-doing").textContent = `(${count("doing")})`;
+                $("#count-review").textContent = `(${count("review")})`;
                 $("#count-approval").textContent = `(${count("approval")})`;
                 $("#count-changes").textContent = `(${count("changes")})`;
                 $("#count-approved").textContent = `(${count("approved")})`;
@@ -2371,7 +2430,7 @@
                 $("#count-published").textContent = `(${count("published")})`;
 
                 // summary
-                const wip = filtered.filter(c => c.status === "doing" || c.status === "changes").length;
+                const wip = filtered.filter(c => c.status === "doing" || c.status === "review" || c.status === "changes").length;
                 $("#sum-wip").textContent = String(wip);
 
                 const published = filtered.filter(c => c.status === "published" && c.publishedAt && c.dueDate);
@@ -2545,7 +2604,9 @@
                 const design = memberName(roles.design);
                 const text = memberName(roles.text);
                 const schedule = memberName(roles.schedule);
+                const review = memberName(roles.review);
 
+                $("#kb-auto-review").textContent = review;
                 $("#kb-auto-briefing").textContent = briefing;
                 $("#kb-auto-design").textContent = design;
                 $("#kb-auto-text").textContent = text;
@@ -2722,6 +2783,18 @@
                     if (card.roles?.text?.active) actions.push(`<button class="btn btn-success kb-role-done" data-role="text" data-id="${id}"><i class="bx bx-check me-1"></i>Concluir legenda/copy</button>`);
                 }
 
+                if (card.status === "review") {
+                    if (card.roles?.review?.active) actions.push(
+                        `<button class="btn btn-success kb-role-done" data-role="review" data-id="${id}">
+                        <i class="bx bx-check me-1"></i>Concluir review
+                        </button>`
+                    );
+
+                    actions.push(`<button class="btn btn-outline-danger kb-change" data-target="design" data-id="${id}"><i class="bx bx-revision me-1"></i>Alteração: Arte</button>`);
+                    actions.push(`<button class="btn btn-outline-danger kb-change" data-target="text" data-id="${id}"><i class="bx bx-revision me-1"></i>Alteração: Legenda/Copy</button>`);
+                    actions.push(`<button class="btn btn-outline-danger kb-change" data-target="both" data-id="${id}"><i class="bx bx-revision me-1"></i>Alteração: Geral</button>`);
+                }
+
                 if (card.status === "approval") {
                     actions.push(`<button class="btn btn-success kb-approve" data-id="${id}"><i class="bx bx-check-double me-1"></i>Aprovar</button>`);
                     actions.push(`<button class="btn btn-outline-danger kb-change" data-target="design" data-id="${id}"><i class="bx bx-revision me-1"></i>Alteração: Arte</button>`);
@@ -2757,6 +2830,7 @@
                 const designOwnerId = roles.design || "m2";
                 const textOwnerId = roles.text || "m3";
                 const scheduleOwnerId = roles.schedule || briefingOwnerId || "m1";
+                const reviewOwnerId = roles.review || briefingOwnerId || "m1";
 
                 const payload = {
                     title,
@@ -2764,6 +2838,9 @@
                     briefing: ($("#kb-briefing").value || "").trim(),
                     client: clientName,
                     priority: $("#kb-priority").value,
+
+                    reviewOwnerId,
+                    estReview: 0,
 
                     briefingOwnerId,
                     designOwnerId,
@@ -2797,6 +2874,8 @@
                     card.roles.design.memberId = payload.designOwnerId;
                     card.roles.text.memberId = payload.textOwnerId;
                     card.roles.schedule.memberId = payload.scheduleOwnerId;
+                    card.roles.review.memberId = payload.reviewOwnerId;
+                    card.roles.review.estimateHours = payload.estReview;
 
                     card.roles.design.estimateHours = payload.estDesign;
                     card.roles.text.estimateHours = payload.estText;
@@ -2832,7 +2911,11 @@
             function bindEvents() {
                 $("#kb-open-create")?.addEventListener("click", () => openCreate());
                 $("#kb-save")?.addEventListener("click", () => upsertCardFromForm());
-
+                $("#kb-goals-month")?.addEventListener("change", (e) => {
+                    state.goalsMonthKey = e.target.value;
+                    saveState();
+                    renderGoals();
+                });
                 $("#kb-edit-from-details")?.addEventListener("click", () => {
                     if (!selectedCardId) return;
                     const card = state.cards.find(c => c.id === selectedCardId);
@@ -3025,14 +3108,25 @@
 
             // ========= Goals =========
             function renderGoals() {
-                const cards = state.cards || [];
+                ensureClientGoals();
+                initGoalsMonthSelect();
 
-                const published = cards.filter(c => c.status === "published" && c.publishedAt && c.dueDate);
+                const month = getGoalsMonthKey();
+                // mostra o mês selecionado no card "Visão do time"
+                if ($("#kb-goals-month-label")) {
+                    $("#kb-goals-month-label").textContent = monthLabel(month);
+                }
+                const cardsMonth = filterCardsByMonth(state.cards || [], month);
+
+                const published = cardsMonth.filter(c =>
+                    c.status === "published" && c.publishedAt && c.dueDate && isDateInMonth(c.publishedAt, month)
+                );
+
                 const ontime = published.filter(c => isOnTime(c) === true).length;
                 const ontimePct = published.length ? Math.round((ontime / published.length) * 100) : 0;
 
-                const qAvg = cards.length ? Math.round(cards.reduce((a, c) => a + calcQuality(c), 0) / cards.length) : 0;
-                const reworkTotal = cards.reduce((a, c) => a + Number(c.feedbackCount || 0), 0);
+                const qAvg = cardsMonth.length ? Math.round(cardsMonth.reduce((a, c) => a + calcQuality(c), 0) / cardsMonth.length) : 0;
+                const reworkTotal = cardsMonth.reduce((a, c) => a + Number(c.feedbackCount || 0), 0);
 
                 const TEAM_GOAL_ONTIME = 90;
                 const TEAM_GOAL_QUALITY = 85;
@@ -3048,49 +3142,39 @@
                 $("#bar-team-rework").style.width = `${clamp(Math.round((reworkTotal / TEAM_MAX_REWORK) * 100), 0, 100)}%`;
                 $("#bar-team-rework").classList.toggle("bg-danger", reworkTotal > TEAM_MAX_REWORK);
 
-                // por pessoa
-                const rows = MOCK_MEMBERS.map(m => {
-                    const participated = cards.filter(c => {
+                const team = getTeam();
+
+                const rows = team.map(m => {
+                    const participated = cardsMonth.filter(c => {
                         const o = c.owners || {};
                         const roles = c.roles || {};
                         return o.briefing === m.id || o.design === m.id || o.text === m.id ||
                             roles.design?.memberId === m.id || roles.text?.memberId === m.id || roles.schedule?.memberId === m.id;
                     });
 
-                    const publishedMine = participated.filter(c => c.status === "published" && c.publishedAt && c.dueDate);
+                    const publishedMine = participated.filter(c => c.status === "published" && c.publishedAt && c.dueDate && isDateInMonth(c.publishedAt, month));
                     const ontimeMine = publishedMine.filter(c => isOnTime(c) === true).length;
                     const ontimeMinePct = publishedMine.length ? Math.round((ontimeMine / publishedMine.length) * 100) : 0;
 
                     const qualityMine = participated.length ? Math.round(participated.reduce((a, c) => a + calcQuality(c), 0) / participated.length) : 0;
                     const reworkMine = participated.reduce((a, c) => a + Number(c.feedbackCount || 0), 0);
 
-                    // estimado e real (somando só o que é atribuído a essa pessoa)
                     let estSum = 0;
-                    if (participated.length) {
-                        participated.forEach(c => {
-                            if (c.roles?.design?.memberId === m.id) estSum += Number(c.roles.design.estimateHours || 0);
-                            if (c.roles?.text?.memberId === m.id) estSum += Number(c.roles.text.estimateHours || 0);
-                            if (c.roles?.schedule?.memberId === m.id) estSum += Number(c.roles.schedule.estimateHours || 0);
-                        });
-                    }
+                    participated.forEach(c => {
+                        if (c.roles?.design?.memberId === m.id) estSum += Number(c.roles.design.estimateHours || 0);
+                        if (c.roles?.text?.memberId === m.id) estSum += Number(c.roles.text.estimateHours || 0);
+                        if (c.roles?.schedule?.memberId === m.id) estSum += Number(c.roles.schedule.estimateHours || 0);
+                    });
                     estSum = Math.round(estSum * 10) / 10;
 
-                    const runs = cards.flatMap(c => Array.isArray(c.roleRuns) ? c.roleRuns : []);
+                    const runs = cardsMonth.flatMap(c => Array.isArray(c.roleRuns) ? c.roleRuns : []);
                     let actSum = runs.filter(r => r.memberId === m.id).reduce((a, r) => a + diffHours(r.startedAt, r.endedAt), 0);
                     actSum = Math.round(actSum * 10) / 10;
 
-                    return {
-                        memberName: m.name,
-                        ontimePct: ontimeMinePct,
-                        qualityAvg: qualityMine,
-                        reworkTotal: reworkMine,
-                        estimateSum: estSum,
-                        actualSum: actSum,
-                    };
+                    return { memberName: m.name, ontimePct: ontimeMinePct, qualityAvg: qualityMine, reworkTotal: reworkMine, estimateSum: estSum, actualSum: actSum };
                 });
 
                 renderGoalsTableRows(rows);
-
                 renderClientGoals();
             }
 
@@ -3127,57 +3211,49 @@
 
             function openGoalsModal() {
                 ensureClientGoals();
+
+                const month = getGoalsMonthKey();
+                const goals = state.clientGoals?.[month] || {};
+                const clients = clientNamesFromAdminAndCards();
+
                 const body = $("#kb-goals-table-body");
                 if (!body) return;
 
-                body.innerHTML = MOCK_CLIENTS.map(client => {
-                    const g = state.clientGoals[client] || {};
+                body.innerHTML = clients.map(client => {
+                    const g = goals[client] || {};
                     const c = escapeHtml(client);
 
                     return `
-            <tr data-client="${escapeAttr(client)}">
-                <td class="fw-medium">${c}</td>
-                <td style="width: 120px;">
-                    <input class="form-control form-control-sm" data-field="postsPerMonth" type="number" min="0"
-                        value="${Number(g.postsPerMonth ?? 0)}">
-                </td>
-                <td style="width: 120px;">
-                    <input class="form-control form-control-sm" data-field="ontimePct" type="number" min="0" max="100"
-                        value="${Number(g.ontimePct ?? 0)}">
-                </td>
-                <td style="width: 130px;">
-                    <input class="form-control form-control-sm" data-field="quality" type="number" min="0" max="100"
-                        value="${Number(g.quality ?? 0)}">
-                </td>
-                <td style="width: 140px;">
-                    <input class="form-control form-control-sm" data-field="maxRework" type="number" min="0"
-                        value="${Number(g.maxRework ?? 0)}">
-                </td>
-            </tr>
-        `;
+      <tr data-client="${escapeAttr(client)}">
+        <td class="fw-medium">${c}</td>
+        <td style="width: 120px;"><input class="form-control form-control-sm" data-field="postsPerMonth" type="number" min="0" value="${Number(g.postsPerMonth ?? 0)}"></td>
+        <td style="width: 120px;"><input class="form-control form-control-sm" data-field="ontimePct" type="number" min="0" max="100" value="${Number(g.ontimePct ?? 0)}"></td>
+        <td style="width: 130px;"><input class="form-control form-control-sm" data-field="quality" type="number" min="0" max="100" value="${Number(g.quality ?? 0)}"></td>
+        <td style="width: 140px;"><input class="form-control form-control-sm" data-field="maxRework" type="number" min="0" value="${Number(g.maxRework ?? 0)}"></td>
+      </tr>
+    `;
                 }).join("");
 
                 modalGoals?.show();
             }
 
             function saveGoalsModal() {
+                ensureClientGoals();
+
+                const month = getGoalsMonthKey();
+                if (!state.clientGoals[month]) state.clientGoals[month] = {};
+
                 const body = $("#kb-goals-table-body");
                 if (!body) return;
 
-                const rows = Array.from(body.querySelectorAll("tr"));
-                rows.forEach(tr => {
+                Array.from(body.querySelectorAll("tr")).forEach(tr => {
                     const client = tr.dataset.client;
                     const postsPerMonth = Number(tr.querySelector('[data-field="postsPerMonth"]')?.value || 0);
                     const ontimePct = Number(tr.querySelector('[data-field="ontimePct"]')?.value || 0);
                     const quality = Number(tr.querySelector('[data-field="quality"]')?.value || 0);
                     const maxRework = Number(tr.querySelector('[data-field="maxRework"]')?.value || 0);
 
-                    state.clientGoals[client] = {
-                        postsPerMonth,
-                        ontimePct,
-                        quality,
-                        maxRework,
-                    };
+                    state.clientGoals[month][client] = { postsPerMonth, ontimePct, quality, maxRework };
                 });
 
                 saveState();
@@ -3192,21 +3268,17 @@
                 const wrap = $("#kb-goals-clients");
                 if (!wrap) return;
 
-                const cards = state.cards || [];
-                const now = new Date();
-                const curM = now.getMonth();
-                const curY = now.getFullYear();
+                const month = getGoalsMonthKey();
+                const goals = state.clientGoals?.[month] || {};
+                const clients = clientNamesFromAdminAndCards();
 
-                const isPublishedThisMonth = (c) => {
-                    if (c.status !== "published" || !c.publishedAt) return false;
-                    const d = new Date(c.publishedAt);
-                    return d.getMonth() === curM && d.getFullYear() === curY;
-                };
+                const cardsMonth = filterCardsByMonth(state.cards || [], month);
 
-                wrap.innerHTML = MOCK_CLIENTS.map(client => {
-                    const g = state.clientGoals[client] || {};
-                    const cardsClient = cards.filter(c => (c.client || "") === client);
-                    const published = cardsClient.filter(isPublishedThisMonth);
+                wrap.innerHTML = clients.map(client => {
+                    const g = goals[client] || {};
+                    const cardsClient = cardsMonth.filter(c => (c.client || "") === client);
+
+                    const published = cardsClient.filter(c => c.status === "published" && c.publishedAt && isDateInMonth(c.publishedAt, month));
 
                     const postsDone = published.length;
                     const postsGoal = Number(g.postsPerMonth ?? 0);
@@ -3226,52 +3298,35 @@
                     const barRework = Number(g.maxRework ?? 0) ? clamp(Math.round((reworkTotal / Number(g.maxRework)) * 100), 0, 100) : 0;
 
                     return `
-            <div class="border rounded p-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="fw-medium">${escapeHtml(client)}</div>
-                    <span class="badge bg-label-secondary">${postsDone}/${postsGoal || "—"} posts (mês)</span>
-                </div>
+                        <div class="border rounded p-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="fw-medium">${escapeHtml(client)}</div>
+                            <span class="badge bg-label-secondary">${postsDone}/${postsGoal || "—"} posts (${month})</span>
+                            </div>
 
-                <div class="mt-2">
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>Posts/mês</span><span>${postsDone} / ${postsGoal || "—"}</span>
-                    </div>
-                    <div class="progress mt-1" style="height: 8px;">
-                        <div class="progress-bar" role="progressbar" style="width: ${barPosts}%"></div>
-                    </div>
-                </div>
+                            <div class="mt-2">
+                            <div class="d-flex justify-content-between small text-muted"><span>Posts/mês</span><span>${postsDone} / ${postsGoal || "—"}</span></div>
+                            <div class="progress mt-1" style="height: 8px;"><div class="progress-bar" role="progressbar" style="width: ${barPosts}%"></div></div>
+                            </div>
 
-                <div class="mt-2">
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>No prazo</span><span>${ontimePct}% / ${Number(g.ontimePct ?? 0)}%</span>
-                    </div>
-                    <div class="progress mt-1" style="height: 8px;">
-                        <div class="progress-bar" role="progressbar" style="width: ${barOntime}%"></div>
-                    </div>
-                </div>
+                            <div class="mt-2">
+                            <div class="d-flex justify-content-between small text-muted"><span>No prazo</span><span>${ontimePct}% / ${Number(g.ontimePct ?? 0)}%</span></div>
+                            <div class="progress mt-1" style="height: 8px;"><div class="progress-bar" role="progressbar" style="width: ${barOntime}%"></div></div>
+                            </div>
 
-                <div class="mt-2">
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>Qualidade</span><span>${qAvg} / ${Number(g.quality ?? 0)}</span>
-                    </div>
-                    <div class="progress mt-1" style="height: 8px;">
-                        <div class="progress-bar" role="progressbar" style="width: ${barQuality}%"></div>
-                    </div>
-                </div>
+                            <div class="mt-2">
+                            <div class="d-flex justify-content-between small text-muted"><span>Qualidade</span><span>${qAvg} / ${Number(g.quality ?? 0)}</span></div>
+                            <div class="progress mt-1" style="height: 8px;"><div class="progress-bar" role="progressbar" style="width: ${barQuality}%"></div></div>
+                            </div>
 
-                <div class="mt-2">
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>Retrabalho</span><span>${reworkTotal} / ${Number(g.maxRework ?? 0)}</span>
-                    </div>
-                    <div class="progress mt-1" style="height: 8px;">
-                        <div class="progress-bar" role="progressbar" style="width: ${barRework}%"></div>
-                    </div>
-                </div>
-            </div>
-        `;
+                            <div class="mt-2">
+                            <div class="d-flex justify-content-between small text-muted"><span>Retrabalho</span><span>${reworkTotal} / ${Number(g.maxRework ?? 0)}</span></div>
+                            <div class="progress mt-1" style="height: 8px;"><div class="progress-bar" role="progressbar" style="width: ${barRework}%"></div></div>
+                            </div>
+                        </div>
+                        `;
                 }).join("");
             }
-
 
             // ========= Init =========
             document.addEventListener("DOMContentLoaded", () => {
@@ -3284,7 +3339,7 @@
 
     <script>
         const ADMIN_KEY = "hoko_kanban_admin_v1";
-        const Roles = ['briefing', 'design', 'text', 'schedule'];
+        const Roles = ['briefing', 'design', 'text', 'review', 'schedule'];
 
         function safeJsonParse(raw, fallback) {
             try { return JSON.parse(raw) ?? fallback; } catch { return fallback; }
