@@ -352,13 +352,13 @@
                                                 </div>
 
                                                 <div class="col-6 col-md-2 col-xxl-2">
-                                                    <label class="form-label">Prioridade</label>
+                                                    <label class="form-label">Semana</label>
                                                     <select id="kb-filter-priority" class="form-select">
                                                         <option value="all">Todas</option>
-                                                        <option value="P0">P0</option>
-                                                        <option value="P1">P1</option>
-                                                        <option value="P2">P2</option>
-                                                        <option value="P3">P3</option>
+                                                        <option value="S1">S1</option>
+                                                        <option value="S2">S2</option>
+                                                        <option value="S3">S3</option>
+                                                        <option value="S4">S4</option>
                                                     </select>
                                                 </div>
 
@@ -937,12 +937,12 @@
                                                         </div>
 
                                                         <div class="col-6 col-lg-2">
-                                                            <label class="form-label">Prioridade</label>
+                                                            <label class="form-label">Semana</label>
                                                             <select id="kb-priority" class="form-select" required>
-                                                                <option value="P1">P1</option>
-                                                                <option value="P0">P0</option>
-                                                                <option value="P2">P2</option>
-                                                                <option value="P3">P3</option>
+                                                                <option value="S2">S2</option>
+                                                                <option value="S1">S1</option>
+                                                                <option value="S3">S3</option>
+                                                                <option value="S4">S4</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-12 col-lg-4">
@@ -1651,10 +1651,10 @@
             ];
 
             const PRIORITY_BADGE = {
-                P0: "bg-label-danger",
-                P1: "bg-label-warning",
-                P2: "bg-label-primary",
-                P3: "bg-label-secondary",
+                S1: "bg-label-danger",
+                S2: "bg-label-warning",
+                S3: "bg-label-primary",
+                S4: "bg-label-secondary",
             };
 
             const STATUS_BADGE = {
@@ -1976,7 +1976,7 @@
                 const c1 = makeCard({
                     title: "Revisar calendário editorial (Jan)",
                     client: "ho.ko Comunicação",
-                    priority: "P1",
+                    priority: "S2",
                     dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).toISOString().slice(0, 10),
                     briefing: "Checar temas + ajustar tom de voz.",
                     briefingOwnerId: "m1",
@@ -1988,7 +1988,7 @@
                 const c2 = makeCard({
                     title: "Criar variações de criativos (Meta Ads)",
                     client: "Café Carneiro",
-                    priority: "P0",
+                    priority: "S1",
                     dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString().slice(0, 10),
                     briefing: "Criar 3 variações de criativo para campanha de conversão.",
                     briefingOwnerId: "m4",
@@ -2002,7 +2002,7 @@
                 const c3 = makeCard({
                     title: "Ajustar LP de agendamento (CTA + tracking)",
                     client: "Imunocamp",
-                    priority: "P1",
+                    priority: "S3",
                     dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3).toISOString().slice(0, 10),
                     briefing: "Revisar CTA e eventos de tracking.",
                     briefingOwnerId: "m1",
@@ -2052,7 +2052,7 @@
                     id: payload.id || uid(),
                     title: payload.title || "",
                     client: payload.client || "",
-                    priority: payload.priority || "P1",
+                    priority: payload.priority || "S2",
                     status: payload.status || "produce",
 
                     dueDate: payload.dueDate || null,
@@ -2204,6 +2204,9 @@
 
                 // se estamos em doing/changes e não há mais roles ativas => automações de fluxo
                 const prevStatus = card.status;
+
+                const designDone = !!card.roles?.design?.doneAt;
+                const textDone = !!card.roles?.text?.doneAt;
 
                 if ((prevStatus === "doing" || prevStatus === "changes") && designDone && textDone) {
                     enterStatus(card, "review", atIso);
@@ -2486,7 +2489,7 @@
                             <div class="fw-semibold">${escapeHtml(card.title)}</div>
                             <div class="small text-muted mt-1">${escapeHtml(card.client || "—")}</div>
                         </div>
-                        <span class="badge ${PRIORITY_BADGE[card.priority] || "bg-label-secondary"}">${escapeHtml(card.priority || "P?")}</span>
+                        <span class="badge ${PRIORITY_BADGE[card.priority] || "bg-label-secondary"}">${escapeHtml(card.priority || "S?")}</span>
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 mt-2">
@@ -2628,7 +2631,7 @@
                 const fallbackClient = clients[0] || "";
                 $("#kb-client").value = editCard?.client || fallbackClient;
 
-                $("#kb-priority").value = editCard?.priority || "P1";
+                $("#kb-priority").value = editCard?.priority || "S2";
 
                 $("#kb-est-design").value = Number(editCard?.roles?.design?.estimateHours ?? 2);
                 $("#kb-est-text").value = Number(editCard?.roles?.text?.estimateHours ?? 1);
@@ -2656,7 +2659,7 @@
 
                 // badges
                 const badges = [];
-                badges.push(`<span class="badge ${PRIORITY_BADGE[card.priority] || "bg-label-secondary"}">${escapeHtml(card.priority || "P?")}</span>`);
+                badges.push(`<span class="badge ${PRIORITY_BADGE[card.priority] || "bg-label-secondary"}">${escapeHtml(card.priority || "S?")}</span>`);
                 badges.push(`<span class="badge ${STATUS_BADGE[card.status] || "bg-label-secondary"}">${escapeHtml(stLabel)}</span>`);
                 if (card.dueDate) badges.push(`<span class="badge bg-label-info"><i class="bx bx-calendar me-1"></i>${fmtDate(card.dueDate)}</span>`);
                 badges.push(`<span class="badge bg-label-warning"><i class="bx bx-shield-quarter me-1"></i>${calcQuality(card)}</span>`);
