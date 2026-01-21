@@ -688,6 +688,21 @@
                                                                     <i class="bx bx-cog me-1"></i>Definir metas
                                                                 </button>
                                                             </div>
+
+                                                            <div class="mt-2">
+                                                                <div class="input-group input-group-sm">
+                                                                    <span class="input-group-text"><i
+                                                                            class="bx bx-search"></i></span>
+                                                                    <input id="kb-goals-client-search" type="text"
+                                                                        class="form-control"
+                                                                        placeholder="Buscar cliente..." />
+                                                                </div>
+                                                            </div>
+
+                                                            <div id="kb-goals-clients"
+                                                                class="kb-goals-clients-scroll d-flex flex-column gap-2 mt-2">
+                                                            </div>
+
                                                             <div id="kb-goals-clients" class="d-flex flex-column gap-2">
                                                             </div>
                                                         </div>
@@ -1097,7 +1112,7 @@
 
                                                                 <hr />
 
-                                                                <!-- Tabs: Copy / Briefing / Checklist / Histórico -->
+                                                                <!-- Tabs: Copy / Briefing / Histórico -->
                                                                 <ul class="nav nav-tabs" role="tablist">
                                                                     <li class="nav-item" role="presentation">
                                                                         <button class="nav-link active"
@@ -1115,14 +1130,6 @@
                                                                             type="button" role="tab">
                                                                             <i class="bx bx-notepad me-1"></i>
                                                                             Briefing
-                                                                        </button>
-                                                                    </li>
-                                                                    <li class="nav-item" role="presentation">
-                                                                        <button class="nav-link" data-bs-toggle="tab"
-                                                                            data-bs-target="#kb-tab-checklist"
-                                                                            type="button" role="tab">
-                                                                            <i class="bx bx-list-check me-1"></i>
-                                                                            Checklist
                                                                         </button>
                                                                     </li>
                                                                     <li class="nav-item" role="presentation">
@@ -1174,14 +1181,6 @@
                                                                         <div id="kb-details-desc" class="small">—
                                                                         </div>
                                                                     </div>
-
-                                                                    <div class="tab-pane fade" id="kb-tab-checklist"
-                                                                        role="tabpanel">
-                                                                        <div class="text-muted small mb-2">Itens de
-                                                                            entrega (mock)</div>
-                                                                        <div id="kb-details-checklist"></div>
-                                                                    </div>
-
                                                                     <div class="tab-pane fade" id="kb-tab-client"
                                                                         role="tabpanel">
                                                                         <div class="text-muted small mb-2">Comentários
@@ -1462,6 +1461,12 @@
                                     .kb-pre {
                                         white-space: pre-wrap;
                                         word-break: break-word;
+                                    }
+
+                                    .kb-goals-clients-scroll {
+                                        max-height: 360px;
+                                        overflow-y: auto;
+                                        padding-right: 6px;
                                     }
                                 </style>
 
@@ -2674,9 +2679,6 @@
                 // assets
                 $("#kb-assets-area").innerHTML = renderAssets(card);
 
-                // checklist (mock)
-                $("#kb-details-checklist").innerHTML = renderChecklist(card);
-
                 // métricas
                 $("#kb-details-estimate").textContent = String(getTotalEstimate(card));
                 $("#kb-details-actual").textContent = String(getTotalReal(card));
@@ -2713,27 +2715,6 @@
                     <div class="kb-asset-caption">Arte ${idx + 1}</div>
                 </div>
             `).join("");
-            }
-
-            function renderChecklist(card) {
-                // Mantive checklist como mock (melhoramos depois)
-                const list = Array.isArray(card.checklist) ? card.checklist : [
-                    { id: "c1", text: "Checklist: briefing validado", done: true },
-                    { id: "c2", text: "Checklist: arte anexada", done: (card.assets || []).length > 0 },
-                    { id: "c3", text: "Checklist: texto preenchido", done: !!(card.copyText || "").trim() },
-                ];
-                card.checklist = list;
-
-                return `
-                <div class="d-flex flex-column gap-2">
-                    ${list.map(item => `
-                        <label class="d-flex align-items-center gap-2">
-                            <input type="checkbox" class="form-check-input kb-check-item" data-id="${escapeAttr(item.id)}" ${item.done ? "checked" : ""}>
-                            <span class="${item.done ? "text-muted text-decoration-line-through" : ""}">${escapeHtml(item.text)}</span>
-                        </label>
-                    `).join("")}
-                </div>
-            `;
             }
 
             function renderTimeLog(card) {
@@ -2914,6 +2895,7 @@
             function bindEvents() {
                 $("#kb-open-create")?.addEventListener("click", () => openCreate());
                 $("#kb-save")?.addEventListener("click", () => upsertCardFromForm());
+                $("#kb-goals-client-search")?.addEventListener("input", () => renderClientGoals());
                 $("#kb-goals-month")?.addEventListener("change", (e) => {
                     state.goalsMonthKey = e.target.value;
                     saveState();
@@ -2986,22 +2968,6 @@
                     render();
                     if (selectedCardId === card.id) openDetails(card.id);
                     showFeedback("Comentário do cliente adicionado.", "info");
-                });
-                // checklist toggle (mock)
-                document.addEventListener("change", (e) => {
-                    const t = e.target;
-                    if (!t?.classList?.contains("kb-check-item")) return;
-                    if (!selectedCardId) return;
-
-                    const card = state.cards.find(c => c.id === selectedCardId);
-                    if (!card || !Array.isArray(card.checklist)) return;
-
-                    const item = card.checklist.find(i => i.id === t.dataset.id);
-                    if (!item) return;
-
-                    item.done = !!t.checked;
-                    saveState();
-                    openDetails(selectedCardId);
                 });
 
                 // reset mock
@@ -3274,10 +3240,12 @@
                 const month = getGoalsMonthKey();
                 const goals = state.clientGoals?.[month] || {};
                 const clients = clientNamesFromAdminAndCards();
+                const q = ($("#kb-goals-client-search")?.value || "").trim().toLowerCase();
+                const filteredClients = q ? clients.filter(n => (n || "").toLowerCase().includes(q)) : clients;
 
                 const cardsMonth = filterCardsByMonth(state.cards || [], month);
 
-                wrap.innerHTML = clients.map(client => {
+                wrap.innerHTML = filteredClients.map(client => {
                     const g = goals[client] || {};
                     const cardsClient = cardsMonth.filter(c => (c.client || "") === client);
 
