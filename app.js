@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const contentsRoutes = require('./routes/contentsRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const kanbanRoutes = request('./routes/kanbanRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
@@ -43,6 +44,7 @@ app.use('/api', authRoutes); // Não deve ser /api
 app.use('/api/billing', billingRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/contents', contentsRoutes);
+app.use('/api/kanban', kanbanRoutes);
 
 //Refatorado
 app.use('/api/contact', contactRoutes);
