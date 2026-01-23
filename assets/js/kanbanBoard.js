@@ -106,6 +106,8 @@
         goals: {},
         goalsMonthKey: null,
         selectedCardId: null,
+        team: [],
+        clients: [],
     };
 
     function currentMonthKey() {
@@ -196,8 +198,19 @@
 
     // ========= API loaders =========
     async function loadCards() {
-        state.cards = await api("/api/kanban/cards");
+        const monthKey = state.goalsMonthKey || currentMonthKey();
+        state.cards = await api(`/api/kanban/cards?month=${encodeURIComponent(monthKey)}`);
         if (!Array.isArray(state.cards)) state.cards = [];
+    }
+
+    async function loadMeta() {
+        const [team, clients] = await Promise.all([
+            api("/api/kanban/team"),
+            api("/api/kanban/clients"),
+        ]);
+
+        state.team = Array.isArray(team) ? team : [];
+        state.clients = Array.isArray(clients) ? clients : [];
     }
 
     async function loadGoals(monthKey) {
@@ -228,9 +241,8 @@
         };
     }
 
-    function memberNameById(id) {
-        const team = window.KanbanAdmin?.getTeam?.() || [];
-        return team.find((m) => m.id === id)?.name || "—";
+    function memberNameById(name) {
+        return name || "—";
     }
 
     function cardActiveMembers(card) {
@@ -238,18 +250,18 @@
 
         if (card.status === "doing" || card.status === "changes") {
             const act = [];
-            if (card.roles?.design?.active) act.push(card.roles.design.member_id);
-            if (card.roles?.text?.active) act.push(card.roles.text.member_id);
+            if (card.roles?.design?.active) act.push(card.roles.design.member_name);
+            if (card.roles?.text?.active) act.push(card.roles.text.member_name);
             return act.filter(Boolean);
         }
 
         if (card.status === "review") {
             const act = [];
-            if (card.roles?.review?.active) act.push(card.roles.review.member_id);
+            if (card.roles?.review?.active) act.push(card.roles.review.member_name);
             return act.filter(Boolean);
         }
 
-        if (card.status === "approved" && card.roles?.schedule?.active) return [card.roles.schedule.member_id];
+        if (card.status === "approved" && card.roles?.schedule?.active) return [card.roles.schedule.member_name];
 
         return [];
     }
@@ -291,18 +303,25 @@
     }
 
     function fillSelects() {
-        const clients = window.KanbanAdmin?.getClients?.() || [];
-        const team = window.KanbanAdmin?.getTeam?.() || [];
+        const clients = (state.clients || []).filter(c => !!c.profile_id); // só com config extra
+        const team = state.team || [];
 
-        fillOptions($("#kb-filter-client"), [{ value: "all", label: "Todos" }].concat(
-            clients.map((c) => ({ value: c.name, label: c.name }))
-        ));
+        fillOptions($("#kb-filter-client"),
+            [{ value: "all", label: "Todos" }].concat(
+                clients.map(c => ({ value: c.name, label: c.name }))
+            )
+        );
 
-        fillOptions($("#kb-filter-member"), [{ value: "all", label: "Todos" }].concat(
-            team.map((m) => ({ value: m.id, label: m.name }))
-        ));
+        // aqui vamos usar "nome" como value (porque o card guarda member_name)
+        fillOptions($("#kb-filter-member"),
+            [{ value: "all", label: "Todos" }].concat(
+                team.map(m => ({ value: m.name, label: m.name }))
+            )
+        );
 
-        fillOptions($("#kb-client"), clients.map((c) => ({ value: c.name, label: c.name })));
+        fillOptions($("#kb-client"),
+            clients.map(c => ({ value: c.name, label: c.name }))
+        );
     }
 
     function renderCard(card) {
@@ -448,7 +467,7 @@
     const modalGoals = $("#kbModalGoals") ? new bootstrap.Modal($("#kbModalGoals")) : null;
 
     function renderAutoClientRolesPreview(clientName) {
-        const clients = window.KanbanAdmin?.getClients?.() || [];
+        const clients = (state.clients || []).filter(c => !!c.profile_id);
         const c = clients.find((x) => x.name === clientName);
 
         const roles = c?.roles || {};
@@ -470,7 +489,7 @@
         $("#kb-desc").value = editCard?.desc || "";
         $("#kb-briefing").value = editCard?.briefing || "";
 
-        const clients = window.KanbanAdmin?.getClients?.() || [];
+        const clients = state.clients || [];
         const fallbackClient = clients[0]?.name || "";
         $("#kb-client").value = editCard?.client_name || fallbackClient;
 
@@ -516,7 +535,7 @@
           <tr>
             <td>${escapeHtml(stageLabel)}</td>
             <td>${escapeHtml(roleLabel)}</td>
-            <td>${escapeHtml(memberNameById(r.member_id))}</td>
+            <td>${escapeHtml(memberNameById(r.member_name))}</td>
             <td>${fmtDateTime(r.started_at)}</td>
             <td>${r.ended_at ? fmtDateTime(r.ended_at) : "—"} <span class="text-muted">(${dur})</span></td>
           </tr>
@@ -1117,6 +1136,10 @@
             bindEvents();
 
             // se API ainda não estiver pronta, a página sobe vazia
+            await loadMeta();
+            fillSelects();
+
+            await initGoalsMonthSelect(); // se existir no seu fluxo
             await loadCards();
             render();
         } catch (err) {

@@ -5,6 +5,14 @@ const monthToDate = (monthKey) => {
     if (!/^\d{4}-\d{2}$/.test(monthKey)) throw new Error('month inválido (use YYYY-MM)');
     return `${monthKey}-01`;
 };
+const monthKeyFromDate = (d) => {
+    if (!d) return null;
+    const dt = new Date(d);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+};
+
 
 // =======================
 // TEAM
@@ -91,7 +99,7 @@ async function listClientsWithProfile(id_user) {
     return rows.map(r => ({
         id: r.id_customer,
         name: r.name,
-
+        profile_id: r.client_profile_id || null,
         approval_name: r.approval_name || "",
         approval_emails: r.approval_emails || "",
 
@@ -327,16 +335,17 @@ async function upsertGoalsByMonthNormalized(id_user, monthKey, clientsArray) {
 // CARDS
 // =======================
 async function listCardsAll(id_user) {
-    const { rows } = await pool.query(
-        `SELECT
-        k.*,
-        c.name as client_name
-     FROM kanban.card k
-     JOIN customer c ON c.id_customer = k.customer_id AND c.id_user = k.id_user
-     WHERE k.id_user=$1
-     ORDER BY k.created_at DESC`,
-        [id_user]
-    );
+    const q = `
+    SELECT
+      k.*,
+      c.name AS client_name
+    FROM kanban.card k
+    JOIN kanban.client_profile cp ON cp.id = k.client_profile_id
+    JOIN public.customer c ON c.id_customer = cp.id_customer AND c.id_user = cp.id_user
+    WHERE k.id_user = $1
+    ORDER BY k.created_at DESC
+  `;
+    const { rows } = await pool.query(q, [id_user]);
     return rows;
 }
 
@@ -451,84 +460,155 @@ async function listCardsByMonth(id_user, monthKey) {
 
 // front manda client_name, week=S1..S4, desc, briefing (opcional), copy_text (opcional)
 async function createCardNormalized(id_user, payload) {
-    const client_name = String(payload.client_name || '').trim();
-    if (!client_name) throw new Error('client_name obrigatório');
+    const client_name = String(payload?.client_name || "").trim();
+    const title = String(payload?.title || "").trim();
+    if (!client_name) throw new Error("client_name obrigatório");
+    if (!title) throw new Error("title obrigatório");
 
-    const c = await pool.query(
-        `SELECT id_customer FROM customer WHERE id_user=$1 AND name=$2 LIMIT 1`,
-        [id_user, client_name]
-    );
-    if (!c.rows.length) throw new Error('Cliente inválido');
-    const customer_id = c.rows[0].id_customer;
+    const week = String(payload?.week || "S2");
+    const due_date = payload?.due_date || null;
 
-    const { rows } = await pool.query(
-        `INSERT INTO kanban.card (
-        id_user, customer_id,
-        title, description,
-        status, week, due_date,
-        tags, roles, checklist,
-        rework_count, quality_score
-     )
-     VALUES ($1,$2,$3,$4,$5,$6,$7::date,$8,$9,$10,$11,$12)
-     RETURNING *`,
-        [
+    const briefing = String(payload?.briefing || "").trim() || null;
+    const description = String(payload?.desc || "").trim() || null;
+    const tags = Array.isArray(payload?.tags) ? payload.tags : [];
+
+    const estimates = payload?.estimates || {};
+    const estDesign = Number(estimates.design || 0);
+    const estText = Number(estimates.text || 0);
+    const estSchedule = Number(estimates.schedule || 0);
+
+    // >>> só pode criar card para cliente com config extra (client_profile existe)
+    const profileQ = `
+    SELECT cp.id,
+           cp.role_briefing_name,
+           cp.role_design_name,
+           cp.role_text_name
+    FROM kanban.client_profile cp
+    JOIN public.customer c
+      ON c.id_customer = cp.id_customer
+     AND c.id_user = cp.id_user
+    WHERE cp.id_user = $1
+      AND lower(c.name) = lower($2)
+    LIMIT 1
+  `;
+    const prof = await pool.query(profileQ, [id_user, client_name]);
+    if (!prof.rows.length) throw new Error("Cliente sem configuração extra (aba Clientes).");
+
+    const client_profile_id = prof.rows[0].id;
+    const owner_briefing_name = prof.rows[0].role_briefing_name || null;
+    const owner_design_name = prof.rows[0].role_design_name || null;
+    const owner_text_name = prof.rows[0].role_text_name || null;
+
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        const insQ = `
+      INSERT INTO kanban.card (
+        id_user, client_profile_id,
+        title, week, status,
+        due_date, tags,
+        briefing, description, copy_text,
+        feedback_count, change_targets,
+        owner_briefing_name, owner_design_name, owner_text_name
+      )
+      VALUES ($1,$2,$3,$4,'produce',$5::date,$6,$7,$8,NULL,0,'{}',$9,$10,$11)
+      RETURNING id
+    `;
+        const ins = await client.query(insQ, [
             id_user,
-            customer_id,
-            payload.title,
-            payload.desc || payload.description || null,
-            'produce',
-            Number(payload.week || 2),
-            payload.due_date || null,
-            payload.tags || [],
-            payload.roles || {},
-            payload.checklist || null,
-            Number(payload.feedback_count || 0),
-            Number(payload.quality_score || 0),
-        ]
-    );
+            client_profile_id,
+            title,
+            week,
+            due_date,
+            tags,
+            briefing,
+            description,
+            owner_briefing_name,
+            owner_design_name,
+            owner_text_name,
+        ]);
 
-    return rows[0];
+        const card_id = ins.rows[0].id;
+
+        // cria roles do card (design/text/review/schedule)
+        const roleIns = `
+      INSERT INTO kanban.card_role (card_id, role, member_name, estimate_hours, active)
+      VALUES ($1,$2,$3,$4,$5)
+      ON CONFLICT (card_id, role) DO NOTHING
+    `;
+
+        await client.query(roleIns, [card_id, "design", owner_design_name, estDesign, false]);
+        await client.query(roleIns, [card_id, "text", owner_text_name, estText, false]);
+        await client.query(roleIns, [card_id, "review", null, 0, false]);
+        await client.query(roleIns, [card_id, "schedule", null, estSchedule, false]);
+
+        await client.query("COMMIT");
+
+        // não dá pra garantir que monthKeyFromDate exista no arquivo, então buscamos direto por id:
+        const one = await getCardByIdExpanded(id_user, card_id);
+        return one;
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 }
 
 async function updateCardNormalized(id_user, id, payload) {
-    // resolve customer_id via client_name
-    const client_name = String(payload.client_name || '').trim();
-    let customer_id = null;
+    // resolve client_profile_id via client_name (se vier)
+    const client_name = String(payload.client_name || "").trim();
+    let client_profile_id = null;
 
     if (client_name) {
-        const c = await pool.query(
-            `SELECT id_customer FROM customer WHERE id_user=$1 AND name=$2 LIMIT 1`,
+        const prof = await pool.query(
+            `
+      SELECT cp.id
+      FROM kanban.client_profile cp
+      JOIN public.customer c
+        ON c.id_customer = cp.id_customer AND c.id_user = cp.id_user
+      WHERE cp.id_user = $1
+        AND lower(c.name) = lower($2)
+      LIMIT 1
+      `,
             [id_user, client_name]
         );
-        if (!c.rows.length) throw new Error('Cliente inválido');
-        customer_id = c.rows[0].id_customer;
+        if (!prof.rows.length) throw new Error("Cliente inválido / sem configuração extra.");
+        client_profile_id = prof.rows[0].id;
     }
 
+    // normaliza week (precisa ser S1..S4)
+    const weekRaw = String(payload.week || "").toUpperCase().trim();
+    const week = /^S[1-4]$/.test(weekRaw) ? weekRaw : null;
+
     const { rows } = await pool.query(
-        `UPDATE kanban.card
-     SET
-       customer_id = COALESCE($3, customer_id),
-       title = COALESCE($4, title),
-       description = $5,
-       week = COALESCE($6, week),
-       due_date = $7::date,
-       tags = COALESCE($8, tags),
-       updated_at = now()
-     WHERE id_user=$1 AND id=$2
-     RETURNING *`,
+        `
+    UPDATE kanban.card
+    SET
+      client_profile_id = COALESCE($3, client_profile_id),
+      title            = COALESCE($4, title),
+      description      = $5,
+      week             = COALESCE($6, week),
+      due_date         = $7::date,
+      tags             = COALESCE($8, tags),
+      updated_at       = now()
+    WHERE id_user=$1 AND id=$2
+    RETURNING *
+    `,
         [
             id_user,
             id,
-            customer_id,
+            client_profile_id,
             payload.title || null,
             payload.desc ?? payload.description ?? null,
-            Number(payload.week || 0) || null,
+            week,
             payload.due_date || null,
             payload.tags || [],
         ]
     );
 
-    if (!rows.length) throw new Error('Card não encontrado');
+    if (!rows.length) throw new Error("Card não encontrado");
     return rows[0];
 }
 
@@ -713,6 +793,78 @@ async function externalRequestChanges(external_token, card_id) {
 async function externalAddComment(external_token, card_id) {
     const profile = await getClientProfileByToken(external_token);
     return { profile, ok: true, card_id };
+}
+
+async function getCardByIdExpanded(id_user, card_id) {
+    const q = `
+    SELECT
+      k.id, k.title, k.week, k.status, k.due_date, k.tags,
+      k.briefing, k.description, k.copy_text, k.feedback_count,
+      k.owner_briefing_name, k.owner_design_name, k.owner_text_name,
+      k.created_at, k.updated_at,
+      c.name AS client_name
+    FROM kanban.card k
+    JOIN kanban.client_profile cp ON cp.id = k.client_profile_id
+    JOIN public.customer c ON c.id_customer = cp.id_customer AND c.id_user = cp.id_user
+    WHERE k.id_user = $1 AND k.id = $2
+    LIMIT 1
+  `;
+    const base = await pool.query(q, [id_user, card_id]);
+    if (!base.rows.length) throw new Error("Card não encontrado");
+
+    const rolesRes = await pool.query(
+        `SELECT role, member_name, estimate_hours, active, done_at
+        FROM kanban.card_role
+        WHERE card_id = $1`,
+        [card_id]
+    );
+
+    const runsRes = await pool.query(
+        `SELECT role, status, member_name, started_at, ended_at
+     FROM kanban.card_role_run WHERE card_id = $1 ORDER BY started_at ASC`,
+        [card_id]
+    );
+
+    const roles = {};
+    for (const r of rolesRes.rows) {
+        roles[r.role] = {
+            role: r.role,
+            member_name: r.member_name,
+            estimate_hours: Number(r.estimate_hours || 0),
+            active: !!r.active,
+            done_at: r.done_at,
+        };
+    }
+
+    const k = base.rows[0];
+    return {
+        id: k.id,
+        client_name: k.client_name,
+        title: k.title,
+        week: k.week,
+        status: k.status,
+        due_date: k.due_date,
+        tags: k.tags || [],
+        briefing: k.briefing || "",
+        desc: k.description || "",
+        copy_text: k.copy_text || "",
+        feedback_count: Number(k.feedback_count || 0),
+        owners: {
+            briefing: k.owner_briefing_name || "",
+            design: k.owner_design_name || "",
+            text: k.owner_text_name || "",
+        },
+        roles,
+        role_runs: runsRes.rows.map(rr => ({
+            role: rr.role,
+            status: rr.status,
+            member_name: rr.member_name,
+            started_at: rr.started_at,
+            ended_at: rr.ended_at,
+        })),
+        created_at: k.created_at,
+        updated_at: k.updated_at,
+    };
 }
 
 module.exports = {

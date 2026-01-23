@@ -139,7 +139,7 @@ async function listCards(req, res) {
             copy_text: c.copy_text ?? null,
             tags: c.tags || [],
             roles: c.roles || {},
-            feedback_count: Number(c.rework_count || 0),
+            feedback_count: Number(c.feedback_count || 0),
             published_at: c.published_at || null,
             assets: c.assets || [],
             role_runs: c.role_runs || [],
@@ -157,8 +157,6 @@ async function createCard(req, res) {
         const id_user = req.user.id;
 
         const payload = req.body || {};
-        payload.week = weekToInt(payload.week);
-
         const card = await repo.createCardNormalized(id_user, payload);
         return ok(res, card);
     } catch (e) {
@@ -171,8 +169,6 @@ async function updateCard(req, res) {
         const id_user = req.user.id;
         const id = req.params.id;
         const payload = req.body || {};
-
-        payload.week = weekToInt(payload.week);
 
         const card = await repo.updateCardNormalized(id_user, id, payload);
         return ok(res, card);
