@@ -78,12 +78,12 @@
 
             state.team.forEach((m) => {
                 const opt = document.createElement("option");
-                opt.value = m.id;
+                opt.value = m.name;
                 opt.textContent = m.name;
                 select.appendChild(opt);
             });
 
-            if (state.team.some((m) => m.id === current)) select.value = current;
+            if (state.team.some((m) => m.name === current)) select.value = current;
         });
     }
 
@@ -100,21 +100,22 @@
         empty.style.display = "none";
 
         state.clients.forEach((c) => {
+            const cid = String(c.id); // <<< garante string
             const a = document.createElement("a");
             a.href = "javascript:void(0)";
             a.className =
                 "list-group-item list-group-item-action" +
-                (state.selectedClientId === c.id ? " active" : "");
-            a.dataset.id = c.id;
+                (state.selectedClientId === cid ? " active" : "");
+            a.dataset.id = cid;
 
             a.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center">
-          <div class="fw-medium">${escapeHtml(c.name)}</div>
-          <small class="${state.selectedClientId === c.id ? "text-white-50" : "text-muted"}">
-            ${escapeHtml(c.approval_name || "")}
-          </small>
-        </div>
-      `;
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-medium">${escapeHtml(c.name)}</div>
+        <small class="${state.selectedClientId === cid ? "text-white-50" : "text-muted"}">
+          ${escapeHtml(c.approval_name || "")}
+        </small>
+      </div>
+    `;
             list.appendChild(a);
         });
     }
@@ -122,7 +123,6 @@
     function clearClientForm() {
         state.selectedClientId = null;
         $("#client-id").value = "";
-        $("#client-name").value = "";
         $("#client-approval-name").value = "";
         $("#client-approval-emails").value = "";
 
@@ -136,13 +136,13 @@
     }
 
     function loadClient(id) {
-        const c = state.clients.find((x) => x.id === id);
+        const cid = String(id);
+        const c = state.clients.find((x) => String(x.id) === cid);
         if (!c) return;
 
-        state.selectedClientId = id;
+        state.selectedClientId = cid;
 
-        $("#client-id").value = c.id;
-        $("#client-name").value = c.name || "";
+        $("#client-id").value = cid;
         $("#client-approval-name").value = c.approval_name || "";
         $("#client-approval-emails").value = c.approval_emails || "";
 
@@ -160,9 +160,6 @@
         const id = $("#client-id").value || state.selectedClientId;
         if (!id) return alert("Selecione um cliente.");
 
-        const name = $("#client-name").value.trim();
-        if (!name) return alert("Nome do cliente é obrigatório.");
-
         const approval_name = $("#client-approval-name").value.trim();
         const approval_emails = $("#client-approval-emails").value.trim();
 
@@ -171,10 +168,9 @@
             roles[role] = document.getElementById(`client-role-${role}`).value || "";
         });
 
-        // rota (você cria na task 3): atualiza apenas perfil/config extra
         await api(`/api/kanban/clients/${id}/profile`, {
             method: "PUT",
-            body: JSON.stringify({ name, approval_name, approval_emails, roles }),
+            body: JSON.stringify({ approval_name, approval_emails, roles }),
         });
 
         await loadAll();
@@ -300,7 +296,7 @@
         $("#clients-list").addEventListener("click", (e) => {
             const item = e.target.closest(".list-group-item");
             if (!item) return;
-            loadClient(item.dataset.id);
+            loadClient(String(item.dataset.id));
         });
     });
 })();

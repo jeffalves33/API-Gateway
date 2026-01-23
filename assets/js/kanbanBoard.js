@@ -706,6 +706,89 @@
 
         // clientes no painel (agora vem da API state.goals.clients)
         renderClientGoals(cardsMonth, month);
+        renderPeopleGoals(cardsMonth, month);
+    }
+
+    function renderPeopleGoals(cardsMonth, month) {
+        const tbody = $("#goals-table-body");
+        if (!tbody) return;
+
+        // nomes do time (vem do Admin)
+        const team = (window.KanbanAdmin?.getTeam?.() || [])
+            .map(m => (m?.name || "").trim())
+            .filter(Boolean);
+
+        // nomes que aparecem nos cards (fallback)
+        const namesFromCards = new Set();
+        for (const c of (cardsMonth || [])) {
+            for (const rk of ["design", "text", "review", "schedule"]) {
+                const n = (c.roles?.[rk]?.member_name || "").trim();
+                if (n) namesFromCards.add(n);
+            }
+            for (const run of (c.role_runs || [])) {
+                const n = (run.member_name || "").trim();
+                if (n) namesFromCards.add(n);
+            }
+        }
+
+        const members = Array.from(new Set([...team, ...namesFromCards])).sort((a, b) => a.localeCompare(b));
+
+        const rows = members.map((name) => {
+            const myCards = (cardsMonth || []).filter((c) => {
+                const r = c.roles || {};
+                return ["design", "text", "review", "schedule"].some((rk) => (r[rk]?.member_name || "").trim() === name);
+            });
+
+            const published = myCards.filter((c) => c.status === "published" && c.published_at && c.due_date && isDateInMonth(c.published_at, month));
+            const ontimeCount = published.filter((c) => isOnTime(c) === true).length;
+            const ontimePct = published.length ? Math.round((ontimeCount / published.length) * 100) : 0;
+
+            const qualityAvg = myCards.length ? Math.round(myCards.reduce((a, c) => a + calcQuality(c), 0) / myCards.length) : 0;
+            const rework = myCards.reduce((a, c) => a + Number(c.feedback_count || 0), 0);
+
+            // horas estimadas só das roles do membro
+            const est = myCards.reduce((sum, c) => {
+                const r = c.roles || {};
+                let s = 0;
+                for (const rk of ["design", "text", "review", "schedule"]) {
+                    if ((r[rk]?.member_name || "").trim() === name) s += Number(r[rk]?.estimate_hours || 0);
+                }
+                return sum + s;
+            }, 0);
+
+            // horas reais pelos runs do membro
+            const real = (cardsMonth || []).reduce((sum, c) => {
+                const runs = Array.isArray(c.role_runs) ? c.role_runs : [];
+                const mine = runs.filter((run) => (run.member_name || "").trim() === name);
+                const hrs = mine.reduce((a, run) => a + diffHours(run.started_at, run.ended_at), 0);
+                return sum + hrs;
+            }, 0);
+
+            const estR = Math.round(est * 10) / 10;
+            const realR = Math.round(real * 10) / 10;
+
+            const initial = (name || "—").trim().slice(0, 1).toUpperCase();
+
+            return `
+                <tr>
+                    <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-xs rounded bg-label-primary"><span class="avatar-initial">${escapeHtml(initial)}</span></span>
+                        <div class="fw-medium">${escapeHtml(name)}</div>
+                    </div>
+                    </td>
+                    <td>${ontimePct}%</td>
+                    <td>${qualityAvg}</td>
+                    <td>${rework}</td>
+                    <td class="text-muted">
+                    <div>Σ est: <b>${estR}h</b> &nbsp;•&nbsp; Σ real: <b>${realR}h</b></div>
+                    <div class="small">Desvio: ${estR ? `${Math.round(((realR - estR) / estR) * 100)}%` : "—"}</div>
+                    </td>
+                </tr>
+                `;
+        });
+
+        tbody.innerHTML = rows.join("");
     }
 
     function renderClientGoals(cardsMonth, month) {
