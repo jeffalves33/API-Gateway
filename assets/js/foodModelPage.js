@@ -323,7 +323,6 @@ document.getElementById('upload-document-form').addEventListener('submit', async
 
     try {
         const documentData = await captureAndValidateForm();
-        console.log("documentData: ", documentData)
 
         // Mostrar loading
         feedbackMessage.className = 'alert alert-info';

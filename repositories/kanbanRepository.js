@@ -354,31 +354,37 @@ async function listCardsByMonth(id_user, monthKey) {
 
     // pega cards do mês pelo due_date
     const q = `
-    SELECT
-      k.id,
-      k.title,
-      k.week,
-      k.status,
-      k.due_date,
-      k.tags,
-      k.briefing,
-      k.description,
-      k.copy_text,
-      k.feedback_count,
-      k.owner_briefing_name,
-      k.owner_design_name,
-      k.owner_text_name,
-      k.created_at,
-      k.updated_at,
-
-      c.name AS client_name
-    FROM kanban.card k
-    JOIN kanban.client_profile cp ON cp.id = k.client_profile_id
-    JOIN public.customer c ON c.id_customer = cp.id_customer AND c.id_user = cp.id_user
-    WHERE k.id_user = $1
-      AND date_trunc('month', k.due_date)::date = $2::date
-    ORDER BY k.created_at DESC
-  `;
+        SELECT
+            k.id,
+            k.title,
+            k.week,
+            k.status,
+            k.due_date,
+            k.tags,
+            k.briefing,
+            k.description,
+            k.copy_text,
+            k.feedback_count,
+            k.owner_briefing_name,
+            k.owner_design_name,
+            k.owner_text_name,
+            k.owner_review_name,
+            k.owner_schedule_name,
+            k.created_at,
+            k.updated_at,
+            c.name AS client_name, 
+            (
+                SELECT COALESCE(MAX(a.name), '')
+                FROM kanban.client_approver a
+                WHERE a.client_profile_id = k.client_profile_id
+            ) AS approval_name
+        FROM kanban.card k
+        JOIN kanban.client_profile cp ON cp.id = k.client_profile_id
+        JOIN public.customer c ON c.id_customer = cp.id_customer AND c.id_user = cp.id_user
+        WHERE k.id_user = $1
+        AND date_trunc('month', k.due_date)::date = $2::date
+        ORDER BY k.created_at DESC
+    `;
     const { rows } = await pool.query(q, [id_user, monthStart]);
 
     if (!rows.length) return [];
@@ -387,19 +393,19 @@ async function listCardsByMonth(id_user, monthKey) {
 
     // roles
     const rolesQ = `
-    SELECT card_id, role, member_name, estimate_hours, active, done_at
-    FROM kanban.card_role
-    WHERE card_id = ANY($1::uuid[])
-  `;
+        SELECT card_id, role, member_name, estimate_hours, active, done_at
+        FROM kanban.card_role
+        WHERE card_id = ANY($1::uuid[])
+    `;
     const rolesRes = await pool.query(rolesQ, [cardIds]);
 
     // runs
     const runsQ = `
-    SELECT card_id, role, status, member_name, started_at, ended_at
-    FROM kanban.card_role_run
-    WHERE card_id = ANY($1::uuid[])
-    ORDER BY started_at ASC
-  `;
+        SELECT card_id, role, status, member_name, started_at, ended_at
+        FROM kanban.card_role_run
+        WHERE card_id = ANY($1::uuid[])
+        ORDER BY started_at ASC
+    `;
     const runsRes = await pool.query(runsQ, [cardIds]);
 
     // index roles por card
@@ -448,7 +454,11 @@ async function listCardsByMonth(id_user, monthKey) {
             briefing: k.owner_briefing_name || "",
             design: k.owner_design_name || "",
             text: k.owner_text_name || "",
+            review: k.owner_review_name || "",
+            schedule: k.owner_schedule_name || "",
         },
+
+        approval_name: k.approval_name || "",
 
         roles: rolesByCard.get(k.id) || {},
         role_runs: runsByCard.get(k.id) || [],
@@ -482,7 +492,9 @@ async function createCardNormalized(id_user, payload) {
     SELECT cp.id,
            cp.role_briefing_name,
            cp.role_design_name,
-           cp.role_text_name
+           cp.role_text_name,
+           cp.role_review_name,
+           cp.role_schedule_name
     FROM kanban.client_profile cp
     JOIN public.customer c
       ON c.id_customer = cp.id_customer
@@ -498,23 +510,26 @@ async function createCardNormalized(id_user, payload) {
     const owner_briefing_name = prof.rows[0].role_briefing_name || null;
     const owner_design_name = prof.rows[0].role_design_name || null;
     const owner_text_name = prof.rows[0].role_text_name || null;
+    const owner_review_name = prof.rows[0].role_review_name || null;
+    const owner_schedule_name = prof.rows[0].role_schedule_name || null;
 
     const client = await pool.connect();
     try {
         await client.query("BEGIN");
 
         const insQ = `
-      INSERT INTO kanban.card (
-        id_user, client_profile_id,
-        title, week, status,
-        due_date, tags,
-        briefing, description, copy_text,
-        feedback_count, change_targets,
-        owner_briefing_name, owner_design_name, owner_text_name
-      )
-      VALUES ($1,$2,$3,$4,'produce',$5::date,$6,$7,$8,NULL,0,'{}',$9,$10,$11)
-      RETURNING id
-    `;
+            INSERT INTO kanban.card (
+                id_user, client_profile_id,
+                title, week, status,
+                due_date, tags,
+                briefing, description, copy_text,
+                feedback_count, change_targets,
+                owner_briefing_name, owner_design_name, owner_text_name,
+                owner_review_name, owner_schedule_name
+            )
+            VALUES ($1,$2,$3,$4,'produce',$5::date,$6,$7,$8,NULL,0,'{}',$9,$10,$11,$12,$13)
+            RETURNING id
+        `;
         const ins = await client.query(insQ, [
             id_user,
             client_profile_id,
@@ -527,21 +542,24 @@ async function createCardNormalized(id_user, payload) {
             owner_briefing_name,
             owner_design_name,
             owner_text_name,
+            owner_review_name,
+            owner_schedule_name
         ]);
 
         const card_id = ins.rows[0].id;
 
         // cria roles do card (design/text/review/schedule)
         const roleIns = `
-      INSERT INTO kanban.card_role (card_id, role, member_name, estimate_hours, active)
-      VALUES ($1,$2,$3,$4,$5)
-      ON CONFLICT (card_id, role) DO NOTHING
-    `;
+            INSERT INTO kanban.card_role (card_id, role, member_name, estimate_hours, active)
+            VALUES ($1,$2,$3,$4,$5)
+            ON CONFLICT (card_id, role) DO NOTHING
+        `;
 
-        await client.query(roleIns, [card_id, "design", owner_design_name, estDesign, false]);
+        await client.query(roleIns, [card_id, "briefing", owner_briefing_name, 0, true]);
         await client.query(roleIns, [card_id, "text", owner_text_name, estText, false]);
-        await client.query(roleIns, [card_id, "review", null, 0, false]);
-        await client.query(roleIns, [card_id, "schedule", null, estSchedule, false]);
+        await client.query(roleIns, [card_id, "design", owner_design_name, estDesign, false]);
+        await client.query(roleIns, [card_id, "review", owner_review_name, 0, false]);
+        await client.query(roleIns, [card_id, "schedule", owner_schedule_name, estSchedule, false]);
 
         await client.query("COMMIT");
 
@@ -627,91 +645,133 @@ async function deleteCard(id_user, id) {
 async function transitionCard(id_user, id, body) {
     const action = String(body?.action || '').trim();
 
-    // busca card
-    const { rows } = await pool.query(
-        `SELECT * FROM kanban.card WHERE id_user=$1 AND id=$2 LIMIT 1`,
-        [id_user, id]
-    );
-    if (!rows.length) throw new Error('Card não encontrado');
-    const card = rows[0];
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
 
-    const roles = card.roles || {};
-
-    const set = async (patch) => {
-        const cols = [];
-        const vals = [id_user, id];
-        let i = 3;
-        for (const [k, v] of Object.entries(patch)) {
-            cols.push(`${k} = $${i++}`);
-            vals.push(v);
-        }
-        await pool.query(
-            `UPDATE kanban.card SET ${cols.join(', ')}, updated_at=now() WHERE id_user=$1 AND id=$2`,
-            vals
+        // trava o card
+        const cardRes = await client.query(
+            `SELECT id, status FROM kanban.card WHERE id_user=$1 AND id=$2 FOR UPDATE`,
+            [id_user, id]
         );
-    };
+        if (!cardRes.rows.length) throw new Error("Card não encontrado");
+        const curStatus = cardRes.rows[0].status;
 
-    if (action === 'start') {
-        await set({ status: 'doing' });
-        return { success: true };
-    }
+        // helpers: roles
+        const getRole = async (role) => {
+            const r = await client.query(
+                `SELECT role, member_name, estimate_hours, active, done_at
+                FROM kanban.card_role WHERE card_id=$1 AND role=$2 LIMIT 1`,
+                [id, role]
+            );
+            return r.rows[0] || null;
+        };
 
-    if (action === 'save_copy') {
-        // schema atual talvez não tenha copy_text -> ignora sem quebrar
-        return { success: true };
-    }
+        const setRole = async (role, patch) => {
+            const cols = [];
+            const vals = [id, role];
+            let i = 3;
+            for (const [k, v] of Object.entries(patch)) {
+                cols.push(`${k} = $${i++}`);
+                vals.push(v);
+            }
+            await client.query(
+                `UPDATE kanban.card_role SET ${cols.join(", ")} WHERE card_id=$1 AND role=$2`,
+                vals
+            );
+        };
 
-    if (action === 'complete_role') {
-        const role = String(body?.role || '').trim(); // design|text|review|schedule
+        const setStatus = async (status) => {
+            await client.query(
+                `UPDATE kanban.card SET status=$3, updated_at=now() WHERE id_user=$1 AND id=$2`,
+                [id_user, id, status]
+            );
+        };
 
-        // marca done_at dentro do JSON roles
-        if (!roles[role]) roles[role] = {};
-        roles[role].done_at = new Date().toISOString();
-        roles[role].active = false;
-
-        // regra: se concluiu design+text -> vai pra review
-        const designDone = !!roles?.design?.done_at;
-        const textDone = !!roles?.text?.done_at;
-        const reviewDone = !!roles?.review?.done_at;
-
-        if ((role === 'design' || role === 'text') && designDone && textDone) {
-            // ativa review
-            if (!roles.review) roles.review = {};
-            roles.review.active = true;
-            await set({ status: 'review', roles });
+        // ===== actions =====
+        if (action === "start") {
+            // produce -> doing: ativa TEXT primeiro (seu fluxo)
+            await setStatus("doing");
+            await setRole("briefing", { active: false });
+            await setRole("text", { active: true });
+            await setRole("design", { active: false });
+            await client.query("COMMIT");
             return { success: true };
         }
 
-        if (role === 'review' && !reviewDone) {
-            await set({ status: 'approval', roles });
+        if (action === "complete_role") {
+            const role = String(body?.role || "").trim(); // briefing|text|design|review|schedule
+            if (!role) throw new Error("role obrigatório");
+
+            // marca done do role atual
+            await setRole(role, { done_at: new Date().toISOString(), active: false });
+
+            // ===== regras do fluxo =====
+            if (role === "text") {
+                // terminou texto -> ativa design (mesma coluna "doing")
+                await setRole("design", { active: true });
+                await client.query("COMMIT");
+                return { success: true };
+            }
+
+            if (role === "design") {
+                // terminou design -> vai pra review (interna)
+                await setStatus("review");
+                await setRole("review", { active: true });
+                await client.query("COMMIT");
+                return { success: true };
+            }
+
+            if (role === "review") {
+                // terminou review interna -> vai pra approval (cliente)
+                await setStatus("approval");
+                // (não ativa nada aqui; responsável é do cliente via client_approver)
+                await client.query("COMMIT");
+                return { success: true };
+            }
+
+            if (role === "schedule") {
+                // terminou agendamento -> scheduled
+                await setStatus("scheduled");
+                await client.query("COMMIT");
+                return { success: true };
+            }
+
+            await client.query("COMMIT");
             return { success: true };
         }
 
-        if (role === 'schedule') {
-            await set({ status: 'scheduled', roles });
+        if (action === "request_change") {
+            // volta pra doing e reativa text (pra refazer)
+            await setStatus("changes");
+            await setRole("text", { active: true });
+            await setRole("design", { active: false });
+            await setRole("review", { active: false });
+            await client.query("COMMIT");
             return { success: true };
         }
 
-        await set({ roles });
-        return { success: true };
-    }
+        if (action === "approve") {
+            // cliente aprovou -> approved e ativa schedule
+            await setStatus("approved");
+            await setRole("schedule", { active: true });
+            await client.query("COMMIT");
+            return { success: true };
+        }
 
-    if (action === 'request_change') {
-        await set({ status: 'changes' });
-        return { success: true };
-    }
+        if (action === "publish") {
+            await setStatus("published");
+            await client.query("COMMIT");
+            return { success: true };
+        }
 
-    if (action === 'approve') {
-        await set({ status: 'approved' });
-        return { success: true };
+        throw new Error("action inválida");
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
     }
-
-    if (action === 'publish') {
-        await set({ status: 'published' });
-        return { success: true };
-    }
-
-    throw new Error('action inválida');
 }
 
 // =======================
@@ -798,11 +858,16 @@ async function externalAddComment(external_token, card_id) {
 async function getCardByIdExpanded(id_user, card_id) {
     const q = `
     SELECT
-      k.id, k.title, k.week, k.status, k.due_date, k.tags,
-      k.briefing, k.description, k.copy_text, k.feedback_count,
-      k.owner_briefing_name, k.owner_design_name, k.owner_text_name,
-      k.created_at, k.updated_at,
-      c.name AS client_name
+        k.id, k.title, k.week, k.status, k.due_date, k.tags,
+        k.briefing, k.description, k.copy_text, k.feedback_count,
+        k.owner_briefing_name, k.owner_design_name, k.owner_text_name,
+        k.created_at, k.updated_at,
+        (
+            SELECT COALESCE(MAX(a.name), '')
+            FROM kanban.client_approver a
+            WHERE a.client_profile_id = k.client_profile_id
+        ) AS approval_name
+        c.name AS client_name
     FROM kanban.card k
     JOIN kanban.client_profile cp ON cp.id = k.client_profile_id
     JOIN public.customer c ON c.id_customer = cp.id_customer AND c.id_user = cp.id_user
@@ -853,7 +918,10 @@ async function getCardByIdExpanded(id_user, card_id) {
             briefing: k.owner_briefing_name || "",
             design: k.owner_design_name || "",
             text: k.owner_text_name || "",
+            review: k.owner_review_name || "",
+            schedule: k.owner_schedule_name || "",
         },
+        approval_name: k.approval_name || "",
         roles,
         role_runs: runsRes.rows.map(rr => ({
             role: rr.role,

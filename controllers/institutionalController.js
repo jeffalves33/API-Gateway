@@ -54,7 +54,7 @@ exports.redirectToUserArea = async (req, res) => {
             return res.redirect('/login');
         }
 
-        // Redireciona para a área do usuário usando seu ID
+        // Redireciona para a área do usuário usando ID
         res.redirect(`/${req.user.id}`);
     } catch (error) {
         console.error('Erro ao redirecionar para área do usuário:', error);

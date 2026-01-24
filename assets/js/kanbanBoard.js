@@ -66,6 +66,13 @@
         return res.text();
     }
 
+    // ===== DEBUG =====
+    const KB_DEBUG = true;
+    function kbLog(...args) {
+        if (!KB_DEBUG) return;
+        console.log("[KB]", ...args);
+    }
+
     // ========= Const =========
     const STATUS = [
         { key: "produce", label: "A Produzir" },
@@ -259,6 +266,10 @@
             const act = [];
             if (card.roles?.review?.active) act.push(card.roles.review.member_name);
             return act.filter(Boolean);
+        }
+
+        if (card.status === "approval") {
+            return [card.approval_name].filter(Boolean);
         }
 
         if (card.status === "approved" && card.roles?.schedule?.active) return [card.roles.schedule.member_name];
@@ -872,6 +883,14 @@
 
     // ========= Events =========
     function bindEvents() {
+        $("#kb-client")?.addEventListener("change", (e) => {
+            const name = e.target.value;
+            const clients = window.KanbanAdmin?.getClients?.() || [];
+            const c = clients.find((x) => x.name === name);
+            kbLog("kb-client change:", { selected: name, clientObj: c });
+            renderAutoClientRolesPreview(name);
+        });
+
         $("#kb-open-create")?.addEventListener("click", () => openCreate());
 
         $("#kb-save")?.addEventListener("click", async () => {
@@ -897,6 +916,17 @@
                         schedule: Number($("#kb-est-schedule").value || 0),
                     },
                 };
+
+                const clients = window.KanbanAdmin?.getClients?.() || [];
+                const selectedClientObj = clients.find((x) => x.name === clientName);
+
+                kbLog("SAVE CLICK:", {
+                    mode: id ? "update" : "create",
+                    clientName,
+                    selectedClientObj,
+                    payloadBeforeSend: payload,
+                });
+
 
                 if (id) {
                     await api(`/api/kanban/cards/${encodeURIComponent(id)}`, {
@@ -1139,7 +1169,7 @@
             await loadMeta();
             fillSelects();
 
-            await initGoalsMonthSelect(); // se existir no seu fluxo
+            await initGoalsMonthSelect(); // se existir no fluxo
             await loadCards();
             render();
         } catch (err) {
