@@ -642,59 +642,68 @@ async function deleteCard(id_user, id) {
 // =======================
 // TRANSITIONS (mínimo pro front não travar)
 // =======================
-async function transitionCard(id_user, id, body) {
-    const action = String(body?.action || '').trim();
+async function transitionCard(id_user, card_id, body) {
+    const action = String(body?.action || "").trim();
 
     const client = await pool.connect();
     try {
         await client.query("BEGIN");
 
-        // trava o card
+        // trava card e pega status atual
         const cardRes = await client.query(
             `SELECT id, status FROM kanban.card WHERE id_user=$1 AND id=$2 FOR UPDATE`,
-            [id_user, id]
+            [id_user, card_id]
         );
         if (!cardRes.rows.length) throw new Error("Card não encontrado");
         const curStatus = cardRes.rows[0].status;
 
-        // helpers: roles
-        const getRole = async (role) => {
-            const r = await client.query(
-                `SELECT role, member_name, estimate_hours, active, done_at
-                FROM kanban.card_role WHERE card_id=$1 AND role=$2 LIMIT 1`,
-                [id, role]
-            );
-            return r.rows[0] || null;
-        };
-
-        const setRole = async (role, patch) => {
-            const cols = [];
-            const vals = [id, role];
-            let i = 3;
-            for (const [k, v] of Object.entries(patch)) {
-                cols.push(`${k} = $${i++}`);
-                vals.push(v);
-            }
-            await client.query(
-                `UPDATE kanban.card_role SET ${cols.join(", ")} WHERE card_id=$1 AND role=$2`,
-                vals
-            );
-        };
-
         const setStatus = async (status) => {
             await client.query(
                 `UPDATE kanban.card SET status=$3, updated_at=now() WHERE id_user=$1 AND id=$2`,
-                [id_user, id, status]
+                [id_user, card_id, status]
             );
         };
 
-        // ===== actions =====
+        const setRoleActive = async (role, active) => {
+            await client.query(
+                `UPDATE kanban.card_role SET active=$3 WHERE card_id=$1 AND role=$2`,
+                [card_id, role, active]
+            );
+        };
+
+        const closeOpenRuns = async () => {
+            await client.query(
+                `UPDATE kanban.card_role_run
+                SET ended_at = now()
+                WHERE card_id=$1 AND ended_at IS NULL`,
+                [card_id]
+            );
+        };
+
+        const startRun = async (role, status) => {
+            const r = await client.query(
+                `SELECT member_name FROM kanban.card_role WHERE card_id=$1 AND role=$2 LIMIT 1`,
+                [card_id, role]
+            );
+            const member_name = r.rows[0]?.member_name || null;
+
+            await client.query(
+                `INSERT INTO kanban.card_role_run (card_id, role, status, member_name, started_at, ended_at)
+         VALUES ($1,$2,$3,$4,now(),NULL)`,
+                [card_id, role, status, member_name]
+            );
+        };
+
+        // ======= AÇÕES =======
+
         if (action === "start") {
-            // produce -> doing: ativa TEXT primeiro (seu fluxo)
+            // produce -> doing (ativa texto primeiro)
+            await closeOpenRuns();
             await setStatus("doing");
-            await setRole("briefing", { active: false });
-            await setRole("text", { active: true });
-            await setRole("design", { active: false });
+            await setRoleActive("briefing", false);
+            await setRoleActive("text", true);
+            await setRoleActive("design", false);
+            await startRun("text", "doing");
             await client.query("COMMIT");
             return { success: true };
         }
@@ -703,35 +712,41 @@ async function transitionCard(id_user, id, body) {
             const role = String(body?.role || "").trim(); // briefing|text|design|review|schedule
             if (!role) throw new Error("role obrigatório");
 
-            // marca done do role atual
-            await setRole(role, { done_at: new Date().toISOString(), active: false });
+            // fecha run atual
+            await closeOpenRuns();
 
-            // ===== regras do fluxo =====
+            // marca role done
+            await client.query(
+                `UPDATE kanban.card_role SET done_at=now(), active=false WHERE card_id=$1 AND role=$2`,
+                [card_id, role]
+            );
+
             if (role === "text") {
-                // terminou texto -> ativa design (mesma coluna "doing")
-                await setRole("design", { active: true });
+                // continua em doing, ativa design
+                await setRoleActive("design", true);
+                await startRun("design", "doing");
                 await client.query("COMMIT");
                 return { success: true };
             }
 
             if (role === "design") {
-                // terminou design -> vai pra review (interna)
+                // vai pra review (interna)
                 await setStatus("review");
-                await setRole("review", { active: true });
+                await setRoleActive("review", true);
+                await startRun("review", "review");
                 await client.query("COMMIT");
                 return { success: true };
             }
 
             if (role === "review") {
-                // terminou review interna -> vai pra approval (cliente)
+                // vai pra approval (cliente) -> sem run (responsável é do cliente)
                 await setStatus("approval");
-                // (não ativa nada aqui; responsável é do cliente via client_approver)
                 await client.query("COMMIT");
                 return { success: true };
             }
 
             if (role === "schedule") {
-                // terminou agendamento -> scheduled
+                // scheduled
                 await setStatus("scheduled");
                 await client.query("COMMIT");
                 return { success: true };
@@ -742,24 +757,29 @@ async function transitionCard(id_user, id, body) {
         }
 
         if (action === "request_change") {
-            // volta pra doing e reativa text (pra refazer)
+            // changes -> volta pra doing, reativa text
+            await closeOpenRuns();
             await setStatus("changes");
-            await setRole("text", { active: true });
-            await setRole("design", { active: false });
-            await setRole("review", { active: false });
+            await setRoleActive("text", true);
+            await setRoleActive("design", false);
+            await setRoleActive("review", false);
+            await startRun("text", "changes");
             await client.query("COMMIT");
             return { success: true };
         }
 
         if (action === "approve") {
-            // cliente aprovou -> approved e ativa schedule
+            // cliente aprovou -> approved (ativa schedule)
+            await closeOpenRuns();
             await setStatus("approved");
-            await setRole("schedule", { active: true });
+            await setRoleActive("schedule", true);
+            await startRun("schedule", "approved");
             await client.query("COMMIT");
             return { success: true };
         }
 
         if (action === "publish") {
+            await closeOpenRuns();
             await setStatus("published");
             await client.query("COMMIT");
             return { success: true };

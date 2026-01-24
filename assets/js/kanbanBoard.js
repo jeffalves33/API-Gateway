@@ -35,9 +35,9 @@
     }
 
     function diffHours(startIso, endIso) {
-        if (!startIso || !endIso) return 0;
+        if (!startIso) return 0;
         const a = new Date(startIso).getTime();
-        const b = new Date(endIso).getTime();
+        const b = endIso ? new Date(endIso).getTime() : Date.now();
         if (!a || !b) return 0;
         return Math.max(0, (b - a) / 36e5);
     }
@@ -248,8 +248,15 @@
         };
     }
 
-    function memberNameById(name) {
-        return name || "—";
+    function memberNameById(v) {
+        if (!v) return "—";
+
+        // se já veio como nome, retorna direto
+        if (typeof v === "string") return v;
+
+        // fallback: se um dia vier ID numérico/uuid, tenta mapear no time
+        const team = window.KanbanAdmin?.getTeam?.() || [];
+        return team.find((m) => m.id === v)?.name || "—";
     }
 
     function cardActiveMembers(card) {
@@ -272,7 +279,9 @@
             return [card.approval_name].filter(Boolean);
         }
 
-        if (card.status === "approved" && card.roles?.schedule?.active) return [card.roles.schedule.member_name];
+        if (card.status === "approved" && card.roles?.schedule?.active) {
+            return [card.roles.schedule.member_name].filter(Boolean);
+        }
 
         return [];
     }
@@ -447,14 +456,21 @@
 
     // ========= Actions (API) =========
     async function transition(cardId, payload) {
-        // rota (task 3): POST /api/kanban/cards/:id/transition
         await api(`/api/kanban/cards/${encodeURIComponent(cardId)}/transition`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
+
         await loadCards();
         render();
+
+        // >>> se o modal de detalhes estiver aberto, re-renderiza ele
+        if (state.selectedCardId) {
+            const detailsEl = document.getElementById("kbModalDetails");
+            const isOpen = detailsEl?.classList.contains("show");
+            if (isOpen) openDetails(state.selectedCardId);
+        }
     }
 
     async function uploadAssets(cardId, files) {
