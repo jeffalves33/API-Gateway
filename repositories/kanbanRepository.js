@@ -370,6 +370,10 @@ async function listCardsByMonth(id_user, monthKey) {
             k.owner_text_name,
             k.owner_review_name,
             k.owner_schedule_name,
+            k.owner_schedule_name,
+            k.approved_at,
+            k.scheduled_at,
+            k.published_at,
             k.created_at,
             k.updated_at,
             c.name AS client_name, 
@@ -459,6 +463,10 @@ async function listCardsByMonth(id_user, monthKey) {
         },
 
         approval_name: k.approval_name || "",
+
+        approved_at: k.approved_at,
+        scheduled_at: k.scheduled_at,
+        published_at: k.published_at,
 
         roles: rolesByCard.get(k.id) || {},
         role_runs: runsByCard.get(k.id) || [],
@@ -657,10 +665,16 @@ async function transitionCard(id_user, card_id, body) {
         if (!cardRes.rows.length) throw new Error("Card não encontrado");
         const curStatus = cardRes.rows[0].status;
 
-        const setStatus = async (status) => {
+        const setStatus = async (status, extraSetSql = "", extraParams = []) => {
             await client.query(
-                `UPDATE kanban.card SET status=$3, updated_at=now() WHERE id_user=$1 AND id=$2`,
-                [id_user, card_id, status]
+                `
+                    UPDATE kanban.card
+                    SET status = $3,
+                        updated_at = now()
+                        ${extraSetSql}
+                    WHERE id_user = $1 AND id = $2
+                `,
+                [id_user, card_id, status, ...extraParams]
             );
         };
 
@@ -747,7 +761,7 @@ async function transitionCard(id_user, card_id, body) {
 
             if (role === "schedule") {
                 // scheduled
-                await setStatus("scheduled");
+                await setStatus("scheduled", ", scheduled_at = now()");
                 await client.query("COMMIT");
                 return { success: true };
             }
@@ -757,13 +771,48 @@ async function transitionCard(id_user, card_id, body) {
         }
 
         if (action === "request_change") {
-            // changes -> volta pra doing, reativa text
+            const targets = Array.isArray(body?.targets) ? body.targets : [];
+
             await closeOpenRuns();
-            await setStatus("changes");
-            await setRoleActive("text", true);
-            await setRoleActive("design", false);
+
+            // muda status + incrementa retrabalho + guarda targets (na MESMA transação)
+            await client.query(
+                `
+                    UPDATE kanban.card
+                    SET
+                    status = 'changes',
+                    feedback_count = COALESCE(feedback_count,0) + 1,
+                    approved_at = NULL,
+                    scheduled_at = NULL,
+                    published_at = NULL,
+                    change_targets = (
+                        SELECT ARRAY(
+                        SELECT DISTINCT x
+                        FROM unnest(COALESCE(change_targets,'{}'::kanban.role_key[]) || $3::kanban.role_key[]) t(x)
+                        )
+                    ),
+                    updated_at = now()
+                    WHERE id_user = $1 AND id = $2
+                `,
+                [id_user, card_id, targets]
+            );
+
+            // reativa responsáveis conforme targets (se vier vazio, volta para texto por padrão)
             await setRoleActive("review", false);
-            await startRun("text", "changes");
+            await setRoleActive("design", false);
+            await setRoleActive("text", false);
+
+            const wantsDesign = targets.includes("design");
+            const wantsText = targets.includes("text");
+
+            if (wantsDesign && !wantsText) {
+                await setRoleActive("design", true);
+                await startRun("design", "changes");
+            } else {
+                await setRoleActive("text", true);
+                await startRun("text", "changes");
+            }
+
             await client.query("COMMIT");
             return { success: true };
         }
@@ -771,7 +820,7 @@ async function transitionCard(id_user, card_id, body) {
         if (action === "approve") {
             // cliente aprovou -> approved (ativa schedule)
             await closeOpenRuns();
-            await setStatus("approved");
+            await setStatus("approved", ", approved_at = now()");
             await setRoleActive("schedule", true);
             await startRun("schedule", "approved");
             await client.query("COMMIT");
@@ -780,7 +829,7 @@ async function transitionCard(id_user, card_id, body) {
 
         if (action === "publish") {
             await closeOpenRuns();
-            await setStatus("published");
+            await setStatus("published", ", published_at = now()");
             await client.query("COMMIT");
             return { success: true };
         }
@@ -881,12 +930,14 @@ async function getCardByIdExpanded(id_user, card_id) {
         k.id, k.title, k.week, k.status, k.due_date, k.tags,
         k.briefing, k.description, k.copy_text, k.feedback_count,
         k.owner_briefing_name, k.owner_design_name, k.owner_text_name,
+        k.owner_review_name, k.owner_schedule_name,
+        k.approved_at, k.scheduled_at, k.published_at,
         k.created_at, k.updated_at,
         (
             SELECT COALESCE(MAX(a.name), '')
             FROM kanban.client_approver a
             WHERE a.client_profile_id = k.client_profile_id
-        ) AS approval_name
+        ) AS approval_name,
         c.name AS client_name
     FROM kanban.card k
     JOIN kanban.client_profile cp ON cp.id = k.client_profile_id
@@ -942,6 +993,9 @@ async function getCardByIdExpanded(id_user, card_id) {
             schedule: k.owner_schedule_name || "",
         },
         approval_name: k.approval_name || "",
+        approved_at: k.approved_at,
+        scheduled_at: k.scheduled_at,
+        published_at: k.published_at,
         roles,
         role_runs: runsRes.rows.map(rr => ({
             role: rr.role,

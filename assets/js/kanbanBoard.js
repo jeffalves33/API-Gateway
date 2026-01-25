@@ -178,13 +178,13 @@
     function getTotalEstimate(card) {
         const r = card.roles || {};
         const sum = (r.design?.estimate_hours || 0) + (r.text?.estimate_hours || 0) + (r.schedule?.estimate_hours || 0);
-        return Math.round(sum * 10) / 10;
+        return Math.round(sum * 100) / 100;
     }
 
     function getTotalReal(card) {
         const runs = Array.isArray(card.role_runs) ? card.role_runs : [];
         const sum = runs.reduce((a, run) => a + diffHours(run.started_at, run.ended_at), 0);
-        return Math.round(sum * 10) / 10;
+        return Math.round(sum * 100) / 100;
     }
 
     function calcProgress(card) {
@@ -811,7 +811,7 @@
             }, 0);
 
             const estR = Math.round(est * 10) / 10;
-            const realR = Math.round(real * 10) / 10;
+            const realR = Math.round(real * 100) / 100;
 
             const initial = (name || "—").trim().slice(0, 1).toUpperCase();
 
