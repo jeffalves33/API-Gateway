@@ -242,7 +242,6 @@ async function uploadCardAssets(req, res) {
 
         // req.files existe (multer)
         const files = req.files || [];
-        console.log("🚀 ~ uploadCardAssets ~ files: ", files)
         const result = await repo.addCardArts(id_user, id, files);
 
         return ok(res, { success: true });
@@ -257,7 +256,22 @@ async function uploadArts(req, res) {
         const card_id = req.params.card_id;
         const files = req.files || [];
 
-        const arts = await repo.addCardArts(id_user, card_id, files);
+        await repo.addCardArts(id_user, card_id, files);
+
+        // devolve lista já com presigned url
+        const arts = await repo.listCardArts(id_user, card_id);
+        return ok(res, { arts });
+    } catch (e) {
+        return bad(res, e);
+    }
+}
+
+async function listArts(req, res) {
+    try {
+        const id_user = req.user.id;
+        const card_id = req.params.card_id;
+
+        const arts = await repo.listCardArts(id_user, card_id);
         return ok(res, { arts });
     } catch (e) {
         return bad(res, e);
@@ -272,6 +286,17 @@ async function deleteArt(req, res) {
 
         await repo.deleteCardArt(id_user, card_id, art_id);
         return ok(res, { success: true });
+    } catch (e) {
+        return bad(res, e);
+    }
+}
+
+async function getCardExpanded(req, res) {
+    try {
+        const id_user = req.user.id;
+        const { id } = req.params;
+        const card = await repo.getCardByIdExpanded(id_user, id);
+        return ok(res, card);
     } catch (e) {
         return bad(res, e);
     }
@@ -394,6 +419,8 @@ module.exports = {
     uploadCardAssets,
     uploadArts,
     deleteArt,
+    getCardExpanded,
+    listArts,
 
     // GOALS
     getGoalsByMonth,

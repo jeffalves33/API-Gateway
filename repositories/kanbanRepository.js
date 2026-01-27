@@ -1095,6 +1095,33 @@ async function saveCardAssetsPlaceholder(id_user, id, files) {
     return true;
 }
 
+// ============ ARTS / ASSETS (card_art) ============
+
+async function listCardAssets(id_user, card_id) {
+    const q = `
+    SELECT a.id, a.card_id, a.s3_key, a.file_name, a.mime_type, a.size_bytes, a.created_at
+    FROM kanban.card_art a
+    JOIN kanban.card k ON k.id = a.card_id
+    WHERE k.id_user = $1 AND k.id = $2::uuid
+    ORDER BY a.created_at ASC
+  `;
+    const { rows } = await pool.query(q, [id_user, card_id]);
+
+    // Se você já tiver um helper de URL assinada em outro lugar do seu projeto,
+    // troque o bloco abaixo para reutilizar o seu.
+    // Por padrão, vou devolver somente o "s3_key" e o front pode pedir a URL quando precisar.
+    return rows.map(r => ({
+        id: r.id,
+        card_id: r.card_id,
+        s3_key: r.s3_key,
+        file_name: r.file_name,
+        mime_type: r.mime_type,
+        size_bytes: Number(r.size_bytes || 0),
+        created_at: r.created_at,
+        // url: (opcional) se você gerar URL assinada aqui
+    }));
+}
+
 // =======================
 // EXTERNAL
 // =======================
@@ -1167,6 +1194,7 @@ async function externalGetCard(external_token, card_id) {
         created_at: c.created_at
     }));
 
+    card.assets = await listCardAssets(profile.id_user, card_id);
     return { profile, card };
 }
 
@@ -1268,6 +1296,7 @@ async function getCardByIdExpanded(id_user, card_id) {
 
     const k = base.rows[0];
     const arts = await listCardArts(id_user, k.id);
+    const assets = await listCardAssets(id_user, card_id);
     return {
         id: k.id,
         client_name: k.client_name,
@@ -1299,6 +1328,7 @@ async function getCardByIdExpanded(id_user, card_id) {
             started_at: rr.started_at,
             ended_at: rr.ended_at,
         })),
+        assets,
         arts,
         created_at: k.created_at,
         updated_at: k.updated_at,
@@ -1369,7 +1399,7 @@ module.exports = {
     getGoalsByMonthNormalized, upsertGoalsByMonthNormalized,
 
     // cards
-    listCardsAll, listCardsByMonth, createCardNormalized, updateCardNormalized, deleteCard, transitionCard, saveCardAssetsPlaceholder, addCardArts, listCardArts, deleteCardArt,
+    listCardsAll, listCardAssets, listCardsByMonth, createCardNormalized, updateCardNormalized, deleteCard, transitionCard, saveCardAssetsPlaceholder, addCardArts, listCardArts, deleteCardArt, getCardByIdExpanded,
 
     // external
     listExternalCards, externalGetCard, externalApprove, externalRequestChanges, externalAddComment, addComment, listComments

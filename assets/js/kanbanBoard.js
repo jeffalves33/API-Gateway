@@ -477,13 +477,18 @@
         const fd = new FormData();
         Array.from(files || []).forEach((f) => fd.append("files", f));
 
-        // rota (task 3): POST /api/kanban/cards/:id/assets (multipart)
         const r = await fetch(`/api/kanban/cards/${cardId}/arts`, {
             method: 'POST',
             body: fd
         });
 
-        const data = await r.json();
+        const raw = await r.text();
+        let data = null;
+        try {
+            data = raw ? JSON.parse(raw) : null;
+        } catch {
+            throw new Error(`Upload falhou: resposta não-JSON (status ${r.status}).`);
+        }
         if (!r.ok) throw new Error(data?.message || 'Erro upload');
 
         await loadCards();
@@ -542,12 +547,22 @@
         if (!assets.length) return `<div class="text-muted small">Sem artes anexadas.</div>`;
 
         return assets
-            .map((a, idx) => `
-        <div class="kb-asset">
-          <img src="${escapeAttr(a.url)}" alt="Arte ${idx + 1}">
-          <div class="kb-asset-caption">Arte ${idx + 1}</div>
-        </div>
-      `)
+            .map((a, idx) => {
+                const url = a?.url ? String(a.url) : "";
+                const name = a?.file_name ? String(a.file_name) : `Arte ${idx + 1}`;
+                if (!url) return ""; // não renderiza vazio
+
+                return `
+                <div class="kb-asset">
+                    <a href="${escapeAttr(url)}" target="_blank" rel="noopener">
+                    <img src="${escapeAttr(url)}" alt="${escapeAttr(name)}">
+                    </a>
+                    <div class="kb-asset-caption">
+                    <a href="${escapeAttr(url)}" target="_blank" rel="noopener">${escapeHtml(name)}</a>
+                    </div>
+                </div>
+                `;
+            })
             .join("");
     }
 
@@ -629,8 +644,8 @@
         return actions.join("");
     }
 
-    function openDetails(cardId) {
-        const card = state.cards.find((c) => c.id === cardId);
+    async function openDetails(cardId) {
+        const card = await api(`/api/kanban/cards/${cardId}`);
         if (!card) return;
 
         state.selectedCardId = cardId;
@@ -664,7 +679,25 @@
         $("#kb-details-briefing").textContent = card.briefing || "—";
         $("#kb-details-desc").textContent = card.desc || "—";
 
-        $("#kb-assets-area").innerHTML = renderAssets(card);
+        // mostra loading imediato
+        $("#kb-assets-area").innerHTML = `<div class="text-muted small">Carregando artes...</div>`;
+
+        // busca artes com presigned url
+        api(`/api/kanban/cards/${encodeURIComponent(cardId)}/arts`)
+            .then((resp) => {
+                const arts = Array.isArray(resp?.arts) ? resp.arts : [];
+                card.assets = arts;
+
+                // ainda é o mesmo card selecionado?
+                if (state.selectedCardId === cardId) {
+                    $("#kb-assets-area").innerHTML = renderAssets(card) || `<div class="text-muted small">Sem artes anexadas.</div>`;
+                }
+            })
+            .catch(() => {
+                if (state.selectedCardId === cardId) {
+                    $("#kb-assets-area").innerHTML = `<div class="text-muted small">Não foi possível carregar as artes.</div>`;
+                }
+            });
 
         $("#kb-details-estimate").textContent = String(getTotalEstimate(card));
         $("#kb-details-actual").textContent = String(getTotalReal(card));

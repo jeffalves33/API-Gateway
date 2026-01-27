@@ -862,7 +862,7 @@
                     </div>
                     <div>
                         <h3 class="section-title">Previa da arte</h3>
-                        <div class="art-preview">
+                        <div class="art-preview" id="modalArtPreview">
                             <div class="art-preview-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="2">
@@ -870,11 +870,9 @@
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </div>
-                            <h4>Previa da arte</h4>
-                            <p>Em breve</p>
                         </div>
                         <div class="art-buttons">
-                            <button class="btn-disabled" disabled>
+                            <button class="btn-disabled" disabled id="btnArtDownload">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -882,7 +880,7 @@
                                 </svg>
                                 Baixar
                             </button>
-                            <button class="btn-disabled" disabled>
+                            <button class="btn-disabled" disabled id="btnArtOpen">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -1163,6 +1161,56 @@
             });
         }
 
+        // Render artes
+        function renderModalArt(card) {
+            const box = document.getElementById('modalArtPreview');
+            const btnOpen = document.getElementById('btnArtOpen');
+            const btnDl = document.getElementById('btnArtDownload');
+
+            const assets = (Array.isArray(card?.arts) && card.arts.length) ? card.arts : (Array.isArray(card?.assets) ? card.assets : []);
+            console.log("🚀 ~ renderModalArt ~ Array.isArray(card?.arts): ", card?.arts)
+            console.log("🚀 ~ renderModalArt ~ Array.isArray(card?.assets): ", card?.assets)
+
+            // reset botões
+            btnOpen.onclick = null;
+            btnDl.onclick = null;
+
+            if (!assets.length) {
+                box.innerHTML = `
+      <div style="padding:16px;border:1px dashed #e5e7eb;border-radius:12px;text-align:center;color:#6b7280">
+        <div style="font-size:22px;margin-bottom:6px">🖼️</div>
+        <div style="font-weight:600">Prévia da arte</div>
+        <div style="font-size:13px;margin-top:4px">Em breve</div>
+      </div>
+    `;
+                btnOpen.classList.add('btn-disabled'); btnOpen.disabled = true;
+                btnDl.classList.add('btn-disabled'); btnDl.disabled = true;
+                return;
+            }
+
+            const items = assets
+                .map((x, idx) => {
+                    const u = x?.url || x?.signed_url || "";
+                    const name = x?.file_name || `Arte ${idx + 1}`;
+                    if (!u) return "";
+                    return `
+                        <a class="art-item" href="${u}" target="_blank" rel="noopener">
+                            <img class="art-item-img" src="${u}" alt="${name}" />
+                        </a>
+                        `;
+                })
+                .filter(Boolean)
+                .join("");
+
+            box.innerHTML = `
+                <div class="art-grid">
+                    ${items || `<div class="text-muted">Sem URL de preview.</div>`}
+                </div>
+            `;
+
+
+        }
+
         // Open Modal
         async function openModal(card_id) {
             // sempre busca o estado atualizado (inclui comentários)
@@ -1176,7 +1224,7 @@
             modalDescription.textContent = card.description || '—';
             modalBriefing.textContent = card.briefing || '—';
             modalCopy.textContent = card.copy_text || '—';
-
+            renderModalArt(card);
             renderComments(card);
             alterationForm.classList.remove('active');
             alterationText.value = '';

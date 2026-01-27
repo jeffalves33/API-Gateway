@@ -27,6 +27,8 @@ const {
     addCardArts,
     uploadArts,
     deleteArt,
+    getCardExpanded,
+    listArts,
 
     // GOALS
     getGoalsByMonth,
@@ -68,10 +70,12 @@ router.get('/clients/:id_customer/portal-link', authenticateToken, getClientPort
 // CARDS
 router.get('/cards', authenticateToken, listCards);
 router.post('/cards', authenticateToken, createCard);
+router.get('/cards/:id', authenticateToken, getCardExpanded);
 router.put('/cards/:id', authenticateToken, updateCard);
 router.delete('/cards/:id', authenticateToken, deleteCard);
 router.post('/cards/:id/transition', authenticateToken, transitionCard);
 router.post('/cards/:card_id/arts', authenticateToken, uploadCardArts.array('files', 10), uploadArts);
+router.get('/cards/:card_id/arts', authenticateToken, listArts);
 router.delete('/cards/:card_id/arts/:art_id', authenticateToken, deleteArt);
 
 // ASSETS (multipart: files[])
