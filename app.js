@@ -17,7 +17,6 @@ const goalsRoutes = require('./routes/goalsRoutes');
 const kanbanRoutes = require('./routes/kanbanRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
-const metricsRoutes = require('./routes/metricsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
