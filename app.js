@@ -85,7 +85,7 @@ app.get('/resetPassword.html', (req, res) => { res.sendFile(path.join(__dirname,
 app.get('/register.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'register.html')); });
 app.get('/privacyPolicyPage.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'privacyPolicyPage.html')); });
 app.get('/termsUse.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'termsUse.html')); });
-
+app.get("/aprovacoes/:cliente", (req, res, next) => { res.sendFile(path.join(__dirname, 'public', 'externoPage.html')); });
 // === Área do usuário com ID ===
 app.get('/:userId', authenticatePageAccess, (req, res, next) => {
   const userId = req.params.userId;

@@ -14,6 +14,7 @@ const {
     listClientsWithProfile,
     upsertClientProfileByCustomerId,
     deleteClientProfileByCustomerId,
+    getClientPortalLink,
 
     // CARDS
     listCards,
@@ -34,6 +35,7 @@ const {
     externalRequestChange,
     externalAddComment
 } = require('../controllers/kanbanController');
+const external = require('../controllers/externalKanbanController');
 
 // =======================
 // Upload (assets do card)
@@ -56,6 +58,8 @@ router.delete('/team/:id', authenticateToken, deleteTeamMember);
 router.get('/clients', authenticateToken, listClientsWithProfile);
 router.put('/clients/:id_customer/profile', authenticateToken, upsertClientProfileByCustomerId);
 router.delete('/clients/:id_customer/profile', authenticateToken, deleteClientProfileByCustomerId);
+router.get('/clients/:id_customer/portal-link', authenticateToken, getClientPortalLink);
+
 
 // CARDS
 router.get('/cards', authenticateToken, listCards);
@@ -81,10 +85,12 @@ router.put('/goals', authenticateToken, upsertGoalsByMonth);     // ?month=YYYY-
 // =======================
 // tudo via token (query/header). controller valida.
 
-router.get('/external/cards', externalListCards);               // ?token=...
-router.get('/external/cards/:id', externalGetCard);             // ?token=...
-router.post('/external/cards/:id/approve', externalApproveCard);// body: { token, author? }
-router.post('/external/cards/:id/change', externalRequestChange);// body: { token, targets:[design|text], comment?, author? }
-router.post('/external/cards/:id/comment', externalAddComment);  // body: { token, text, target?, author? }
+router.get('/external/cards', external.listCards);                     // ?token=...
+router.get('/external/cards/:card_id', external.getCard);
+router.post('/external/cards/:card_id/approve', external.approve);     // body: { token }
+router.post('/external/cards/:card_id/change', external.requestChanges);// body: { token, targets, body?, author_name? }
+router.post('/external/cards/:card_id/comment', external.addComment);  // body: { token, body, author_name? }
+router.get('/external/cards/:card_id/comments', external.listComments);// ?token=...
+router.post('/external/cards/:card_id/request-changes', external.requestChanges);
 
 module.exports = router;

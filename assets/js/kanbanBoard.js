@@ -637,6 +637,17 @@
 
         $("#kb-details-subtitle").textContent = `${card.client_name || "—"} • ${actMembers} • ${stLabel}`;
         $("#kb-details-title").textContent = card.title || "—";
+        const copyInput = $("#kb-copy-input");
+        const copySave = $("#kb-copy-save");
+        const copyStatus = $("#kb-copy-status");
+
+        // estado inicial: sem mudanças pendentes
+        copyInput.dataset.lastSaved = copyInput.value || "";
+        if (copySave) copySave.disabled = true;
+        if (copyStatus) {
+            copyStatus.textContent = copyInput.value ? "Salvo" : "";
+            copyStatus.className = copyInput.value ? "small text-success" : "small text-muted";
+        }
 
         const badges = [];
         badges.push(`<span class="badge ${WEEK_BADGE[card.week] || "bg-label-secondary"}">${escapeHtml(card.week || "S?")}</span>`);
@@ -1021,12 +1032,80 @@
 
         $("#kb-copy-save")?.addEventListener("click", async () => {
             if (!state.selectedCardId) return;
+
+            const copyInput = $("#kb-copy-input");
+            const copySave = $("#kb-copy-save");
+            const copyStatus = $("#kb-copy-status");
+            if (!copyInput || !copySave) return;
+
+            const text = (copyInput.value || "").trim();
+
+            const originalHtml = copySave.innerHTML;
+            copySave.disabled = true;
+            copySave.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Salvando...`;
+
+            if (copyStatus) {
+                copyStatus.textContent = "Salvando...";
+                copyStatus.className = "small text-muted";
+            }
+
             try {
-                await transition(state.selectedCardId, { action: "save_copy", copy_text: ($("#kb-copy-input").value || "").trim() });
-                showFeedback("Texto salvo.", "success");
+                await transition(state.selectedCardId, { action: "save_copy", copy_text: text });
+
+                // atualiza estado local do card para refletir sem recarregar
+                const card = state.cards.find((c) => c.id === state.selectedCardId);
+                if (card) card.copy_text = text;
+
+                // marca como salvo (pra controlar dirty-state)
+                copyInput.dataset.lastSaved = copyInput.value || "";
+
+                if (copyStatus) {
+                    copyStatus.textContent = "Salvo agora";
+                    copyStatus.className = "small text-success";
+                }
+
+                // volta o botão pro normal, mas mantém disabled (já está salvo)
+                copySave.innerHTML = originalHtml;
+                copySave.disabled = true;
+
+                // (opcional) atualiza o modal sem fechar:
+                render();
             } catch (err) {
                 console.error(err);
-                showFeedback("Erro ao salvar texto.", "danger");
+
+                // volta botão
+                copySave.innerHTML = originalHtml;
+
+                // reabilita para tentar de novo
+                copySave.disabled = false;
+
+                if (copyStatus) {
+                    copyStatus.textContent = "Erro ao salvar";
+                    copyStatus.className = "small text-danger";
+                }
+            }
+        });
+
+        $("#kb-copy-input")?.addEventListener("input", () => {
+            const copyInput = $("#kb-copy-input");
+            const copySave = $("#kb-copy-save");
+            const copyStatus = $("#kb-copy-status");
+            if (!copyInput || !copySave) return;
+
+            const last = String(copyInput.dataset.lastSaved || "");
+            const cur = String(copyInput.value || "");
+
+            const dirty = cur !== last;
+            copySave.disabled = !dirty;
+
+            if (copyStatus) {
+                if (dirty) {
+                    copyStatus.textContent = "Não salvo";
+                    copyStatus.className = "small text-warning";
+                } else {
+                    copyStatus.textContent = cur ? "Salvo" : "";
+                    copyStatus.className = cur ? "small text-success" : "small text-muted";
+                }
             }
         });
 

@@ -113,6 +113,30 @@ async function deleteClientProfileByCustomerId(req, res) {
     }
 }
 
+async function getClientPortalLink(req, res) {
+    try {
+        const id_user = req.user.id;
+        const id_customer = Number(req.params.id_customer);
+        if (!id_customer) throw new Error("id_customer inválido");
+
+        const { token, client_name } =
+            await repo.getOrCreateClientPortalToken(id_user, id_customer);
+
+        const base = `${req.protocol}://${req.get("host")}`;
+        const slug = String(client_name || "")
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9\-_.]/g, "");
+
+        const url = `${base}/aprovacoes/${encodeURIComponent(slug)}?token=${encodeURIComponent(token)}`;
+
+        return ok(res, { url, token });
+    } catch (e) {
+        return bad(res, e);
+    }
+}
+
 // =======================
 // CARDS
 // =======================
@@ -331,6 +355,7 @@ module.exports = {
     listClientsWithProfile,
     upsertClientProfileByCustomerId,
     deleteClientProfileByCustomerId,
+    getClientPortalLink,
 
     // CARDS
     listCards,

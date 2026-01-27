@@ -109,13 +109,13 @@
             a.dataset.id = cid;
 
             a.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="fw-medium">${escapeHtml(c.name)}</div>
-        <small class="${state.selectedClientId === cid ? "text-white-50" : "text-muted"}">
-          ${escapeHtml(c.approval_name || "")}
-        </small>
-      </div>
-    `;
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="fw-medium">${escapeHtml(c.name)}</div>
+                <small class="${state.selectedClientId === cid ? "text-white-50" : "text-muted"}">
+                ${escapeHtml(c.approval_name || "")}
+                </small>
+            </div>
+            `;
             list.appendChild(a);
         });
     }
@@ -125,6 +125,9 @@
         $("#client-id").value = "";
         $("#client-approval-name").value = "";
         $("#client-approval-emails").value = "";
+
+        const copyBtn = $("#client-btn-copy-portal");
+        if (copyBtn) copyBtn.disabled = true;
 
         Roles.forEach((r) => {
             const el = document.getElementById(`client-role-${r}`);
@@ -145,6 +148,9 @@
         $("#client-id").value = cid;
         $("#client-approval-name").value = c.approval_name || "";
         $("#client-approval-emails").value = c.approval_emails || "";
+
+        const copyBtn = $("#client-btn-copy-portal");
+        if (copyBtn) copyBtn.disabled = false;
 
         const roles = c.roles || {};
         Roles.forEach((role) => {
@@ -224,6 +230,29 @@
         if (state.selectedClientId) loadClient(state.selectedClientId);
     }
 
+    async function copyPortalLink() {
+        const id = $("#client-id").value || state.selectedClientId;
+        if (!id) return alert("Selecione um cliente.");
+
+        const data = await api(`/api/kanban/clients/${id}/portal-link`);
+        const url = data?.url;
+        if (!url) throw new Error("Link inválido");
+
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch {
+            const tmp = document.createElement("textarea");
+            tmp.value = url;
+            tmp.setAttribute("readonly", "");
+            tmp.style.position = "absolute";
+            tmp.style.left = "-9999px";
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand("copy");
+            document.body.removeChild(tmp);
+        }
+    }
+
     // API mínima usada pelo modal de criação do card
     window.KanbanAdmin = {
         openClientByName(name) {
@@ -297,6 +326,15 @@
             const item = e.target.closest(".list-group-item");
             if (!item) return;
             loadClient(String(item.dataset.id));
+        });
+
+        $("#client-btn-copy-portal").addEventListener("click", async () => {
+            try {
+                await copyPortalLink();
+            } catch (err) {
+                alert("Erro ao copiar link do portal.");
+                console.error(err);
+            }
         });
     });
 })();

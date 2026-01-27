@@ -643,7 +643,8 @@
                                                                 </div>
                                                             </div>
                                                             <div class="card-body pt-2">
-                                                                <div class="kb-dropzone" data-status="review" id="list-review"></div>
+                                                                <div class="kb-dropzone" data-status="review"
+                                                                    id="list-review"></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -900,10 +901,17 @@
                                                 <!-- Configuração do cliente -->
                                                 <div class="col-lg-8">
                                                     <div class="card h-100">
-                                                        <div class="card-header">
+                                                        <div
+                                                            class="card-header d-flex align-items-center justify-content-between">
                                                             <h5 class="mb-0"><i class="bx bx-cog me-2"></i>Configuração
                                                                 do cliente</h5>
+
+                                                            <button id="client-btn-copy-portal" type="button"
+                                                                class="btn btn-sm btn-outline-primary" disabled>
+                                                                <i class="bx bx-link-alt me-1"></i>Copiar link do portal
+                                                            </button>
                                                         </div>
+
 
                                                         <div class="card-body">
                                                             <input type="hidden" id="client-id" />
@@ -1275,14 +1283,18 @@
                                                                         <textarea id="kb-copy-input"
                                                                             class="form-control" rows="7"
                                                                             placeholder="Cole aqui a legenda/copy do post (responsável por texto)..."></textarea>
-                                                                        <div class="d-flex justify-content-end mt-2">
+                                                                        <div
+                                                                            class="d-flex justify-content-end align-items-center gap-2 mt-2">
+                                                                            <span id="kb-copy-status"
+                                                                                class="small text-muted"></span>
                                                                             <button
                                                                                 class="btn btn-outline-primary btn-sm"
-                                                                                id="kb-copy-save">
+                                                                                id="kb-copy-save" disabled>
                                                                                 <i class="bx bx-save me-1"></i>Salvar
                                                                                 texto
                                                                             </button>
                                                                         </div>
+
                                                                     </div>
 
                                                                     <div class="tab-pane fade" id="kb-tab-briefing"
@@ -1304,33 +1316,6 @@
 
                                                                         <div id="kb-client-comments"
                                                                             class="d-flex flex-column gap-2 mb-3"></div>
-
-                                                                        <div class="input-group">
-                                                                            <select id="kb-client-comment-target"
-                                                                                class="form-select"
-                                                                                style="max-width: 190px;">
-                                                                                <option value="comment" selected>
-                                                                                    Comentário</option>
-                                                                                <option value="design">Alteração: Arte
-                                                                                </option>
-                                                                                <option value="text">Alteração:
-                                                                                    Legenda/Copy</option>
-                                                                                <option value="both">Alteração: Geral
-                                                                                </option>
-                                                                            </select>
-                                                                            <textarea id="kb-client-comment-text"
-                                                                                class="form-control" rows="2"
-                                                                                placeholder="Escreva um comentário..."></textarea>
-                                                                            <button class="btn btn-primary"
-                                                                                id="kb-client-comment-add">
-                                                                                <i class="bx bx-send"></i>
-                                                                            </button>
-                                                                        </div>
-
-                                                                        <div class="form-text">
-                                                                            Comentários exibidos aqui são do portal do
-                                                                            cliente.
-                                                                        </div>
                                                                     </div>
 
                                                                     <div class="tab-pane fade" id="kb-tab-history"
@@ -1415,16 +1400,6 @@
                                                                         <div class="text-muted small">Publicado em
                                                                         </div>
                                                                         <div class="fw-medium" id="kb-details-doneAt">—
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="col-12">
-                                                                        <div class="alert alert-secondary mb-0">
-                                                                            <strong>Resultados
-                                                                                (placeholder):</strong>
-                                                                            <span class="small">você vai amarrar
-                                                                                isso ao plano/objetivo do cliente
-                                                                                depois.</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1546,35 +1521,6 @@
         </div>
     </div>
 
-    <!-- Jeferson: container para mensagem -->
-    <div id="alert-container"></div>
-
-    <!-- Core JS -->
-    <!-- build:js assets/vendor/js/core.js -->
-
-    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
-    <script src="/assets/vendor/libs/popper/popper.js"></script>
-    <script src="/assets/vendor/js/bootstrap.js"></script>
-    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-    <script src="/assets/vendor/js/menu.js"></script>
-
-    <!-- Main JS -->
-    <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/notifications.js"></script>
-
-    <!-- Place this tag in your head or just before your close body tag. -->
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
-
-    <!-- Jeferson: dados do cliente logado -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-    <!-- Jeferson: Check pagamentos -->
-    <script src="/assets/js/checkPayments.js"></script>
-
-
-
     <!-- =================== MODAL: Metas por cliente =================== -->
     <div class="modal fade" id="kbModalGoals" tabindex="-1" aria-labelledby="kbModalGoalsLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -1616,6 +1562,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Jeferson: container para mensagem -->
+    <div id="alert-container"></div>
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/core.js -->
+
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+
+    <!-- Main JS -->
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/notifications.js"></script>
+
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+    <!-- Jeferson: dados do cliente logado -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Jeferson: Check pagamentos -->
+    <script src="/assets/js/checkPayments.js"></script>
     <script src="/assets/js/kanbanAdmin.js"></script>
     <script src="/assets/js/kanbanBoard.js"></script>
 </body>

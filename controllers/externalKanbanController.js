@@ -14,6 +14,18 @@ async function listCards(req, res) {
     }
 }
 
+async function getCard(req, res) {
+    try {
+        const { token } = req.query;
+        const { card_id } = req.params;
+
+        const data = await repo.externalGetCard(token, card_id);
+        return ok(res, data);
+    } catch (e) {
+        return fail(res, e);
+    }
+}
+
 async function approve(req, res) {
     try {
         const { token } = req.body;
@@ -27,22 +39,23 @@ async function approve(req, res) {
 
 async function requestChanges(req, res) {
     try {
-        const { token, body, author_name } = req.body;
+        const { token, targets, text, body, message, author_name, author_email } = req.body || {};
+        const note = String(text ?? "").trim();
         const { card_id } = req.params;
 
         const data = await repo.externalRequestChanges(token, card_id);
 
-        // comentário do cliente
-        if (body) {
+        if (note) {
+            const profile = await repo.getClientProfileByToken(token);
+
             await repo.addComment(
-                data.profile.id_user,
+                profile.id_user,
                 card_id,
-                'external',
-                author_name || data.profile.approval_name || 'Cliente',
-                body
+                "external",
+                author_name || profile.approval_name || author_email || "Cliente",
+                note
             );
         }
-
         return ok(res, data);
     } catch (e) {
         return fail(res, e);
@@ -83,4 +96,4 @@ async function listComments(req, res) {
     }
 }
 
-module.exports = { listCards, approve, requestChanges, addComment, listComments };
+module.exports = { listCards, getCard, approve, requestChanges, addComment, listComments };

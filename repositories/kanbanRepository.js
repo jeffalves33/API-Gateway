@@ -208,8 +208,113 @@ async function deleteClientProfile(id_user, customer_id) {
     return true;
 }
 
-async function getClientProfileByToken() {
-    throw new Error("external_token não existe na migration atual (client_profile)");
+async function getClientProfileByToken(external_token) {
+    const token = String(external_token || "").trim();
+    if (!token) throw new Error("token obrigatório");
+
+    const q = `
+        SELECT
+            cp.id AS client_profile_id,
+            cp.id_user,
+            cp.id_customer,
+            c.name AS client_name,
+            cp.external_token,
+            cp.role_briefing_name,
+            cp.role_design_name,
+            cp.role_text_name,
+            cp.role_review_name,
+            cp.role_schedule_name,
+            (
+                SELECT COALESCE(MAX(a.name), '')
+                FROM kanban.client_approver a
+                WHERE a.client_profile_id = cp.id
+            ) AS approval_name,
+            (
+                SELECT COALESCE(string_agg(a.email, ', ' ORDER BY lower(a.email)), '')
+                FROM kanban.client_approver a
+                WHERE a.client_profile_id = cp.id
+            ) AS approval_emails
+        FROM kanban.client_profile cp
+        JOIN public.customer c
+          ON c.id_customer = cp.id_customer
+         AND c.id_user = cp.id_user
+        WHERE cp.external_token = $1
+        LIMIT 1
+    `;
+
+    const { rows } = await pool.query(q, [token]);
+    if (!rows.length) throw new Error("token inválido");
+
+    const r = rows[0];
+    return {
+        client_profile_id: r.client_profile_id,
+        id_user: r.id_user,
+        id_customer: r.id_customer,
+        client_name: r.client_name,
+        approval_name: r.approval_name || "",
+        approval_emails: r.approval_emails || "",
+        roles: {
+            briefing: r.role_briefing_name || "",
+            design: r.role_design_name || "",
+            text: r.role_text_name || "",
+            review: r.role_review_name || "",
+            schedule: r.role_schedule_name || "",
+        }
+    };
+}
+
+async function getOrCreateClientPortalToken(id_user, id_customer) {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        const q = `
+            SELECT
+                cp.id AS client_profile_id,
+                cp.external_token,
+                c.name AS client_name
+            FROM public.customer c
+            JOIN kanban.client_profile cp
+                ON cp.id_customer = c.id_customer
+            AND cp.id_user = c.id_user
+            WHERE c.id_user = $1
+                AND c.id_customer = $2
+            LIMIT 1
+            FOR UPDATE
+        `;
+
+        let row;
+        try {
+            const r = await client.query(q, [id_user, id_customer]);
+            row = r.rows[0];
+        } catch (e) {
+            if (e?.code === "42703") throw new Error("external_token não existe em kanban.client_profile. Rode a migration para adicionar a coluna.");
+            throw e;
+        }
+
+        if (!row) throw new Error("Cliente sem configuração extra (aba Clientes).");
+
+        let token = row.external_token;
+        if (!token) {
+            const up = await client.query(
+                `UPDATE kanban.client_profile
+         SET external_token = gen_random_uuid()::text,
+             updated_at = now()
+         WHERE id = $1
+         RETURNING external_token`,
+                [row.client_profile_id]
+            );
+            token = up.rows[0]?.external_token;
+        }
+
+        await client.query("COMMIT");
+        return { token, client_name: row.client_name };
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 }
 
 // =======================
@@ -412,6 +517,27 @@ async function listCardsByMonth(id_user, monthKey) {
     `;
     const runsRes = await pool.query(runsQ, [cardIds]);
 
+    // comments (do portal do cliente)
+    const commentsQ = `
+      SELECT card_id, actor_type, author, target, body, created_at
+      FROM kanban.card_comment
+      WHERE card_id = ANY($1::uuid[])
+      ORDER BY created_at ASC
+    `;
+    const commentsRes = await pool.query(commentsQ, [cardIds]);
+
+    const commentsByCard = new Map();
+    for (const c of commentsRes.rows) {
+        if (!commentsByCard.has(c.card_id)) commentsByCard.set(c.card_id, []);
+        commentsByCard.get(c.card_id).push({
+            actor_type: c.actor_type,
+            author: c.author,
+            target: c.target,
+            text: c.body,          // IMPORTANTE: o front usa "text"
+            created_at: c.created_at
+        });
+    }
+
     // index roles por card
     const rolesByCard = new Map();
     for (const r of rolesRes.rows) {
@@ -470,6 +596,8 @@ async function listCardsByMonth(id_user, monthKey) {
 
         roles: rolesByCard.get(k.id) || {},
         role_runs: runsByCard.get(k.id) || [],
+
+        client_comments: (commentsByCard.get(k.id) || []).filter(x => x.actor_type === 'client' || x.actor_type === 'external'),
 
         created_at: k.created_at,
         updated_at: k.updated_at,
@@ -709,6 +837,19 @@ async function transitionCard(id_user, card_id, body) {
         };
 
         // ======= AÇÕES =======
+        if (action === "save_copy") {
+            const copy_text = String(body?.copy_text || "").trim() || null;
+
+            await client.query(
+                `UPDATE kanban.card
+                SET copy_text = $3, updated_at = now()
+                WHERE id_user = $1 AND id = $2`,
+                [id_user, card_id, copy_text]
+            );
+
+            await client.query("COMMIT");
+            return { success: true };
+        }
 
         if (action === "start") {
             // produce -> doing (ativa texto primeiro)
@@ -862,16 +1003,23 @@ async function saveCardAssetsPlaceholder(id_user, id, files) {
 async function listExternalCards(external_token) {
     const profile = await getClientProfileByToken(external_token);
 
-    const { rows } = await pool.query(
-        `SELECT k.*, c.name as client_name
-     FROM kanban.card k
-     JOIN customer c ON c.id_customer = k.customer_id AND c.id_user = k.id_user
-     WHERE k.id_user=$1
-       AND k.customer_id=$2
-       AND k.status IN ('approval','changes')
-     ORDER BY k.due_date ASC NULLS LAST, k.created_at DESC`,
-        [profile.id_user, profile.customer_id]
-    );
+    const q = `
+        SELECT
+            k.id, k.title, k.week, k.status, k.due_date, k.tags,
+            k.description, k.briefing, k.copy_text,
+            k.feedback_count,
+            k.approved_at, k.scheduled_at, k.published_at,
+            k.created_at, k.updated_at
+        FROM kanban.card k
+        WHERE k.id_user = $1
+          AND k.client_profile_id = $2
+          AND k.status IN ('approval','approved','scheduled','published')
+        ORDER BY
+          (k.status='approval') DESC,
+          k.due_date ASC NULLS LAST,
+          k.created_at DESC
+    `;
+    const { rows } = await pool.query(q, [profile.id_user, profile.client_profile_id]);
 
     return { profile, cards: rows };
 }
@@ -879,49 +1027,96 @@ async function listExternalCards(external_token) {
 async function externalGetCard(external_token, card_id) {
     const profile = await getClientProfileByToken(external_token);
 
-    const { rows } = await pool.query(
-        `SELECT k.*, c.name as client_name
-     FROM kanban.card k
-     JOIN customer c ON c.id_customer = k.customer_id AND c.id_user = k.id_user
-     WHERE k.id_user=$1 AND k.customer_id=$2 AND k.id=$3
-     LIMIT 1`,
-        [profile.id_user, profile.customer_id, card_id]
+    const q = `
+    SELECT
+      k.id, k.title, k.week, k.status, k.due_date, k.tags,
+      k.description, k.briefing, k.copy_text,
+      k.feedback_count,
+      k.approved_at, k.scheduled_at, k.published_at,
+      k.created_at, k.updated_at
+    FROM kanban.card k
+    WHERE k.id_user = $1
+      AND k.client_profile_id = $2
+      AND k.id = $3
+    LIMIT 1
+  `;
+
+    const { rows } = await pool.query(q, [profile.id_user, profile.client_profile_id, card_id]);
+    if (!rows.length) throw new Error("Card não encontrado");
+
+    // >>> BUSCA COMENTÁRIOS DO CARD
+    const commentsRes = await pool.query(
+        `
+      SELECT id, actor_type, author, target, body, created_at
+      FROM kanban.card_comment
+      WHERE card_id = $1
+      ORDER BY created_at ASC
+    `,
+        [card_id]
     );
-    if (!rows.length) throw new Error('Card não encontrado');
-    return { profile, card: rows[0] };
+
+    const card = rows[0];
+
+    // IMPORTANT: seu front está usando "client_comments"
+    // e espera campos como text/author_name/created_at.
+    card.client_comments = commentsRes.rows.map((c) => ({
+        id: c.id,
+        actor_type: c.actor_type,         // 'user' | 'client'
+        author_name: c.author || "",      // front usa isso
+        text: c.body || "",               // front usa isso
+        target: c.target,
+        created_at: c.created_at
+    }));
+
+    return { profile, card };
 }
 
 async function externalApprove(external_token, card_id) {
     const profile = await getClientProfileByToken(external_token);
 
-    const { rows } = await pool.query(
-        `UPDATE kanban.card
-     SET status='approved', updated_at=now()
-     WHERE id_user=$1 AND customer_id=$2 AND id=$3
-     RETURNING *`,
-        [profile.id_user, profile.customer_id, card_id]
+    // valida que o card pertence a esse client_profile
+    const chk = await pool.query(
+        `SELECT id FROM kanban.card WHERE id_user=$1 AND client_profile_id=$2 AND id=$3 LIMIT 1`,
+        [profile.id_user, profile.client_profile_id, card_id]
     );
-    if (!rows.length) throw new Error('Card não encontrado');
-    return { profile, card: rows[0] };
+    if (!chk.rows.length) throw new Error("Card não encontrado");
+
+    // reaproveita sua lógica interna (garante approved_at + ativa schedule etc)
+    await transitionCard(profile.id_user, card_id, { action: "approve" });
+
+    const card = await getCardByIdExpanded(profile.id_user, card_id);
+    return { profile, card };
 }
 
-async function externalRequestChanges(external_token, card_id) {
+async function externalRequestChanges(external_token, card_id, opts = {}) {
     const profile = await getClientProfileByToken(external_token);
 
-    const { rows } = await pool.query(
-        `UPDATE kanban.card
-     SET status='changes', updated_at=now()
-     WHERE id_user=$1 AND customer_id=$2 AND id=$3
-     RETURNING *`,
-        [profile.id_user, profile.customer_id, card_id]
+    const chk = await pool.query(
+        `SELECT id FROM kanban.card WHERE id_user=$1 AND client_profile_id=$2 AND id=$3 LIMIT 1`,
+        [profile.id_user, profile.client_profile_id, card_id]
     );
-    if (!rows.length) throw new Error('Card não encontrado');
-    return { profile, card: rows[0] };
+    if (!chk.rows.length) throw new Error("Card não encontrado");
+
+    const targets = Array.isArray(opts.targets) ? opts.targets : [];
+
+    await transitionCard(profile.id_user, card_id, { action: "request_change", targets });
+
+    const card = await getCardByIdExpanded(profile.id_user, card_id);
+    return { profile, card };
 }
 
-async function externalAddComment(external_token, card_id) {
+async function externalAddComment(external_token, card_id, opts = {}) {
     const profile = await getClientProfileByToken(external_token);
-    return { profile, ok: true, card_id };
+
+    const text = String(opts?.text || opts?.body || '').trim();
+    if (!text) throw new Error('text obrigatório');
+
+    const author = String(opts?.author || opts?.author_name || '').trim() || profile.approval_name || 'Cliente';
+
+    const target = normalizeTarget(opts?.target);
+
+    const comment = await addComment(profile.id_user, card_id, 'client', author, text, target);
+    return { profile, comment };
 }
 
 async function getCardByIdExpanded(id_user, card_id) {
@@ -1009,12 +1204,65 @@ async function getCardByIdExpanded(id_user, card_id) {
     };
 }
 
+function normalizeActorType(v) {
+    const s = String(v || '').trim().toLowerCase();
+    // seu enum kanban.actor_type é ('user','client')
+    if (s === 'user') return 'user';
+    return 'client'; // external/client/default
+}
+
+function normalizeTarget(v) {
+    const s = String(v || '').trim().toLowerCase();
+    // seu enum kanban.comment_target é ('comment','design','text','both')
+    if (['comment', 'design', 'text', 'both'].includes(s)) return s;
+    return 'comment';
+}
+
+// usado por externalKanbanController.js (repo.addComment)
+async function addComment(id_user, card_id, actor_type, author, body, target = 'comment') {
+    const text = String(body || '').trim();
+    if (!text) throw new Error('body obrigatório');
+
+    const act = normalizeActorType(actor_type);
+    const tgt = normalizeTarget(target);
+    const auth = String(author || '').trim() || null;
+
+    // garante que o card pertence ao id_user
+    const q = `
+    INSERT INTO kanban.card_comment (card_id, actor_type, author, target, body)
+    SELECT $2::uuid, $3::kanban.actor_type, $4::text, $5::kanban.comment_target, $6::text
+    WHERE EXISTS (
+      SELECT 1 FROM kanban.card k
+      WHERE k.id_user = $1 AND k.id = $2::uuid
+    )
+    RETURNING id, card_id, actor_type, author, target, body, created_at
+  `;
+
+    const { rows } = await pool.query(q, [id_user, card_id, act, auth, tgt, text]);
+    if (!rows.length) throw new Error('Card não encontrado');
+    return rows[0];
+}
+
+// usado por externalKanbanController.js (repo.listComments)
+async function listComments(id_user, card_id) {
+    const q = `
+    SELECT cc.id, cc.card_id, cc.actor_type, cc.author, cc.target, cc.body, cc.created_at
+    FROM kanban.card_comment cc
+    JOIN kanban.card k ON k.id = cc.card_id
+    WHERE k.id_user = $1 AND k.id = $2::uuid
+    ORDER BY cc.created_at ASC
+  `;
+    const { rows } = await pool.query(q, [id_user, card_id]);
+    return rows;
+}
+
+
 module.exports = {
     // team
     listTeam, addTeamMember, removeTeamMember,
 
     // clients/profile
-    listClientsWithProfile, upsertClientProfile, deleteClientProfile, getClientProfileByToken,
+    listClientsWithProfile, upsertClientProfile, deleteClientProfile, getClientProfileByToken, getOrCreateClientPortalToken,
 
     // goals
     getGoalsByMonthNormalized, upsertGoalsByMonthNormalized,
@@ -1023,5 +1271,5 @@ module.exports = {
     listCardsAll, listCardsByMonth, createCardNormalized, updateCardNormalized, deleteCard, transitionCard, saveCardAssetsPlaceholder,
 
     // external
-    listExternalCards, externalGetCard, externalApprove, externalRequestChanges, externalAddComment,
+    listExternalCards, externalGetCard, externalApprove, externalRequestChanges, externalAddComment, addComment, listComments
 };

@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Aprovações | ho.ko</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid #f3f4f6;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .header-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            background: #111827;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.375rem 0.625rem;
+            border-radius: 0.375rem;
+            letter-spacing: 0.025em;
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: #e5e7eb;
+        }
+
+        .client-info h1 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .client-info p {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-right label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .user-select {
+            font-size: 0.875rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: #fff;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .user-select:focus {
+            border-color: #d1d5db;
+            box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.05);
+        }
+
+        /* Main Board */
+        .main {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .board {
+                grid-template-columns: 1fr;
+            }
+
+            .divider,
+            .client-info,
+            .header-right label {
+                display: none;
+            }
+        }
+
+        /* Column */
+        .column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .column-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .column-count {
+            background: #f3f4f6;
+            color: #4b5563;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        .column-cards {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-height: 200px;
+        }
+
+        .column-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            border: 2px dashed #e5e7eb;
+            border-radius: 0.75rem;
+            background: rgba(249, 250, 251, 0.5);
+        }
+
+        .empty-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-icon svg {
+            width: 20px;
+            height: 20px;
+            color: #9ca3af;
+        }
+
+        .column-empty p {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        /* Card */
+        .card {
+            background: #fff;
+            border: 1px solid #f3f4f6;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            border-color: #e5e7eb;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #111827;
+            line-height: 1.4;
+        }
+
+        .card-week {
+            flex-shrink: 0;
+            background: #f3f4f6;
+            color: #4b5563;
+            font-size: 0.625rem;
+            font-weight: 600;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+        }
+
+        .card-description {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.625rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+        }
+
+        .badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .badge-date {
+            background: #f9fafb;
+            color: #6b7280;
+        }
+
+        .badge-feedback {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .badge-alteration {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge-status {
+            font-weight: 500;
+        }
+
+        .badge-para_aprovar {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-aprovados {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .badge-agendados {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-publicados {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Modal */
+        .modal {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .modal-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .modal-close {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+        }
+
+        .modal-close svg {
+            width: 20px;
+            height: 20px;
+            color: #6b7280;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+        }
+
+        @media (max-width: 768px) {
+            .modal-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .modal-sidebar {
+            padding: 1.5rem;
+            background: rgba(249, 250, 251, 0.5);
+            border-left: 1px solid #f3f4f6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (max-width: 768px) {
+            .modal-sidebar {
+                border-left: none;
+                border-top: 1px solid #f3f4f6;
+            }
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-text {
+            font-size: 0.875rem;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .copy-box {
+            background: #f9fafb;
+            border: 1px solid #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .copy-box p {
+            font-size: 0.875rem;
+            color: #1f2937;
+            white-space: pre-wrap;
+        }
+
+        .art-preview {
+            background: #f9fafb;
+            border: 2px dashed #e5e7eb;
+            border-radius: 0.75rem;
+            aspect-ratio: 16/9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .art-preview-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .art-preview-icon svg {
+            width: 24px;
+            height: 24px;
+            color: #9ca3af;
+        }
+
+        .art-preview h4 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .art-preview p {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        .art-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .btn-disabled {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #9ca3af;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: not-allowed;
+        }
+
+        .btn-disabled svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Comments */
+        .comments-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .comments-header svg {
+            width: 16px;
+            height: 16px;
+            color: #6b7280;
+        }
+
+        .comments-count {
+            background: #e5e7eb;
+            color: #4b5563;
+            font-size: 0.625rem;
+            font-weight: 500;
+            padding: 0.125rem 0.375rem;
+            border-radius: 9999px;
+        }
+
+        .comments-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .comments-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+
+        .comments-empty-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .comments-empty-icon svg {
+            width: 20px;
+            height: 20px;
+            color: #9ca3af;
+        }
+
+        .comments-empty p {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .comment {
+            background: #fff;
+            border: 1px solid #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .comment-author {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .comment-date {
+            font-size: 0.625rem;
+            color: #9ca3af;
+        }
+
+        .comment-text {
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            resize: none;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .comment-form textarea:focus {
+            border-color: #d1d5db;
+            box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.05);
+        }
+
+        .comment-form button {
+            margin-top: 0.5rem;
+            width: 100%;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #fff;
+            background: #111827;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .comment-form button:hover:not(:disabled) {
+            background: #1f2937;
+        }
+
+        .comment-form button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #f3f4f6;
+            background: #fafafa;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-secondary {
+            color: #374151;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .btn-primary {
+            color: #fff;
+            background: #059669;
+        }
+
+        .btn-primary:hover {
+            background: #047857;
+        }
+
+        /* Alteration Form */
+        .alteration-form {
+            display: none;
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .alteration-form.active {
+            display: block;
+        }
+
+        .alteration-form h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 0.75rem;
+        }
+
+        .alteration-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .alteration-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.875rem;
+            color: #78350f;
+            cursor: pointer;
+        }
+
+        .alteration-checkbox input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .alteration-form textarea {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            border: 1px solid #fcd34d;
+            border-radius: 0.5rem;
+            resize: none;
+            outline: none;
+            background: #fff;
+            margin-bottom: 0.75rem;
+        }
+
+        .alteration-form textarea:focus {
+            border-color: #f59e0b;
+        }
+
+        .alteration-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            color: #78350f;
+            background: transparent;
+            border: 1px solid #fcd34d;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-warning {
+            color: #fff;
+            background: #d97706;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: #b45309;
+        }
+
+        .btn-warning:disabled {
+            background: #fbbf24;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <span class="logo">ho.ko</span>
+                <div class="divider"></div>
+                <div class="client-info">
+                    <h1>teste</h1>
+                    <p>Portal de aprovacoes</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <label>Acessando como</label>
+                <select class="user-select" id="userSelect">
+                    <option value="maria@empresa.com">Maria Silva</option>
+                    <option value="joao@empresa.com">Joao Costa</option>
+                    <option value="ana@empresa.com">Ana Beatriz</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Board -->
+    <main class="main">
+        <div class="board" id="board"></div>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <h2 class="modal-title" id="modalTitle">Titulo</h2>
+                    <span class="badge card-week" id="modalWeek">S1</span>
+                    <span class="badge badge-status" id="modalStatus">Status</span>
+                </div>
+                <button class="modal-close" id="modalClose">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-content">
+                    <div>
+                        <h3 class="section-title">Descricao</h3>
+                        <p class="section-text" id="modalDescription"></p>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Briefing</h3>
+                        <p class="section-text" id="modalBriefing"></p>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Copy / Legenda</h3>
+                        <div class="copy-box">
+                            <p id="modalCopy"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Previa da arte</h3>
+                        <div class="art-preview">
+                            <div class="art-preview-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </div>
+                            <h4>Previa da arte</h4>
+                            <p>Em breve</p>
+                        </div>
+                        <div class="art-buttons">
+                            <button class="btn-disabled" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Baixar
+                            </button>
+                            <button class="btn-disabled" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Abrir em nova aba
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Alteration Form -->
+                    <div class="alteration-form" id="alterationForm">
+                        <h4>Solicitar alteracao</h4>
+                        <div class="alteration-checkboxes">
+                            <label class="alteration-checkbox">
+                                <input type="checkbox" id="checkArte"> Arte/Design
+                            </label>
+                            <label class="alteration-checkbox">
+                                <input type="checkbox" id="checkLegenda"> Legenda/Copy
+                            </label>
+                            <label class="alteration-checkbox">
+                                <input type="checkbox" id="checkGeral"> Geral
+                            </label>
+                        </div>
+                        <textarea id="alterationText" rows="3"
+                            placeholder="Descreva a alteracao necessaria..."></textarea>
+                        <div class="alteration-buttons">
+                            <button class="btn btn-cancel" id="cancelAlteration">Cancelar</button>
+                            <button class="btn btn-warning" id="submitAlteration" disabled>Enviar solicitacao</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-sidebar">
+                    <div class="comments-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span class="section-title" style="margin-bottom: 0;">Comentarios</span>
+                        <span class="comments-count" id="commentsCount">0</span>
+                    </div>
+                    <div class="comments-list" id="commentsList"></div>
+                    <div class="comment-form">
+                        <textarea id="newComment" rows="3" placeholder="Escreva um comentario..."></textarea>
+                        <button id="sendComment" disabled>Enviar comentario</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="requestAlteration">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Solicitar alteracao
+                </button>
+                <button class="btn btn-primary" id="approveBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Aprovar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================================
+        // Portal externo
+        // ================================
+        const qs = new URLSearchParams(location.search);
+        const TOKEN = (qs.get('token') || '').trim();
+
+        const statusConfig = {
+            approval: { label: "Para aprovar", class: "badge-para_aprovar" },
+            changes: { label: "Alteracao solicitada", class: "badge-para_aprovar" },
+            approved: { label: "Aprovados", class: "badge-aprovados" },
+            scheduled: { label: "Agendados", class: "badge-agendados" },
+            published: { label: "Publicados", class: "badge-publicados" }
+        };
+
+        const columns = [
+            { key: "para_aprovar", title: "Para aprovar" },
+            { key: "approved", title: "Aprovados" },
+            { key: "scheduled", title: "Agendados" },
+            { key: "published", title: "Publicados" }
+        ];
+
+        let state = {
+            profile: null,
+            cards: [],
+            selectedCard: null,
+            loading: false,
+        };
+
+        function fmtDateISOToBR(iso) {
+            if (!iso) return "—";
+            // iso pode vir como 'YYYY-MM-DD' ou date json
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return String(iso);
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        async function api(path, { method = 'GET', body = null } = {}) {
+            const res = await fetch(path, {
+                method,
+                headers: body ? { 'Content-Type': 'application/json' } : undefined,
+                body: body ? JSON.stringify(body) : undefined,
+            });
+            const text = await res.text();
+            let json;
+            try { json = text ? JSON.parse(text) : null; } catch { json = null; }
+            if (!res.ok) {
+                const msg = json?.message || json?.error || text || `HTTP ${res.status}`;
+                throw new Error(msg);
+            }
+            // controller usa ok(res,data) => {success:true, data}
+            return json?.data ?? json;
+        }
+
+        function getSelectedApprover() {
+            const email = (userSelect.value || '').trim();
+            const name = email ? email.split('@')[0] : '';
+            return {
+                author_email: email || null,
+                author_name: name ? name.replace(/(^\w|\s\w)/g, m => m.toUpperCase()) : null,
+            };
+        }
+
+        function mapCardToColumnKey(card) {
+            if (card.status === 'approval' || card.status === 'changes') return 'para_aprovar';
+            if (card.status === 'approved') return 'approved';
+            if (card.status === 'scheduled') return 'scheduled';
+            if (card.status === 'published') return 'published';
+            return 'para_aprovar';
+        }
+
+        async function loadPortal() {
+            if (!TOKEN) {
+                board.innerHTML = `<div style="padding:24px;color:#b42318;">Token ausente na URL. Use ?token=...</div>`;
+                return;
+            }
+            state.loading = true;
+            const out = await api(`/api/kanban/external/cards?token=${encodeURIComponent(TOKEN)}`);
+            state.profile = out.profile;
+            state.cards = out.cards || [];
+
+            // header
+            const clientNameEl = document.getElementById('clientName');
+            if (clientNameEl && state.profile?.client_name) clientNameEl.textContent = state.profile.client_name;
+
+            // aprovadores
+            const emails = String(state.profile?.approval_emails || '').split(',').map(s => s.trim()).filter(Boolean);
+            userSelect.innerHTML = emails.length
+                ? emails.map(e => `<option value="${e}">${e}</option>`).join('')
+                : `<option value="">Selecione</option>`;
+
+            state.loading = false;
+            renderBoard();
+        }
+
+        async function refreshCard(id) {
+            const out = await api(`/api/kanban/external/cards/${id}?token=${encodeURIComponent(TOKEN)}`);
+            const updated = out.card;
+            // atualiza lista
+            const idx = state.cards.findIndex(c => c.id === updated.id);
+            const compact = {
+                ...state.cards[idx],
+                ...updated,
+                comment_count: (updated.client_comments || []).length,
+            };
+            if (idx >= 0) state.cards[idx] = compact;
+            else state.cards.unshift(compact);
+            state.selectedCard = updated;
+            return updated;
+        }
+
+        function excerpt(text, max = 110) {
+            const t = String(text || '').trim();
+            if (!t) return '';
+            return t.length > max ? t.slice(0, max).trim() + '…' : t;
+        }
+
+        let selectedCard = null;
+
+        // DOM Elements
+        const board = document.getElementById('board');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalClose = document.getElementById('modalClose');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalWeek = document.getElementById('modalWeek');
+        const modalStatus = document.getElementById('modalStatus');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalBriefing = document.getElementById('modalBriefing');
+        const modalCopy = document.getElementById('modalCopy');
+        const commentsList = document.getElementById('commentsList');
+        const commentsCount = document.getElementById('commentsCount');
+        const newCommentInput = document.getElementById('newComment');
+        const sendCommentBtn = document.getElementById('sendComment');
+        const requestAlterationBtn = document.getElementById('requestAlteration');
+        const approveBtn = document.getElementById('approveBtn');
+        const alterationForm = document.getElementById('alterationForm');
+        const alterationText = document.getElementById('alterationText');
+        const cancelAlteration = document.getElementById('cancelAlteration');
+        const submitAlteration = document.getElementById('submitAlteration');
+        const userSelect = document.getElementById('userSelect');
+
+        // SVG Icons
+        const icons = {
+            calendar: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`,
+            refresh: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>`,
+            alert: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            check: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`,
+            message: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>`
+        };
+
+        // Render Board
+        function renderBoard() {
+            const viewCards = (state.cards || []).map(c => ({
+                ...c,
+                __col: mapCardToColumnKey(c)
+            }));
+
+            board.innerHTML = '';
+
+            columns.forEach(col => {
+                const colCards = viewCards.filter(c => c.__col === col.key);
+                const column = document.createElement('div');
+                column.className = 'column';
+                column.innerHTML = `
+          <div class="column-header">
+            <h2 class="column-title">${col.title}</h2>
+            <span class="column-count">${colCards.length}</span>
+          </div>
+          <div class="column-cards" id="col-${col.key}"></div>
+        `;
+                board.appendChild(column);
+
+                const cardsContainer = document.getElementById(`col-${col.key}`);
+                if (!colCards.length) {
+                    cardsContainer.innerHTML = `
+            <div class="column-empty">
+              <div class="empty-icon">${icons.check}</div>
+              <p>Nenhum item</p>
+            </div>
+          `;
+                    return;
+                }
+
+                colCards.forEach(card => {
+                    const due = fmtDateISOToBR(card.due_date);
+                    const desc = excerpt(card.description || card.briefing || card.copy_text, 120);
+                    const isChanges = card.status === 'changes';
+
+                    const cardEl = document.createElement('button');
+                    cardEl.type = 'button';
+                    cardEl.className = 'card';
+                    cardEl.innerHTML = `
+            <div class="card-header">
+              <h3 class="card-title">${card.title || '—'}</h3>
+              <span class="card-week">${card.week || ''}</span>
+            </div>
+            <p class="card-description">${desc || '—'}</p>
+            <div class="card-badges">
+              <span class="badge badge-date">${icons.calendar} ${due}</span>
+              ${Number(card.feedback_count || 0) > 0 ? `<span class="badge badge-feedback">${icons.refresh} ${card.feedback_count}</span>` : ''}
+              ${isChanges ? `<span class="badge badge-alteration">${icons.alert} Alteracao</span>` : ''}
+              <span class="badge badge-status ${statusConfig[card.status]?.class || 'badge-para_aprovar'}">${statusConfig[card.status]?.label || card.status}</span>
+            </div>
+          `;
+                    cardEl.addEventListener('click', () => openModal(card.id));
+                    cardsContainer.appendChild(cardEl);
+                });
+            });
+        }
+
+        // Open Modal
+        async function openModal(card_id) {
+            // sempre busca o estado atualizado (inclui comentários)
+            const card = await refreshCard(card_id);
+            selectedCard = card;
+
+            modalTitle.textContent = card.title || '—';
+            modalWeek.textContent = card.week || '';
+            modalStatus.textContent = statusConfig[card.status]?.label || card.status;
+            modalStatus.className = `badge badge-status ${statusConfig[card.status]?.class || 'badge-para_aprovar'}`;
+            modalDescription.textContent = card.description || '—';
+            modalBriefing.textContent = card.briefing || '—';
+            modalCopy.textContent = card.copy_text || '—';
+
+            renderComments(card);
+            alterationForm.classList.remove('active');
+            alterationText.value = '';
+            document.getElementById('checkArte').checked = false;
+            document.getElementById('checkLegenda').checked = false;
+            document.getElementById('checkGeral').checked = false;
+
+            modalOverlay.classList.add('active');
+        }
+
+        // Close Modal
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            selectedCard = null;
+        }
+
+        // Render Comments
+        function renderComments(card) {
+            if (!card) return;
+            const comments = Array.isArray(card.client_comments) ? card.client_comments : [];
+            commentsCount.textContent = comments.length;
+
+            if (!comments.length) {
+                commentsList.innerHTML = `
+          <div class="comments-empty">
+            <div class="comments-empty-icon">${icons.message}</div>
+            <p>Nenhum comentario ainda</p>
+          </div>
+        `;
+            } else {
+                commentsList.innerHTML = comments.map(c => {
+                    const author = c.author_name || c.author_email || '—';
+                    const date = c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '—';
+                    return `
+          <div class="comment">
+            <div class="comment-header">
+              <span class="comment-author">${author}</span>
+              <span class="comment-date">${date}</span>
+            </div>
+            <p class="comment-text">${c.text || ''}</p>
+          </div>
+        `}).join('');
+            }
+        }
+
+        // Send Comment
+        async function sendComment() {
+            const body = newCommentInput.value.trim();
+            if (!body || !selectedCard) return;
+            const a = getSelectedApprover();
+
+            await api(`/api/kanban/external/cards/${selectedCard.id}/comment`, {
+                method: 'POST',
+                body: { token: TOKEN, body, author_name: a.author_name, author_email: a.author_email }
+            });
+
+            newCommentInput.value = '';
+            sendCommentBtn.disabled = true;
+            const card = await refreshCard(selectedCard.id);
+            renderComments(card);
+            renderBoard();
+        }
+
+        // Request Alteration
+        async function requestAlteration() {
+            const text = alterationText.value.trim();
+            if (!text || !selectedCard) return;
+
+            const targets = [];
+            const arte = document.getElementById('checkArte').checked;
+            const legenda = document.getElementById('checkLegenda').checked;
+            const geral = document.getElementById('checkGeral').checked;
+            if (geral || (!arte && !legenda)) {
+                targets.push('design', 'text');
+            } else {
+                if (arte) targets.push('design');
+                if (legenda) targets.push('text');
+            }
+
+            const a = getSelectedApprover();
+            await api(`/api/kanban/external/cards/${selectedCard.id}/request-changes`, {
+                method: 'POST',
+                body: { token: TOKEN, targets, text, author_name: a.author_name, author_email: a.author_email }
+            });
+
+            alterationForm.classList.remove('active');
+            alterationText.value = '';
+            const card = await refreshCard(selectedCard.id);
+            selectedCard = card;
+            renderComments(card);
+            renderBoard();
+        }
+
+        // Approve
+        async function approve() {
+            if (!selectedCard) return;
+            await api(`/api/kanban/external/cards/${selectedCard.id}/approve`, {
+                method: 'POST',
+                body: { token: TOKEN }
+            });
+            closeModal();
+            await loadPortal();
+        }
+
+        // Event Listeners
+        modalClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        newCommentInput.addEventListener('input', () => {
+            sendCommentBtn.disabled = !newCommentInput.value.trim();
+        });
+        sendCommentBtn.addEventListener('click', () => sendComment().catch(err => alert(err.message)));
+
+        requestAlterationBtn.addEventListener('click', () => {
+            alterationForm.classList.toggle('active');
+        });
+        cancelAlteration.addEventListener('click', () => {
+            alterationForm.classList.remove('active');
+            alterationText.value = '';
+        });
+        alterationText.addEventListener('input', () => {
+            submitAlteration.disabled = !alterationText.value.trim();
+        });
+        submitAlteration.addEventListener('click', () => requestAlteration().catch(err => alert(err.message)));
+
+        approveBtn.addEventListener('click', () => approve().catch(err => alert(err.message)));
+
+        // Initial load
+        loadPortal().catch(err => {
+            board.innerHTML = `<div style="padding:24px;color:#b42318;">${err.message}</div>`;
+        });
+    </script>
+</body>
+
+</html>
