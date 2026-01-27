@@ -14,6 +14,8 @@ const contactRoutes = require('./routes/contactRoutes');
 const contentsRoutes = require('./routes/contentsRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const goalsRoutes = require('./routes/goalsRoutes');
+const kanbanRoutes = require('./routes/kanbanRoutes');
+const metricsRoutes = require('./routes/metricsRoutes');
 const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
@@ -44,6 +46,7 @@ app.use('/api', authRoutes); // Não deve ser /api
 app.use('/api/billing', billingRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/contents', contentsRoutes);
+app.use('/api/kanban', kanbanRoutes);
 
 //Refatorado
 app.use('/api/contact', contactRoutes);
@@ -69,11 +72,12 @@ app.get('/', (req, res) => {
 
 // === Páginas protegidas ===
 app.get('/analyzesPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'analyzesPage.html')); });
-app.get('/chatPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'chatPage.html')); });
+//app.get('/chatPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'chatPage.html')); });
 app.get('/customersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'customersPage.html')); });
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html')); });
 app.get('/foodModelPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html')); });
 app.get('/goalsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'goalsPage.html')); });
+app.get('/kanbanPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'kanbanPage.html')); });
 app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
 app.get('/platformsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'platformsPage.html')); });
 app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html')); });
@@ -85,7 +89,7 @@ app.get('/resetPassword.html', (req, res) => { res.sendFile(path.join(__dirname,
 app.get('/register.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'register.html')); });
 app.get('/privacyPolicyPage.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'privacyPolicyPage.html')); });
 app.get('/termsUse.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'termsUse.html')); });
-
+app.get("/aprovacoes/:cliente", (req, res, next) => { res.sendFile(path.join(__dirname, 'public', 'externoPage.html')); });
 // === Área do usuário com ID ===
 app.get('/:userId', authenticatePageAccess, (req, res, next) => {
   const userId = req.params.userId;

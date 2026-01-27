@@ -6,6 +6,21 @@
 
 let menu, animate;
 
+function syncVerticalMenuCollapsedState() {
+  const menuEl = document.getElementById('layout-menu');
+  if (!menuEl) return;
+
+  // Em telas pequenas o menu é offcanvas (não queremos menu-collapsed ali)
+  if (window.Helpers && window.Helpers.isSmallScreen && window.Helpers.isSmallScreen()) {
+    menuEl.classList.remove('menu-collapsed');
+    return;
+  }
+
+  const isLayoutCollapsed = document.documentElement.classList.contains('layout-menu-collapsed');
+  menuEl.classList.toggle('menu-collapsed', isLayoutCollapsed);
+}
+
+
 (function () {
   // Initialize menu
   //-----------------
@@ -27,6 +42,7 @@ let menu, animate;
     item.addEventListener('click', event => {
       event.preventDefault();
       window.Helpers.toggleCollapsed();
+      setTimeout(syncVerticalMenuCollapsedState, 0);
     });
   });
 
@@ -115,6 +131,9 @@ let menu, animate;
 
   // Auto update menu collapsed/expanded based on the themeConfig
   window.Helpers.setCollapsed(true, false);
+  syncVerticalMenuCollapsedState();
+  window.addEventListener('resize', syncVerticalMenuCollapsedState);
+
 })();
 
 async function logout() {

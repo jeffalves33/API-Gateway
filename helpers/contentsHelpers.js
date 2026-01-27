@@ -83,7 +83,7 @@ function totalShares(facebookData, instagramData) {
 }
 
 function totalSaves(facebookData, instagramData) {
-    // Ainda não existe saves nem no FB nem no IG no seu payload atual
+    // Ainda não existe saves nem no FB nem no IG no payload atual
     return 0;
 }
 

@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+
+<html lang="en" class="light-style layout-menu-fixed layout-compact layout-menu-collapsed" dir="ltr"
+    data-theme="theme-default" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+    <title>Kanban - Analytics </title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+        rel="stylesheet" />
+
+    <!-- Jeferson: Icones -->
+    <link rel="stylesheet" href="/assets/vendor/fonts/boxicons.css" />
+
+    <!-- Jeferson: Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Jeferson: Tema opcional para Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="/assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+
+    <!-- Helpers -->
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="/assets/js/config.js"></script>
+
+    <!-- ADICIONE este bloco como módulo -->
+    <script type="module">
+        import * as pdfjs from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.min.mjs";
+        // o worker também é módulo na v4
+        pdfjs.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs";
+
+        // expõe no global para o resto do seu código que usa pdfjsLib
+        window.pdfjsLib = pdfjs;
+    </script>
+
+    <!-- manter layout correto quando menu estiver colapsado -->
+    <style>
+        /* ho.ko fix — manter layout correto quando menu estiver colapsado */
+        @media (min-width: 1200px) {
+
+            /* Quando estiver colapsado, a página precisa continuar “respeitando” 5.25rem */
+            html.layout-menu-fixed.layout-menu-collapsed .layout-page,
+            html.layout-menu-fixed-offcanvas.layout-menu-collapsed .layout-page {
+                padding-left: 5.25rem;
+            }
+
+            /* Navbar fixa também precisa acompanhar */
+            html.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar,
+            html.layout-menu-fixed.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar,
+            html.layout-menu-fixed-offcanvas.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar {
+                left: 5.25rem;
+            }
+
+            /* Footer fixo também */
+            html.layout-footer-fixed.layout-menu-collapsed .layout-wrapper:not(.layout-without-menu) .content-footer {
+                left: 5.25rem;
+            }
+        }
+    </style>
+    <style>
+        /* Board maior, colunas largas e aproveitando espaço */
+        .kb-board-scroll {
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+
+        .kb-board {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 16px;
+            min-height: 420px;
+        }
+
+        .kb-col {
+            flex: 0 0 420px;
+        }
+
+        @media (min-width: 1600px) {
+            .kb-col {
+                flex-basis: 520px;
+            }
+        }
+
+        .kb-col-card .card-body {
+            min-height: 520px;
+        }
+
+        .kb-dropzone {
+            min-height: 500px;
+            padding: .25rem;
+            border-radius: .5rem;
+        }
+
+        .kb-dropzone.kb-over {
+            outline: 2px dashed rgba(105, 108, 255, 0.6);
+            outline-offset: 4px;
+            background: rgba(105, 108, 255, 0.06);
+        }
+
+        /* Cards: mostrar só marcações necessárias (prioridade + prazo + retrabalho) */
+        .kb-card {
+            border: 1px solid rgba(67, 89, 113, 0.15);
+            border-radius: .6rem;
+            padding: .8rem;
+            margin-bottom: .75rem;
+            background: #fff;
+            cursor: grab;
+            transition: transform .08s ease, box-shadow .08s ease;
+        }
+
+        .kb-card:active {
+            cursor: grabbing;
+        }
+
+        .kb-card:hover {
+            box-shadow: 0 8px 22px rgba(67, 89, 113, 0.10);
+            transform: translateY(-1px);
+        }
+
+        .kb-title {
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: .25rem;
+        }
+
+        .kb-meta {
+            font-size: .80rem;
+            color: rgba(67, 89, 113, 0.75);
+        }
+
+        .kb-empty {
+            border: 1px dashed rgba(67, 89, 113, 0.25);
+            border-radius: .6rem;
+            padding: .85rem;
+            text-align: center;
+            color: rgba(67, 89, 113, 0.75);
+            font-size: .875rem;
+            background: rgba(67, 89, 113, 0.03);
+        }
+
+        /* Detalhes: artes no topo */
+        .kb-asset-wrap {
+            border: 1px solid rgba(67, 89, 113, 0.15);
+            border-radius: .8rem;
+            overflow: hidden;
+        }
+
+        .kb-asset-top {
+            padding: 12px 14px;
+            background: rgba(67, 89, 113, 0.03);
+            border-bottom: 1px solid rgba(67, 89, 113, 0.10);
+        }
+
+        .kb-assets-area {
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+        }
+
+        .kb-asset {
+            flex: 0 0 320px;
+            border: 1px solid rgba(67, 89, 113, 0.12);
+            border-radius: .8rem;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .kb-asset img {
+            display: block;
+            width: 100%;
+            height: 210px;
+            object-fit: cover;
+        }
+
+        .kb-asset .kb-asset-caption {
+            padding: 10px 12px;
+            font-size: .85rem;
+            color: rgba(67, 89, 113, 0.85);
+        }
+
+        .kb-pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .kb-goals-clients-scroll {
+            max-height: 360px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+
+            <!-- Menu -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo">
+                    <a href="dashboardPage.html" class="app-brand-link">
+                        <div class="avatar">
+                            <img src="/assets/img/favicon/favicon.ico" alt class="w-px-40 h-auto rounded-circle" />
+                        </div>
+                    </a>
+
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+                        <i class="bx bx-chevron-left bx-sm align-middle"></i>
+                    </a>
+                </div>
+
+                <div class="menu-inner-shadow"></div>
+
+                <ul class="menu-inner py-1">
+
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">Páginas</span>
+                    </li>
+                    <!-- Apps -->
+                    <li class="menu-item">
+                        <a href="/dashboardPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-layout"></i>
+                            <div data-i18n="Email">Dashboard</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="/analyzesPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-robot"></i>
+                            <div data-i18n="Calendar">Análises</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="/foodModelPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-menu-up"></i>
+                            <div data-i18n="Chat">Alimentar modelo</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">Plataformas & Clientes</span>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="myCustomersPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-people"></i>
+                            <div data-i18n="Without menu">Meus Clientes</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">Equipe</span>
+                    </li>
+
+                    <li class="menu-item active">
+                        <a href="/kanbanPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-grid"></i>
+                            <div data-i18n="Kanban">Kanban</div>
+                            <!--<div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>-->
+                        </a>
+                    </li>
+
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">Outros</span>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="javascript:void(0);" class="menu-link menu-toggle">
+                            <i class="menu-icon tf-icons bi bi-gear"></i>
+                            <div data-i18n="Chat">Configurações</div>
+                        </a>
+
+                        <ul class="menu-sub">
+                            <li class="menu-item">
+                                <a href="/settingsAccountPage.html" class="menu-link">
+                                    <div data-i18n="Without menu">Conta</div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="#" class="menu-link" data-bs-toggle="modal" data-bs-target="#contactModal">
+                            <i class="menu-icon tf-icons bi bi-headset"></i>
+                            <div data-i18n="Chat">Fale conosco</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">Segurança</span>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="/termsUse.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-file-earmark-lock"></i>
+                            <div data-i18n="Chat">Termos de Uso</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="/privacyPolicyPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-shield-lock"></i>
+                            <div data-i18n="Chat">Política de Privacidade</div>
+                        </a>
+                    </li>
+
+                </ul>
+            </aside>
+            <!-- / Menu -->
+
+            <!-- Layout container -->
+            <div class="layout-page">
+
+                <!-- Navbar -->
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+                    id="layout-navbar">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm"></i>
+                        </a>
+                    </div>
+
+                    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+
+                        <ul class="navbar-nav flex-row align-items-center ms-auto">
+                            <!-- User -->
+                            <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
+                                    data-bs-toggle="dropdown">
+                                    <div class="avatar avatar-online">
+                                        <img src="/assets/img/favicon/favicon.ico" alt
+                                            class="w-px-40 h-auto rounded-circle user-profile-avatar" />
+                                    </div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="d-flex">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="avatar avatar-online">
+                                                        <img src="/assets/img/favicon/favicon.ico" alt
+                                                            class="w-px-40 h-auto rounded-circle user-profile-avatar" />
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <span class="fw-medium d-block" id="user-name"></span>
+                                                    <small class="text-muted">Admin</small>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <div class="dropdown-divider"></div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/settingsAccountPage.html">
+                                            <i class="bx bx-user me-2"></i>
+                                            <span class="align-middle">Perfil</span>
+                                        </a>
+                                    </li>
+                                    <!--<li>
+                                        <a class="dropdown-item" href="#">
+                                            <span class="d-flex align-items-center align-middle">
+                                                <i class="flex-shrink-0 bx bx-credit-card me-2"></i>
+                                                <span class="flex-grow-1 align-middle ms-1">Billing</span>
+                                                <span
+                                                    class="flex-shrink-0 badge badge-center rounded-pill bg-danger w-px-20 h-px-20">4</span>
+                                            </span>
+                                        </a>
+                                    </li>-->
+                                    <li>
+                                        <div class="dropdown-divider"></div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0);" id="log-out">
+                                            <i class="bx bx-power-off me-2"></i>
+                                            <span class="align-middle">Sair</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <!--/ User -->
+                        </ul>
+                    </div>
+                </nav>
+
+                <div class="container-xxl pt-4">
+                    <div id="feedback-message" class="alert" style="display: none; margin-top: 10px;"></div>
+                    <div class="row">
+                        <div class="col-xxl">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <!-- Header -->
+                                    <!-- Kanban + Metas (mock) -->
+                                    <div id="kanban-feedback" class="alert" style="display:none;"></div>
+
+                                    <ul class="nav nav-pills mb-3" id="kanbanTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="tab-kanban" data-bs-toggle="pill"
+                                                data-bs-target="#pane-kanban" type="button" role="tab"
+                                                aria-controls="pane-kanban" aria-selected="true">
+                                                <i class="bx bx-columns me-1"></i> Kanban
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tab-metas" data-bs-toggle="pill"
+                                                data-bs-target="#pane-metas" type="button" role="tab"
+                                                aria-controls="pane-metas" aria-selected="false">
+                                                <i class="bx bx-target-lock me-1"></i> Metas & Objetivos
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tab-clientes" data-bs-toggle="tab"
+                                                data-bs-target="#pane-clientes" type="button" role="tab">
+                                                <i class="bx bx-buildings me-1"></i>Clientes
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tab-equipe" data-bs-toggle="tab"
+                                                data-bs-target="#pane-equipe" type="button" role="tab">
+                                                <i class="bx bx-group me-1"></i>Equipe
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <div class="tab-content" id="kanbanTabsContent">
+
+                                        <!-- =================== KANBAN =================== -->
+                                        <div class="tab-pane fade show active" id="pane-kanban" role="tabpanel"
+                                            aria-labelledby="tab-kanban" tabindex="0">
+
+                                            <!-- Toolbar -->
+                                            <div class="row g-3 align-items-end mb-3">
+                                                <div class="col-12 col-md-4 col-xxl-4">
+                                                    <label class="form-label">Buscar</label>
+                                                    <div class="input-group input-group-merge">
+                                                        <span class="input-group-text"><i
+                                                                class="bx bx-search"></i></span>
+                                                        <input id="kb-search" type="text" class="form-control"
+                                                            placeholder="Título, cliente, tag..." />
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-2 col-xxl-2">
+                                                    <label class="form-label">Cliente</label>
+                                                    <select id="kb-filter-client" class="form-select">
+                                                        <option value="all">Todos</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-6 col-md-2 col-xxl-2">
+                                                    <label class="form-label">Responsável</label>
+                                                    <select id="kb-filter-member" class="form-select">
+                                                        <option value="all">Todos</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-6 col-md-2 col-xxl-2">
+                                                    <label class="form-label">Semana</label>
+                                                    <select id="kb-filter-priority" class="form-select">
+                                                        <option value="all">Todas</option>
+                                                        <option value="S1">S1</option>
+                                                        <option value="S2">S2</option>
+                                                        <option value="S3">S3</option>
+                                                        <option value="S4">S4</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-6 col-md-2 col-xxl-2 text-md-end">
+                                                    <button id="kb-open-create" type="button" class="btn btn-primary"
+                                                        data-bs-toggle="modal" data-bs-target="#kbModalCreate">
+                                                        <i class="bx bx-plus me-1"></i> Novo Card
+                                                    </button>
+
+                                                </div>
+                                            </div>
+
+                                            <!-- Quick metrics (mantive como você curtiu) -->
+                                            <div class="row g-3 mb-3" id="kb-summary-cards">
+                                                <div class="col-12 col-md-3">
+                                                    <div class="card border">
+                                                        <div class="card-body">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div>
+                                                                    <div class="text-muted small">WIP (em andamento)
+                                                                    </div>
+                                                                    <div class="h4 mb-0" id="sum-wip">0</div>
+                                                                </div>
+                                                                <div class="avatar">
+                                                                    <span
+                                                                        class="avatar-initial rounded bg-label-primary"><i
+                                                                            class="bx bx-loader-circle"></i></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="small mt-2 text-muted">Cards em execução agora
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 col-md-3">
+                                                    <div class="card border">
+                                                        <div class="card-body">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div>
+                                                                    <div class="text-muted small">On-time</div>
+                                                                    <div class="h4 mb-0" id="sum-ontime">0%</div>
+                                                                </div>
+                                                                <div class="avatar">
+                                                                    <span
+                                                                        class="avatar-initial rounded bg-label-success"><i
+                                                                            class="bx bx-timer"></i></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="small mt-2 text-muted">Entregas no prazo</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 col-md-3">
+                                                    <div class="card border">
+                                                        <div class="card-body">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div>
+                                                                    <div class="text-muted small">Qualidade</div>
+                                                                    <div class="h4 mb-0" id="sum-quality">0</div>
+                                                                </div>
+                                                                <div class="avatar">
+                                                                    <span
+                                                                        class="avatar-initial rounded bg-label-warning"><i
+                                                                            class="bx bx-shield-quarter"></i></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="small mt-2 text-muted">Score médio (0–100)</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 col-md-3">
+                                                    <div class="card border">
+                                                        <div class="card-body">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div>
+                                                                    <div class="text-muted small">Retrabalho</div>
+                                                                    <div class="h4 mb-0" id="sum-rework">0</div>
+                                                                </div>
+                                                                <div class="avatar">
+                                                                    <span
+                                                                        class="avatar-initial rounded bg-label-danger"><i
+                                                                            class="bx bx-revision"></i></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="small mt-2 text-muted">Alterações solicitadas
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Board (agora ocupa mais e não fica espremido) -->
+                                            <div id="kb-board-scroll" class="kb-board-scroll">
+                                                <div id="kb-board" class="kb-board">
+
+
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-secondary"><i
+                                                                            class="bx bi-box"></i></span>
+                                                                    <div class="fw-medium">A Produzir</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-produce">(0)</span>
+                                                                </div>
+                                                                <small class="text-muted">Briefing</small>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="produce"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-primary"><i
+                                                                            class="bx bx-loader-circle"></i></span>
+                                                                    <div class="fw-medium">Em andamento</div>
+                                                                    <span class="text-muted" id="count-doing">(0)</span>
+                                                                </div>
+                                                                <small class="text-muted">Produção</small>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="doing"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Em Review -->
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-warning"><i
+                                                                            class="bx bx-search-alt"></i></span>
+                                                                    <div class="fw-medium">Em Review</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-review">(0)</span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="review"
+                                                                    id="list-review"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-warning"><i
+                                                                            class="bx bx-check-shield"></i></span>
+                                                                    <div class="fw-medium">Em aprovação</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-approval">(0)</span>
+                                                                </div>
+                                                                <small class="text-muted">Cliente</small>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="approval"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-danger"><i
+                                                                            class="bx bx-revision"></i></span>
+                                                                    <div class="fw-medium">Alteração necessária</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-changes">(0)</span>
+                                                                </div>
+                                                                <small class="text-muted">Retrabalho</small>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="changes"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-success"><i
+                                                                            class="bx bx-check-double"></i></span>
+                                                                    <div class="fw-medium">Aprovados</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-approved">(0)</span>
+                                                                </div>
+                                                                <small class="text-muted">Pronto</small>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="approved"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-info"><i
+                                                                            class="bx bx-calendar-check"></i></span>
+                                                                    <div class="fw-medium">Agendados</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-scheduled">(0)</span>
+                                                                </div>
+                                                                <small class="text-muted">Agendamento</small>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="scheduled"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="kb-col">
+                                                        <div class="card border kb-col-card">
+                                                            <div
+                                                                class="card-header d-flex align-items-center justify-content-between py-3">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-label-dark"><i
+                                                                            class="bx bx-world"></i></span>
+                                                                    <div class="fw-medium">Publicados</div>
+                                                                    <span class="text-muted"
+                                                                        id="count-published">(0)</span>
+                                                                </div>
+                                                                <small class="text-muted">Final</small>
+                                                            </div>
+                                                            <div class="card-body pt-2">
+                                                                <div class="kb-dropzone" data-status="published"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <!-- =================== METAS =================== -->
+                                        <div class="tab-pane fade" id="pane-metas" role="tabpanel"
+                                            aria-labelledby="tab-metas" tabindex="0">
+
+                                            <!-- Toolbar do mês (FILTRO MACRO da aba Metas) -->
+                                            <div class="d-flex justify-content-end align-items-end gap-2 mb-3">
+                                                <div>
+                                                    <label class="form-label mb-1"
+                                                        style="font-size: .85rem;">Mês</label>
+                                                    <select id="kb-goals-month" class="form-select form-select-sm"
+                                                        style="width: 140px;"></select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-3">
+                                                <div class="col-12 col-xl-4">
+                                                    <div class="card border">
+                                                        <div class="card-header">
+                                                            <h5 class="mb-0"><i
+                                                                    class="bx bx-bar-chart-alt-2 me-2"></i>Visão
+                                                                do time
+                                                            </h5>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="mb-3">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span class="text-muted">Entregas no prazo
+                                                                        (meta)</span>
+                                                                    <span class="fw-medium" id="goal-team-ontime">0% /
+                                                                        90%</span>
+                                                                </div>
+                                                                <div class="progress mt-2" style="height: 10px;">
+                                                                    <div id="bar-team-ontime" class="progress-bar"
+                                                                        role="progressbar" style="width: 0%"></div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span class="text-muted">Qualidade média
+                                                                        (meta)</span>
+                                                                    <span class="fw-medium" id="goal-team-quality">0 /
+                                                                        85</span>
+                                                                </div>
+                                                                <div class="progress mt-2" style="height: 10px;">
+                                                                    <div id="bar-team-quality" class="progress-bar"
+                                                                        role="progressbar" style="width: 0%"></div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb-0">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span class="text-muted">Retrabalho (meta
+                                                                        máx.)</span>
+                                                                    <span class="fw-medium" id="goal-team-rework">0 /
+                                                                        10</span>
+                                                                </div>
+                                                                <div class="progress mt-2" style="height: 10px;">
+                                                                    <div id="bar-team-rework" class="progress-bar"
+                                                                        role="progressbar" style="width: 0%"></div>
+                                                                </div>
+                                                            </div>
+
+                                                            <hr class="my-3" />
+
+                                                            <div class="d-flex gap-2 align-items-center">
+                                                                <span class="badge bg-label-secondary"
+                                                                    id="kb-goals-month-label">Clientes</span>
+
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    id="kb-goals-config">
+                                                                    <i class="bx bx-cog me-1"></i>Definir metas
+                                                                </button>
+                                                            </div>
+
+                                                            <div class="mt-2">
+                                                                <div class="input-group input-group-sm">
+                                                                    <span class="input-group-text"><i
+                                                                            class="bx bx-search"></i></span>
+                                                                    <input id="kb-goals-client-search" type="text"
+                                                                        class="form-control"
+                                                                        placeholder="Buscar cliente..." />
+                                                                </div>
+                                                            </div>
+
+                                                            <div id="kb-goals-clients"
+                                                                class="kb-goals-clients-scroll d-flex flex-column gap-2 mt-2">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 col-xl-8">
+                                                    <div class="card border">
+                                                        <div
+                                                            class="card-header d-flex align-items-center justify-content-between">
+                                                            <h5 class="mb-0"><i class="bx bx-user-check me-2"></i>Metas
+                                                                por pessoa</h5>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="table-responsive text-nowrap">
+                                                                <table class="table table-hover align-middle">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Pessoa</th>
+                                                                            <th>On-time</th>
+                                                                            <th>Qualidade</th>
+                                                                            <th>Retrabalho</th>
+                                                                            <th>Tempo (estimado x real)</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="goals-table-body"></tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- ============ TAB: CLIENTES ============ -->
+                                        <div class="tab-pane fade" id="pane-clientes" role="tabpanel"
+                                            aria-labelledby="tab-clientes">
+                                            <div class="row g-3">
+                                                <!-- Lista de clientes -->
+                                                <div class="col-lg-4">
+                                                    <div class="card h-100">
+                                                        <div
+                                                            class="card-header d-flex align-items-center justify-content-between">
+                                                            <h5 class="mb-0"><i
+                                                                    class="bx bx-buildings me-2"></i>Clientes</h5>
+                                                        </div>
+
+                                                        <div class="card-body">
+                                                            <div class="list-group" id="clients-list">
+                                                                <!-- preenchido via JS -->
+                                                            </div>
+
+                                                            <div id="clients-empty" class="text-muted small mt-3"
+                                                                style="display:none;">
+                                                                Nenhum cliente cadastrado.
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Configuração do cliente -->
+                                                <div class="col-lg-8">
+                                                    <div class="card h-100">
+                                                        <div
+                                                            class="card-header d-flex align-items-center justify-content-between">
+                                                            <h5 class="mb-0"><i class="bx bx-cog me-2"></i>Configuração
+                                                                do cliente</h5>
+
+                                                            <button id="client-btn-copy-portal" type="button"
+                                                                class="btn btn-sm btn-outline-primary" disabled>
+                                                                <i class="bx bx-link-alt me-1"></i>Copiar link do portal
+                                                            </button>
+                                                        </div>
+
+
+                                                        <div class="card-body">
+                                                            <input type="hidden" id="client-id" />
+
+                                                            <div class="row g-3">
+                                                                <div class="col-md-12">
+                                                                    <label class="form-label"
+                                                                        for="client-approval-name">Responsável do
+                                                                        cliente (aprovação)</label>
+                                                                    <input class="form-control"
+                                                                        id="client-approval-name" maxlength="80"
+                                                                        placeholder="Ex: João (Marketing)" />
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <label class="form-label"
+                                                                        for="client-approval-emails">Emails do
+                                                                        responsável (notificações)</label>
+                                                                    <input class="form-control"
+                                                                        id="client-approval-emails" maxlength="180"
+                                                                        placeholder="Ex: joao@cliente.com, time@cliente.com" />
+                                                                    <div class="form-text">Pode ser 1 ou mais emails
+                                                                        separados por vírgula.</div>
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <hr class="my-2" />
+                                                                    <div class="fw-semibold mb-2">Responsáveis internos
+                                                                        (por cliente)</div>
+                                                                    <div class="row g-3">
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label">Aprovações</label>
+                                                                            <select id="client-role-review"
+                                                                                class="form-select"></select>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-briefing">Briefing</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-briefing"></select>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-design">Arte/Design</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-design"></select>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-text">Legenda/Copy</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-text"></select>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label"
+                                                                                for="client-role-schedule">Agendamento</label>
+                                                                            <select class="form-select"
+                                                                                id="client-role-schedule"></select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div
+                                                                    class="col-12 d-flex gap-2 justify-content-end mt-3">
+                                                                    <button class="btn btn-outline-danger"
+                                                                        id="client-btn-delete" type="button" disabled>
+                                                                        <i class="bx bx-trash me-1"></i>Excluir
+                                                                    </button>
+                                                                    <button class="btn btn-primary" id="client-btn-save"
+                                                                        type="button">
+                                                                        <i class="bx bx-save me-1"></i>Salvar
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <div id="client-form-hint" class="text-muted small">
+                                                                        Selecione um cliente na lista para editar as
+                                                                        informações extras.
+                                                                    </div>
+                                                                </div>
+                                                            </div><!-- /row -->
+                                                        </div><!-- /card-body -->
+                                                    </div><!-- /card -->
+                                                </div><!-- /col -->
+                                            </div><!-- /row -->
+                                        </div>
+
+                                        <!-- ============ TAB: EQUIPE ============ -->
+                                        <div class="tab-pane fade" id="pane-equipe" role="tabpanel"
+                                            aria-labelledby="tab-equipe">
+                                            <div class="card">
+                                                <div
+                                                    class="card-header d-flex align-items-center justify-content-between">
+                                                    <h5 class="mb-0"><i class="bx bx-group me-2"></i>Equipe do Kanban
+                                                    </h5>
+                                                    <small class="text-muted">Adicionar/remover nomes usados nos
+                                                        responsáveis</small>
+                                                </div>
+
+                                                <div class="card-body">
+                                                    <form id="team-form-add" class="row g-2 align-items-end">
+                                                        <div class="col-md-8">
+                                                            <label class="form-label" for="team-name">Nome</label>
+                                                            <input type="text" class="form-control" id="team-name"
+                                                                placeholder="Ex: Maria Souza" maxlength="60" />
+                                                        </div>
+                                                        <div class="col-md-4 d-grid">
+                                                            <button type="submit" class="btn btn-primary">
+                                                                <i class="bx bx-plus me-1"></i>Adicionar
+                                                            </button>
+                                                        </div>
+                                                    </form>
+
+                                                    <hr class="my-4" />
+
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 70%;">Nome</th>
+                                                                    <th class="text-end">Ações</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="team-table-body">
+                                                                <!-- preenchido via JS -->
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    <div id="team-empty" class="text-muted small" style="display:none;">
+                                                        Nenhum membro cadastrado.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- =================== MODAL: Criar/Editar =================== -->
+                                <div class="modal fade" id="kbModalCreate" tabindex="-1"
+                                    aria-labelledby="kbModalCreateLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="kbModalCreateLabel"><i
+                                                        class="bx bx-plus-circle me-2"></i>Novo card</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Fechar"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <form id="kb-form">
+                                                    <input type="hidden" id="kb-id" />
+
+                                                    <div class="row g-3">
+                                                        <div class="col-12 col-lg-8">
+                                                            <label class="form-label">Título</label>
+                                                            <input id="kb-title" class="form-control" maxlength="120"
+                                                                required
+                                                                placeholder="Ex.: Ajustar criativos do Café Carneiro" />
+                                                        </div>
+
+                                                        <div class="col-6 col-lg-2">
+                                                            <label class="form-label">Semana</label>
+                                                            <select id="kb-priority" class="form-select" required>
+                                                                <option value="S2">S1</option>
+                                                                <option value="S1">S2</option>
+                                                                <option value="S3">S3</option>
+                                                                <option value="S4">S4</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-12 col-lg-4">
+                                                            <label class="form-label">Cliente</label>
+                                                            <select id="kb-client" class="form-select"
+                                                                required></select>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="alert alert-info mb-0">
+                                                                <div class="fw-semibold mb-1">Responsáveis do cliente
+                                                                    (automático)</div>
+                                                                <div class="small">
+                                                                    Briefing: <span id="kb-auto-briefing">—</span><br />
+                                                                    Arte/Design: <span
+                                                                        id="kb-auto-design">—</span><br />
+                                                                    Legenda/Copy: <span id="kb-auto-text">—</span><br />
+                                                                    Agendamento: <span
+                                                                        id="kb-auto-schedule">—</span><br />
+                                                                    Review (interno): <span
+                                                                        id="kb-auto-review">—</span><br />
+                                                                    Aprovação (cliente): <span
+                                                                        id="kb-auto-approver">—</span>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <a href="javascript:void(0)"
+                                                                        id="kb-go-client-config" class="small">
+                                                                        Editar responsáveis desse cliente
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-4 col-lg-2">
+                                                            <label class="form-label">Est. Design (h)</label>
+                                                            <input id="kb-est-design" type="number" min="0" step="0.5"
+                                                                class="form-control" value="2" />
+                                                        </div>
+
+                                                        <div class="col-4 col-lg-2">
+                                                            <label class="form-label">Est. Texto (h)</label>
+                                                            <input id="kb-est-text" type="number" min="0" step="0.5"
+                                                                class="form-control" value="1" />
+                                                        </div>
+
+                                                        <div class="col-4 col-lg-2">
+                                                            <label class="form-label">Est. Agendar (h)</label>
+                                                            <input id="kb-est-schedule" type="number" min="0" step="0.5"
+                                                                class="form-control" value="0.5" />
+                                                        </div>
+                                                        <div class="col-12 col-lg-4">
+                                                            <label class="form-label">Prazo</label>
+                                                            <input id="kb-due" type="date" class="form-control" />
+                                                        </div>
+
+                                                        <div class="col-6 col-lg-4">
+                                                            <label class="form-label">Tags (vírgula)</label>
+                                                            <input id="kb-tags" class="form-control"
+                                                                placeholder="ex.: criativo, meta, sprint-12" />
+                                                        </div>
+
+                                                        <div class="col-6 col-lg-4">
+                                                            <label class="form-label">Retrabalho
+                                                                (alterações)</label>
+                                                            <input id="kb-rework" type="number" min="0" step="1"
+                                                                class="form-control" value="0" />
+                                                        </div>
+
+                                                        <!-- NOVO: campos que alimentam o Detalhes (arte/copy/briefing) -->
+                                                        <div class="col-12 col-lg-6">
+                                                            <label class="form-label">Briefing (o que precisa ser
+                                                                feito)</label>
+                                                            <textarea id="kb-briefing" class="form-control" rows="4"
+                                                                placeholder="Objetivo, referências, público, regras..."></textarea>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="form-label">Descrição rápida</label>
+                                                            <textarea id="kb-desc" class="form-control" rows="2"
+                                                                placeholder="Contexto curto (visão geral)..."></textarea>
+                                                        </div>
+
+                                                    </div>
+                                                </form>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button class="btn btn-outline-secondary"
+                                                    data-bs-dismiss="modal">Cancelar</button>
+                                                <button class="btn btn-primary" id="kb-save"><i
+                                                        class="bx bx-save me-1"></i>Salvar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- =================== MODAL: Detalhes (REFEITO) =================== -->
+                                <div class="modal fade" id="kbModalDetails" tabindex="-1"
+                                    aria-labelledby="kbModalDetailsLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                                        <div class="modal-content">
+
+                                            <div class="modal-header">
+                                                <div>
+                                                    <h5 class="modal-title" id="kbModalDetailsLabel"><i
+                                                            class="bx bx-detail me-2"></i>Detalhes do card</h5>
+                                                    <div class="small text-muted" id="kb-details-subtitle"></div>
+                                                </div>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Fechar"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+
+                                                <!-- Arte(s) no topo -->
+                                                <div class="kb-asset-wrap mb-3">
+                                                    <div
+                                                        class="kb-asset-top d-flex align-items-center justify-content-between">
+                                                        <div class="fw-medium"><i class="bx bx-image me-2"></i>Artes
+                                                        </div>
+                                                        <div class="d-flex gap-2">
+                                                            <button class="btn btn-outline-secondary btn-sm"
+                                                                id="kb-add-assets-btn">
+                                                                <i class="bx bx-upload me-1"></i> Adicionar artes
+                                                            </button>
+                                                            <input id="kb-assets-file" type="file" class="d-none"
+                                                                multiple accept="image/*">
+                                                            <button class="btn btn-outline-primary btn-sm"
+                                                                id="kb-edit-from-details">
+                                                                <i class="bx bx-edit-alt me-1"></i> Editar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div id="kb-assets-area" class="kb-assets-area">
+                                                        <!-- renderiza via JS -->
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-3">
+                                                    <!-- Conteúdo compartilhado do card -->
+                                                    <div class="col-12 col-lg-7">
+                                                        <div class="card border">
+                                                            <div class="card-body">
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-start">
+                                                                    <div>
+                                                                        <h5 class="mb-1" id="kb-details-title">—
+                                                                        </h5>
+                                                                        <div class="d-flex flex-wrap gap-2 mt-2"
+                                                                            id="kb-details-badges"></div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <hr />
+
+                                                                <!-- Tabs: Copy / Briefing / Histórico -->
+                                                                <ul class="nav nav-tabs" role="tablist">
+                                                                    <li class="nav-item" role="presentation">
+                                                                        <button class="nav-link active"
+                                                                            data-bs-toggle="tab"
+                                                                            data-bs-target="#kb-tab-copy" type="button"
+                                                                            role="tab">
+                                                                            <i
+                                                                                class="bx bx-message-rounded-dots me-1"></i>
+                                                                            Copy / Legenda
+                                                                        </button>
+                                                                    </li>
+                                                                    <li class="nav-item" role="presentation">
+                                                                        <button class="nav-link" data-bs-toggle="tab"
+                                                                            data-bs-target="#kb-tab-briefing"
+                                                                            type="button" role="tab">
+                                                                            <i class="bx bx-notepad me-1"></i>
+                                                                            Briefing
+                                                                        </button>
+                                                                    </li>
+                                                                    <li class="nav-item" role="presentation">
+                                                                        <button class="nav-link" data-bs-toggle="tab"
+                                                                            data-bs-target="#kb-tab-client"
+                                                                            type="button" role="tab">
+                                                                            <i
+                                                                                class="bx bx-message-square-dots me-1"></i>
+                                                                            Cliente
+                                                                        </button>
+                                                                    </li>
+                                                                    <li class="nav-item" role="presentation">
+                                                                        <button class="nav-link" data-bs-toggle="tab"
+                                                                            data-bs-target="#kb-tab-history"
+                                                                            type="button" role="tab">
+                                                                            <i class="bx bx-time-five me-1"></i>
+                                                                            Histórico & Tempos
+                                                                        </button>
+                                                                    </li>
+                                                                </ul>
+
+                                                                <div class="tab-content pt-3">
+                                                                    <div class="tab-pane fade show active"
+                                                                        id="kb-tab-copy" role="tabpanel">
+                                                                        <div class="text-muted small mb-2">Texto
+                                                                            final (público)</div>
+                                                                        <textarea id="kb-copy-input"
+                                                                            class="form-control" rows="7"
+                                                                            placeholder="Cole aqui a legenda/copy do post (responsável por texto)..."></textarea>
+                                                                        <div
+                                                                            class="d-flex justify-content-end align-items-center gap-2 mt-2">
+                                                                            <span id="kb-copy-status"
+                                                                                class="small text-muted"></span>
+                                                                            <button
+                                                                                class="btn btn-outline-primary btn-sm"
+                                                                                id="kb-copy-save" disabled>
+                                                                                <i class="bx bx-save me-1"></i>Salvar
+                                                                                texto
+                                                                            </button>
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <div class="tab-pane fade" id="kb-tab-briefing"
+                                                                        role="tabpanel">
+                                                                        <div class="text-muted small mb-2">
+                                                                            Orientações do job</div>
+                                                                        <div id="kb-details-briefing" class="kb-pre">—
+                                                                        </div>
+                                                                        <hr />
+                                                                        <div class="text-muted small mb-2">Descrição
+                                                                            rápida</div>
+                                                                        <div id="kb-details-desc" class="small">—
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="tab-pane fade" id="kb-tab-client"
+                                                                        role="tabpanel">
+                                                                        <div class="text-muted small mb-2">Comentários
+                                                                            do cliente (aprovação e alterações)</div>
+
+                                                                        <div id="kb-client-comments"
+                                                                            class="d-flex flex-column gap-2 mb-3"></div>
+                                                                    </div>
+
+                                                                    <div class="tab-pane fade" id="kb-tab-history"
+                                                                        role="tabpanel">
+                                                                        <div class="text-muted small mb-2">Tempo por
+                                                                            etapa / responsável</div>
+                                                                        <div class="table-responsive text-nowrap">
+                                                                            <table
+                                                                                class="table table-sm table-hover align-middle mb-0">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>Etapa</th>
+                                                                                        <th>Função</th>
+                                                                                        <th>Responsável</th>
+                                                                                        <th>Saiu</th>
+                                                                                        <th>Duração</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody id="kb-details-timelog">
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Métricas do card -->
+                                                    <div class="col-12 col-lg-5">
+                                                        <div class="card border">
+                                                            <div class="card-body">
+
+                                                                <div class="row g-3">
+                                                                    <div class="col-6">
+                                                                        <div class="text-muted small">Estimado (h)
+                                                                        </div>
+                                                                        <div class="h5 mb-0" id="kb-details-estimate">0
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <div class="text-muted small">Real (h)</div>
+                                                                        <div class="h5 mb-0" id="kb-details-actual">
+                                                                            0</div>
+                                                                    </div>
+
+                                                                    <div class="col-6">
+                                                                        <div class="text-muted small">Qualidade
+                                                                            (0–100)</div>
+                                                                        <div class="h5 mb-0" id="kb-details-quality">0
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <div class="text-muted small">Retrabalho
+                                                                        </div>
+                                                                        <div class="h5 mb-0" id="kb-details-rework">
+                                                                            0</div>
+                                                                    </div>
+
+                                                                    <div class="col-12">
+                                                                        <div class="d-flex justify-content-between">
+                                                                            <span class="text-muted small">Progresso
+                                                                                do card</span>
+                                                                            <span class="small fw-medium"
+                                                                                id="kb-details-progress-label">0%</span>
+                                                                        </div>
+                                                                        <div class="progress mt-2"
+                                                                            style="height: 10px;">
+                                                                            <div id="kb-details-progress"
+                                                                                class="progress-bar" role="progressbar"
+                                                                                style="width: 0%"></div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="col-6">
+                                                                        <div class="text-muted small">Prazo</div>
+                                                                        <div class="fw-medium" id="kb-details-due">—
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <div class="text-muted small">Publicado em
+                                                                        </div>
+                                                                        <div class="fw-medium" id="kb-details-doneAt">—
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <hr />
+
+                                                                <div class="d-flex gap-2 justify-content-end">
+                                                                    <button class="btn btn-outline-danger"
+                                                                        id="kb-delete">
+                                                                        <i class="bx bx-trash me-1"></i> Excluir
+                                                                    </button>
+                                                                    <div id="kb-actions"
+                                                                        class="d-flex flex-wrap gap-2 justify-content-end">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- / Layout page -->
+    </div>
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Modal: Assinatura / Pagamento -->
+    <div class="modal fade" id="billingModal" tabindex="-1" aria-labelledby="billingModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="billingModalLabel">
+                        <i class="bx bx-credit-card me-2"></i> Assinatura da plataforma
+                    </h5>
+                    <!-- Sem botão de fechar para forçar decisão -->
+                </div>
+
+                <div class="modal-body">
+                    <div id="billing-alert" class="alert alert-info" role="alert" style="display:none;"></div>
+
+                    <!-- Status atual -->
+                    <div id="billing-status" class="mb-3">
+                        <small class="text-muted">Verificando sua assinatura…</small>
+                    </div>
+
+                    <!-- Cupom 
+                    <div class="mb-3">
+                        <label for="couponInput" class="form-label">Cupom (opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bx bx-purchase-tag-alt"></i></span>
+                            <input type="text" id="couponInput" class="form-control" placeholder="EX.: BEMVINDO10">
+                        </div>
+                    </div>-->
+
+                    <!-- Planos -->
+                    <div class="mb-2">
+                        <h6 class="mb-1">Escolha um plano</h6>
+                        <!--<small class="text-muted">Os valores são carregados automaticamente dos seus planos.</small>-->
+                    </div>
+                    <div id="plansGrid" class="row g-3">
+                        <!-- Cartões de planos serão injetados aqui via JS -->
+                    </div>
+                </div>
+
+                <div class="modal-footer d-flex justify-content-between">
+                    <button id="openPortalBtn" type="button" class="btn btn-outline-secondary" disabled>
+                        Gerenciar pagamento (Portal)
+                    </button>
+                    <div class="d-flex gap-2">
+                        <a href="/settingsAccountPage.html" class="btn btn-light">Ver opções completas</a>
+                        <button id="closeBillingBtn" type="button" class="btn btn-secondary">Fechar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Fale Conosco -->
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalLabel">
+                        <i class="bi bi-headset me-2"></i>Fale Conosco
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i><strong>Telefone:</strong>
+                        +55 19
+                        99714-8221 </p>
+                    <p class="mb-2"><i class="bi bi-envelope me-2 text-danger"></i><strong>Email:</strong>
+                        contato@hokocomunicacao.com.br</p>
+                    <p class="mb-0"><i class="bi bi-geo-alt me-2 text-success"></i><strong>Endereço:</strong> R.
+                        Comendador Tórlogo Dauntre, n.74 Sala 1207
+                        13.025-270
+                        Cambui, Campinas SP</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MODAL: Metas por cliente =================== -->
+    <div class="modal fade" id="kbModalGoals" tabindex="-1" aria-labelledby="kbModalGoalsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="kbModalGoalsLabel"><i class="bx bx-target-lock me-2"></i>Metas por
+                        cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3">
+                        Defina metas simples por cliente. Isso alimenta o bloco de <b>Resultados por cliente</b>.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th class="text-nowrap">Posts/mês</th>
+                                    <th class="text-nowrap">% no prazo</th>
+                                    <th class="text-nowrap">Qualidade meta</th>
+                                    <th class="text-nowrap">Retrabalho máx.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kb-goals-table-body"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-text">
+                        Qualidade (mock) = 100 - retrabalho - atraso. (Depois amarra com objetivo real do cliente.)
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" id="kb-goals-save"><i class="bx bx-save me-1"></i>Salvar
+                        metas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jeferson: container para mensagem -->
+    <div id="alert-container"></div>
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/core.js -->
+
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+
+    <!-- Main JS -->
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/notifications.js"></script>
+
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+    <!-- Jeferson: dados do cliente logado -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Jeferson: Check pagamentos -->
+    <script src="/assets/js/checkPayments.js"></script>
+    <script src="/assets/js/kanbanAdmin.js"></script>
+    <script src="/assets/js/kanbanBoard.js"></script>
+</body>
+
+</html>

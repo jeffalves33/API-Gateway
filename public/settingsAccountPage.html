@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
-<html lang="en" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default"
-    data-assets-path="/assets/" data-template="vertical-menu-template-free">
+<html lang="en" class="light-style layout-menu-fixed layout-compact layout-menu-collapsed" dir="ltr"
+    data-theme="theme-default" data-assets-path="/assets/" data-template="vertical-menu-template-free">
 
 <head>
     <meta charset="utf-8" />
@@ -48,6 +48,30 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="/assets/js/config.js"></script>
+    <!-- manter layout correto quando menu estiver colapsado -->
+    <style>
+        /* ho.ko fix — manter layout correto quando menu estiver colapsado */
+        @media (min-width: 1200px) {
+
+            /* Quando estiver colapsado, a página precisa continuar “respeitando” 5.25rem */
+            html.layout-menu-fixed.layout-menu-collapsed .layout-page,
+            html.layout-menu-fixed-offcanvas.layout-menu-collapsed .layout-page {
+                padding-left: 5.25rem;
+            }
+
+            /* Navbar fixa também precisa acompanhar */
+            html.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar,
+            html.layout-menu-fixed.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar,
+            html.layout-menu-fixed-offcanvas.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar {
+                left: 5.25rem;
+            }
+
+            /* Footer fixo também */
+            html.layout-footer-fixed.layout-menu-collapsed .layout-wrapper:not(.layout-without-menu) .content-footer {
+                left: 5.25rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -62,11 +86,9 @@
                         <div class="avatar">
                             <img src="/assets/img/favicon/favicon.ico" alt class="w-px-40 h-auto rounded-circle" />
                         </div>
-                        <span class="app-brand-text demo menu-text fw-bold ms-2">ho.ko AI.nalytics</span>
                     </a>
 
-                    <a href="javascript:void(0);"
-                        class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
                         <i class="bx bx-chevron-left bx-sm align-middle"></i>
                     </a>
                 </div>
@@ -112,31 +134,10 @@
                     </li>
 
                     <li class="menu-item">
-                        <a href="/platformsPage.html" class="menu-link">
-                            <i class="menu-icon tf-icons bi bi-link-45deg"></i>
-                            <div data-i18n="Chat">Plataformas</div>
-                        </a>
-                    </li>
-
-                    <!-- Layouts -->
-                    <li class="menu-item">
-                        <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <a href="myCustomersPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-people"></i>
-                            <div data-i18n="Chat">Clientes</div>
+                            <div data-i18n="Without menu">Meus Clientes</div>
                         </a>
-
-                        <ul class="menu-sub">
-                            <li class="menu-item">
-                                <a href="myCustomersPage.html" class="menu-link">
-                                    <div data-i18n="Without menu">Meus Clientes</div>
-                                </a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="customersPage.html" class="menu-link">
-                                    <div data-i18n="Without navbar">Adicionar Clientes</div>
-                                </a>
-                            </li>
-                        </ul>
                     </li>
 
                     <li class="menu-header small text-uppercase">

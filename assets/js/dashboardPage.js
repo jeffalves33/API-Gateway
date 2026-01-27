@@ -938,7 +938,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             ...data.instagram.map((p) => {
                 const likes = p.like_count ?? 0;
                 const comments = p.comments_count ?? 0;
-                const shares = 0; // IG não tem shares no seu payload atual
+                const shares = 0; // IG não tem shares no payload atual
 
                 return {
                     platform: 'instagram',
