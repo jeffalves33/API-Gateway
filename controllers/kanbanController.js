@@ -242,13 +242,41 @@ async function uploadCardAssets(req, res) {
 
         // req.files existe (multer)
         const files = req.files || [];
-        await repo.saveCardAssetsPlaceholder(id_user, id, files);
+        console.log("🚀 ~ uploadCardAssets ~ files: ", files)
+        const result = await repo.addCardArts(id_user, id, files);
 
         return ok(res, { success: true });
     } catch (e) {
         return bad(res, e);
     }
 }
+
+async function uploadArts(req, res) {
+    try {
+        const id_user = req.user.id;
+        const card_id = req.params.card_id;
+        const files = req.files || [];
+
+        const arts = await repo.addCardArts(id_user, card_id, files);
+        return ok(res, { arts });
+    } catch (e) {
+        return bad(res, e);
+    }
+}
+
+async function deleteArt(req, res) {
+    try {
+        const id_user = req.user.id;
+        const card_id = req.params.card_id;
+        const art_id = req.params.art_id;
+
+        await repo.deleteCardArt(id_user, card_id, art_id);
+        return ok(res, { success: true });
+    } catch (e) {
+        return bad(res, e);
+    }
+}
+
 
 // =======================
 // GOALS (mês)
@@ -364,6 +392,8 @@ module.exports = {
     deleteCard,
     transitionCard,
     uploadCardAssets,
+    uploadArts,
+    deleteArt,
 
     // GOALS
     getGoalsByMonth,

@@ -1,5 +1,9 @@
 // Arquivo: repositories/kanbanRepository.js
 const { pool } = require('../config/db');
+const { s3_kanban, BUCKET_NAME_KANBAN } = require('../config/s3Config');
+const { DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
 
 const monthToDate = (monthKey) => {
     if (!/^\d{4}-\d{2}$/.test(monthKey)) throw new Error('month inválido (use YYYY-MM)');
@@ -315,6 +319,70 @@ async function getOrCreateClientPortalToken(id_user, id_customer) {
     } finally {
         client.release();
     }
+}
+
+async function addCardArts(id_user, card_id, files) {
+    // garante que card pertence ao id_user
+    const exists = await pool.query(
+        `SELECT 1 FROM kanban.card WHERE id_user=$1 AND id=$2::uuid`,
+        [id_user, card_id]
+    );
+    if (!exists.rows.length) throw new Error("Card não encontrado");
+
+    const inserted = [];
+    for (const f of files) {
+        const s3_key = f.key; // multer-s3
+        const file_name = f.originalname;
+        const mime_type = f.mimetype;
+        const size_bytes = Number(f.size || 0);
+
+        const q = `
+            INSERT INTO kanban.card_art (card_id, s3_key, file_name, mime_type, size_bytes)
+            VALUES ($1,$2,$3,$4,$5)
+            RETURNING id, card_id, s3_key, file_name, mime_type, size_bytes, created_at
+        `;
+        const { rows } = await pool.query(q, [card_id, s3_key, file_name, mime_type, size_bytes]);
+        inserted.push(rows[0]);
+    }
+    return inserted;
+}
+
+async function listCardArts(id_user, card_id) {
+    const q = `
+    SELECT a.id, a.card_id, a.s3_key, a.file_name, a.mime_type, a.size_bytes, a.created_at
+    FROM kanban.card_art a
+    JOIN kanban.card k ON k.id=a.card_id
+    WHERE k.id_user=$1 AND k.id=$2::uuid
+    ORDER BY a.created_at ASC
+  `;
+    const { rows } = await pool.query(q, [id_user, card_id]);
+
+    // presigned url (10 min)
+    for (const r of rows) {
+        r.url = await getSignedUrl(
+            s3_kanban,
+            new GetObjectCommand({ Bucket: BUCKET_NAME_KANBAN, Key: r.s3_key }),
+            { expiresIn: 600 }
+        );
+    }
+    return rows;
+}
+
+async function deleteCardArt(id_user, card_id, art_id) {
+    const q = `
+    SELECT a.s3_key
+    FROM kanban.card_art a
+    JOIN kanban.card k ON k.id=a.card_id
+    WHERE k.id_user=$1 AND a.card_id=$2::uuid AND a.id=$3::uuid
+    LIMIT 1
+  `;
+    const { rows } = await pool.query(q, [id_user, card_id, art_id]);
+    if (!rows.length) throw new Error("Arte não encontrada");
+
+    const key = rows[0].s3_key;
+
+    await s3_kanban.send(new DeleteObjectCommand({ Bucket: BUCKET_NAME_KANBAN, Key: key }));
+    await pool.query(`DELETE FROM kanban.card_art WHERE id=$1::uuid`, [art_id]);
 }
 
 // =======================
@@ -969,6 +1037,36 @@ async function transitionCard(id_user, card_id, body) {
         }
 
         if (action === "publish") {
+            // remove artes do S3 ao publicar
+            const artsRes = await client.query(
+                `SELECT a.id, a.s3_key
+            FROM kanban.card_art a
+            JOIN kanban.card k ON k.id=a.card_id
+            WHERE k.id_user=$1 AND k.id=$2::uuid`,
+                [id_user, card_id]
+            );
+
+            const failed = [];
+
+            for (const a of artsRes.rows) {
+                try {
+                    await s3_kanban.send(new DeleteObjectCommand({ Bucket: BUCKET_NAME, Key: a.s3_key }));
+                } catch (err) {
+                    failed.push({ id: a.id, key: a.s3_key, msg: String(err?.message || err) });
+                }
+            }
+
+            // Se falhou algo, NÃO apaga do banco (pra retry) e loga
+            if (failed.length) {
+                // Escolha 1 (recomendado): bloqueia publish pra não “perder” o cleanup
+                throw new Error("Falha ao remover artes do S3. Publish interrompido.");
+
+                // Escolha 2 (se você preferir publicar mesmo assim):
+                // return { success: true, warning: "Publicado, mas falhou cleanup do S3." };
+            }
+
+            // Se chegou aqui, deletou tudo no S3 -> agora sim limpa o banco
+            await client.query(`DELETE FROM kanban.card_art WHERE card_id=$1::uuid`, [card_id]);
             await closeOpenRuns();
             await setStatus("published", ", published_at = now()");
             await client.query("COMMIT");
@@ -1056,6 +1154,7 @@ async function externalGetCard(external_token, card_id) {
     );
 
     const card = rows[0];
+    card.arts = await listCardArts(profile.id_user, card.id);
 
     // IMPORTANT: seu front está usando "client_comments"
     // e espera campos como text/author_name/created_at.
@@ -1168,6 +1267,7 @@ async function getCardByIdExpanded(id_user, card_id) {
     }
 
     const k = base.rows[0];
+    const arts = await listCardArts(id_user, k.id);
     return {
         id: k.id,
         client_name: k.client_name,
@@ -1199,6 +1299,7 @@ async function getCardByIdExpanded(id_user, card_id) {
             started_at: rr.started_at,
             ended_at: rr.ended_at,
         })),
+        arts,
         created_at: k.created_at,
         updated_at: k.updated_at,
     };
@@ -1268,7 +1369,7 @@ module.exports = {
     getGoalsByMonthNormalized, upsertGoalsByMonthNormalized,
 
     // cards
-    listCardsAll, listCardsByMonth, createCardNormalized, updateCardNormalized, deleteCard, transitionCard, saveCardAssetsPlaceholder,
+    listCardsAll, listCardsByMonth, createCardNormalized, updateCardNormalized, deleteCard, transitionCard, saveCardAssetsPlaceholder, addCardArts, listCardArts, deleteCardArt,
 
     // external
     listExternalCards, externalGetCard, externalApprove, externalRequestChanges, externalAddComment, addComment, listComments

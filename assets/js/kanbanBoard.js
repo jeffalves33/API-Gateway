@@ -478,10 +478,13 @@
         Array.from(files || []).forEach((f) => fd.append("files", f));
 
         // rota (task 3): POST /api/kanban/cards/:id/assets (multipart)
-        await api(`/api/kanban/cards/${encodeURIComponent(cardId)}/assets`, {
-            method: "POST",
-            body: fd,
+        const r = await fetch(`/api/kanban/cards/${cardId}/arts`, {
+            method: 'POST',
+            body: fd
         });
+
+        const data = await r.json();
+        if (!r.ok) throw new Error(data?.message || 'Erro upload');
 
         await loadCards();
         render();

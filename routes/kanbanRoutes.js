@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const { uploadCardArts } = require('../middleware/uploadMiddleware');
 
 const {
     // TEAM
@@ -23,6 +24,9 @@ const {
     deleteCard,
     transitionCard,
     uploadCardAssets,
+    addCardArts,
+    uploadArts,
+    deleteArt,
 
     // GOALS
     getGoalsByMonth,
@@ -67,14 +71,11 @@ router.post('/cards', authenticateToken, createCard);
 router.put('/cards/:id', authenticateToken, updateCard);
 router.delete('/cards/:id', authenticateToken, deleteCard);
 router.post('/cards/:id/transition', authenticateToken, transitionCard);
+router.post('/cards/:card_id/arts', authenticateToken, uploadCardArts.array('files', 10), uploadArts);
+router.delete('/cards/:card_id/arts/:art_id', authenticateToken, deleteArt);
 
 // ASSETS (multipart: files[])
-router.post(
-    '/cards/:id/assets',
-    authenticateToken,
-    upload.array('files', 10),
-    uploadCardAssets
-);
+router.post('/cards/:id/assets', authenticateToken, upload.array('files', 10), uploadCardAssets);
 
 // GOALS
 router.get('/goals', authenticateToken, getGoalsByMonth);        // ?month=YYYY-MM
