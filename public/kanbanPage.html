@@ -58,7 +58,7 @@
         window.pdfjsLib = pdfjs;
     </script>
 
-    <!--barra colapse-->
+    <!-- manter layout correto quando menu estiver colapsado -->
     <style>
         /* ho.ko fix — manter layout correto quando menu estiver colapsado */
         @media (min-width: 1200px) {
@@ -82,7 +82,6 @@
             }
         }
     </style>
-
     <style>
         /* Board maior, colunas largas e aproveitando espaço */
         .kb-board-scroll {
@@ -226,7 +225,7 @@
             <!-- Menu -->
             <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
                 <div class="app-brand demo">
-                    <a href="javascript:void(0);" class="app-brand-link">
+                    <a href="dashboardPage.html" class="app-brand-link">
                         <div class="avatar">
                             <img src="/assets/img/favicon/favicon.ico" alt class="w-px-40 h-auto rounded-circle" />
                         </div>
@@ -235,7 +234,6 @@
                     <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
                         <i class="bx bx-chevron-left bx-sm align-middle"></i>
                     </a>
-
                 </div>
 
                 <div class="menu-inner-shadow"></div>
@@ -261,16 +259,9 @@
                     </li>
 
                     <li class="menu-item">
-                        <a href="/chatPage.html" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-chat"></i>
-                            <div data-i18n="Chat">Chat</div>
-                        </a>
-                    </li>
-
-                    <li class="menu-item active">
                         <a href="/foodModelPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-menu-up"></i>
-                            <div data-i18n="Chat">Kanban</div>
+                            <div data-i18n="Chat">Alimentar modelo</div>
                         </a>
                     </li>
 
@@ -282,6 +273,18 @@
                         <a href="myCustomersPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-people"></i>
                             <div data-i18n="Without menu">Meus Clientes</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">Equipe</span>
+                    </li>
+
+                    <li class="menu-item active">
+                        <a href="/kanbanPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-grid"></i>
+                            <div data-i18n="Kanban">Kanban</div>
+                            <!--<div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>-->
                         </a>
                     </li>
 
@@ -301,11 +304,6 @@
                                     <div data-i18n="Without menu">Conta</div>
                                 </a>
                             </li>
-                            <!--<li class="menu-item">
-                                <a href="/notificationsPage.html" class="menu-link">
-                                    <div data-i18n="Without navbar">Notificações</div>
-                                </a>
-                            </li>-->
                         </ul>
                     </li>
 
