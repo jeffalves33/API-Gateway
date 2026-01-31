@@ -1,7 +1,8 @@
 // Arquivo: controllers/customerController.js
-const { createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removeCustomerPlatformAuth, updateCustomer, checkCustomerBelongsToUser } = require('../repositories/customerRepository');
+const { createCustomer, deleteCustomer, deactivateCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removeCustomerPlatformAuth, updateCustomer, checkCustomerBelongsToUser } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys, clearCacheForUser } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
+const { syncExtraClientsForUser } = require('../services/stripeService');
 
 /*const addCustomer = async (req, res) => {
   try {
@@ -38,7 +39,22 @@ const addCustomer = async (req, res) => {
 
     if (!name || !email) return res.status(400).json({ success: false, message: 'Nome e email são obrigatórios.' });
 
-    const customer = await createCustomer(id_user, name, company || null, email, phone || null);
+
+    const customer = await createCustomer(
+      id_user,
+      name,
+      company || null,
+      email,
+      phone || null
+    );
+
+    // Atualiza quantidade de clientes extras (acima de 3) no Stripe
+    try {
+      await syncExtraClientsForUser(id_user);
+    } catch (err) {
+      console.error('Erro ao sincronizar clientes extras no Stripe (addCustomer):', err);
+      // não bloqueia criação de cliente
+    }
 
     return res.status(201).json({
       success: true,
@@ -57,16 +73,36 @@ const deleteCustomerById = async (req, res) => {
     const id_customer = req.params.id_customer;
 
     const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
-    if (!belongs) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário autenticado.' });
+    if (!belongs) {
+      return res.status(403).json({
+        success: false,
+        message: 'Cliente não pertence ao usuário autenticado.'
+      });
+    }
 
-    await deleteCustomer(id_customer, id_user);
+    // Soft delete: marca como inativo e registra data de desativação
+    await deactivateCustomer(id_customer, id_user);
 
     clearCacheForUser(id_user);
 
-    res.status(200).json({ success: true, message: 'Cliente excluido com sucesso' });
+    // Opcional: tentar sincronizar Stripe.
+    // syncExtraClientsForUser *não* diminui extras no meio do ciclo (allowDecrease=false).
+    try {
+      await syncExtraClientsForUser(id_user);
+    } catch (err) {
+      console.error('Erro ao sincronizar clientes extras no Stripe (deleteCustomerById):', err);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Cliente desativado com sucesso'
+    });
   } catch (error) {
-    console.error('Erro ao excluir cliente:', error);
-    res.status(500).json({ success: false, message: error.message || 'Erro ao excluir cliente' });
+    console.error('Erro ao desativar cliente:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Erro ao desativar cliente'
+    });
   }
 };
 
