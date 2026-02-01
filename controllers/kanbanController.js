@@ -145,9 +145,7 @@ async function listCards(req, res) {
         const id_user = req.user.id;
         const month = req.query?.month ? toMonthKey(req.query.month) : null;
 
-        const cards = month
-            ? await repo.listCardsByMonth(id_user, month)
-            : await repo.listCardsAll(id_user);
+        const cards = month ? await repo.listCardsByMonth(id_user, month) : await repo.listCardsAll(id_user);
 
         // front (kanbanBoard.js) espera array direto
         // map mínimo pro formato do front (sem quebrar)

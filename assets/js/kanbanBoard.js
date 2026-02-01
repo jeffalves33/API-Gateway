@@ -206,7 +206,8 @@
     // ========= API loaders =========
     async function loadCards() {
         const monthKey = state.goalsMonthKey || currentMonthKey();
-        state.cards = await api(`/api/kanban/cards?month=${encodeURIComponent(monthKey)}`);
+        //state.cards = await api(`/api/kanban/cards?month=${encodeURIComponent(monthKey)}`);
+        state.cards = await api(`/api/kanban/cards`);
         if (!Array.isArray(state.cards)) state.cards = [];
     }
 
