@@ -10,7 +10,7 @@ async function handleStripeWebhook(req, res) {
 
     try {
         // importante: usar RAW body para verificar assinatura! :contentReference[oaicite:15]{index=15}
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_PROD);
     } catch (err) {
         console.error('Webhook signature verify failed:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
