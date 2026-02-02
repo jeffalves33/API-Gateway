@@ -2,7 +2,7 @@
 const Stripe = require('stripe');
 require('dotenv').config();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_PROD, {
     apiVersion: '2025-09-30.clover',
 });
 module.exports = { stripe };

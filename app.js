@@ -72,13 +72,11 @@ app.get('/', (req, res) => {
 // === Páginas protegidas ===
 app.get('/analyzesPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'analyzesPage.html')); });
 //app.get('/chatPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'chatPage.html')); });
-app.get('/customersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'customersPage.html')); });
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html')); });
 app.get('/foodModelPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html')); });
 app.get('/goalsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'goalsPage.html')); });
 app.get('/kanbanPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'kanbanPage.html')); });
 app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
-app.get('/platformsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'platformsPage.html')); });
 app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html')); });
 
 // === Páginas públicas ===

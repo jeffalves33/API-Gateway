@@ -21,8 +21,9 @@ async function createCheckoutSession({ user, priceId, planCode, promoCode }) {
     // item base do plano (Pro/Starter)
     const lineItems = [{ price: priceId, quantity: 1 }];
 
-    // item de cliente extra (quantidade inicial 0)
-    if (EXTRA_PRICE_ID) lineItems.push({ price: EXTRA_PRICE_ID, quantity: 0 });
+    // item de cliente extra: só adiciona se houver extras no momento da compra
+    const extrasQty = 0; // por enquanto não cobra extras no checkout inicial
+    if (EXTRA_PRICE_ID && extrasQty >= 1) lineItems.push({ price: EXTRA_PRICE_ID, quantity: extrasQty });
 
 
     const params = {
@@ -57,9 +58,8 @@ async function createCheckoutSession({ user, priceId, planCode, promoCode }) {
 
 async function ensureStripeCustomer(user) {
     // se já tem, retorna
-    if (user.stripe_customer_id) {
-        return user.stripe_customer_id;
-    }
+    if (user.stripe_customer_id) return user.stripe_customer_id;
+
     const customer = await stripe.customers.create({
         email: user.email,
         name: user.name,
