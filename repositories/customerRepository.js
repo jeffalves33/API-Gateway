@@ -51,6 +51,19 @@ const deleteCustomer = async (id_customer, id_user) => {
   }
 };
 
+const deactivateCustomer = async (id_customer, id_user) => {
+  const result = await pool.query(
+    'UPDATE customer SET status = $1, deactivated_at = NOW() WHERE id_customer = $2 AND id_user = $3 RETURNING *',
+    ['inactive', id_customer, id_user]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error('Cliente não encontrado para este usuário');
+  }
+
+  return result.rows[0];
+};
+
 const getCustomerByIdCustomer = async (id_customer) => {
   const result = await pool.query('SELECT * FROM customer WHERE id_customer = $1', [id_customer]);
   return result.rows;
@@ -79,6 +92,7 @@ const getCustomersListByUserId = async (id_user) => {
       c.email,
       c.phone,
       c.created_at,
+      c.status,
       COALESCE(
         json_agg(
           json_build_object(
@@ -173,4 +187,4 @@ const updateCustomer = async (id_customer, id_user, name, email, company, phone)
 };
 
 
-module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, getCustomersListByUserId, removeCustomerPlatformAuth, removePlatformFromUser, updateCustomer };
+module.exports = { checkCustomerBelongsToUser, createCustomer, deleteCustomer, deactivateCustomer, getCustomerByIdCustomer, getCustomerKeys, getCustomersByUserId, getCustomersListByUserId, removeCustomerPlatformAuth, removePlatformFromUser, updateCustomer };

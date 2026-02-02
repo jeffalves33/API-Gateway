@@ -2,6 +2,8 @@
 const { stripe } = require('../config/stripeConfig');
 const { pool } = require('../config/db'); // :contentReference[oaicite:14]{index=14}
 
+const EXTRA_PRICE_ID = process.env.STRIPE_PRICE_CLIENT_EXTRA || null;
+
 async function handleStripeWebhook(req, res) {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -27,9 +29,24 @@ async function handleStripeWebhook(req, res) {
                 if (session.mode === 'subscription') {
                     const subscriptionId = session.subscription;
                     const customerId = session.customer;
-                    // pegar assinatura completa
                     const sub = await stripe.subscriptions.retrieve(subscriptionId);
-                    const priceId = sub.items.data[0]?.price?.id || null;
+                    const items = sub.items?.data || [];
+                    let basePriceId = null;
+                    let extraItemId = null;
+
+                    if (EXTRA_PRICE_ID) {
+                        const extraItem = items.find(i => i.price?.id === EXTRA_PRICE_ID) || null;
+                        const baseItem =
+                            items.find(i => i.price?.id !== EXTRA_PRICE_ID) ||
+                            items[0] ||
+                            null;
+
+                        basePriceId = baseItem?.price?.id || null;
+                        extraItemId = extraItem?.id || null;
+                    } else {
+                        basePriceId = items[0]?.price?.id || null;
+                    }
+
                     const planCode = sub.metadata?.plan_code || session.metadata?.plan_code || null;
                     const periodStart = sub.current_period_start ?? sub.trial_start ?? sub.start_date ?? null;
                     const periodEnd = sub.current_period_end ?? sub.trial_end ?? sub.billing_cycle_anchor ?? null;
@@ -48,17 +65,19 @@ async function handleStripeWebhook(req, res) {
                             subscription_status    = $3,
                             plan_code              = COALESCE($4, plan_code),
                             stripe_price_id        = $5,
-                            current_period_start   = COALESCE(to_timestamp($6::double precision), current_period_start),
-                            current_period_end     = COALESCE(to_timestamp($7::double precision), current_period_end),
-                            trial_start            = COALESCE(to_timestamp($8::double precision), trial_start),
-                            trial_end              = COALESCE(to_timestamp($9::double precision), trial_end)
-                        WHERE id_user = $10
+                            stripe_extra_item_id   = COALESCE($6, stripe_extra_item_id),
+                            current_period_start   = COALESCE(to_timestamp($7::double precision), current_period_start),
+                            current_period_end     = COALESCE(to_timestamp($8::double precision), current_period_end),
+                            trial_start            = COALESCE(to_timestamp($9::double precision), trial_start),
+                            trial_end              = COALESCE(to_timestamp($10::double precision), trial_end)
+                        WHERE id_user = $11
                         `, [
                             customerId,
                             subscriptionId,
                             sub.status || null,
                             planCode,
-                            priceId,
+                            basePriceId,
+                            extraItemId,
                             periodStart,
                             periodEnd,
                             sub.trial_start ?? null,
@@ -74,6 +93,22 @@ async function handleStripeWebhook(req, res) {
             case 'customer.subscription.created':
             case 'customer.subscription.deleted': {
                 const sub = event.data.object;
+                const items = sub.items?.data || [];
+                let basePriceId = null;
+                let extraItemId = null;
+
+                if (EXTRA_PRICE_ID) {
+                    const extraItem = items.find(i => i.price?.id === EXTRA_PRICE_ID) || null;
+                    const baseItem =
+                        items.find(i => i.price?.id !== EXTRA_PRICE_ID) ||
+                        items[0] ||
+                        null;
+
+                    basePriceId = baseItem?.price?.id || null;
+                    extraItemId = extraItem?.id || null;
+                } else basePriceId = items[0]?.price?.id || null;
+
+
                 const periodStart = sub.current_period_start ?? sub.trial_start ?? sub.start_date ?? null;
                 const periodEnd = sub.current_period_end ?? sub.trial_end ?? sub.billing_cycle_anchor ?? null;
                 const q = await pool.query('SELECT id_user FROM "user" WHERE stripe_customer_id = $1', [sub.customer]);
@@ -84,17 +119,19 @@ async function handleStripeWebhook(req, res) {
                             SET stripe_subscription_id = $1,
                                 subscription_status    = $2,
                                 stripe_price_id        = $3,
-                                current_period_start   = COALESCE(to_timestamp($4::double precision), current_period_start),
-                                current_period_end     = COALESCE(to_timestamp($5::double precision), current_period_end),
-                                trial_start            = COALESCE(to_timestamp($6::double precision), trial_start),
-                                trial_end              = COALESCE(to_timestamp($7::double precision), trial_end),
-                                cancel_at              = COALESCE(to_timestamp($8::double precision), cancel_at),
-                                cancel_at_period_end   = $9
-                        WHERE id_user = $10
+                                stripe_extra_item_id   = COALESCE($4, stripe_extra_item_id),
+                                current_period_start   = COALESCE(to_timestamp($5::double precision), current_period_start),
+                                current_period_end     = COALESCE(to_timestamp($6::double precision), current_period_end),
+                                trial_start            = COALESCE(to_timestamp($7::double precision), trial_start),
+                                trial_end              = COALESCE(to_timestamp($8::double precision), trial_end),
+                                cancel_at              = COALESCE(to_timestamp($9::double precision), cancel_at),
+                                cancel_at_period_end   = $10
+                        WHERE id_user = $11
                     `, [
                         sub.id,
                         sub.status || null,
-                        sub.items.data[0]?.price?.id || null,
+                        basePriceId,
+                        extraItemId,
                         periodStart,
                         periodEnd,
                         sub.trial_start ?? null,

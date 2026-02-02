@@ -637,19 +637,23 @@
                     </div>
                 </div>
 
-                <!-- Modal: Modal de Exclusão de Cliente -->
+                <!-- Modal: Desativar Cliente -->
                 <div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Remover cliente</h5>
+                                <h5 class="modal-title">Desativar cliente</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Fechar"></button>
                             </div>
 
                             <div class="modal-body">
                                 <input type="hidden" id="delete_id_customer" />
-                                <p class="mb-0">Tem certeza? Todos os dados e históricos deste cliente serão removidos.
+                                <p class="mb-0">
+                                    O cliente será desativado. Ele continuará aparecendo na lista como
+                                    <strong>Desativado</strong>, mas não poderá ser aberto, editado ou conectado
+                                    às plataformas. Seus dados e históricos só serão removidos definitivamente
+                                    ao final do ciclo de cobrança. Deseja continuar?
                                 </p>
                                 <div id="deleteCustomerAlert" class="mt-3"></div>
                             </div>
@@ -658,7 +662,7 @@
                                 <button type="button" class="btn btn-outline-secondary"
                                     data-bs-dismiss="modal">Cancelar</button>
                                 <button type="button" class="btn btn-danger" id="confirmDeleteCustomerBtn">
-                                    <span id="deleteCustomerBtnText">Remover</span>
+                                    <span id="deleteCustomerBtnText">Desativar</span>
                                     <span id="deleteCustomerSpinner" class="spinner-border spinner-border-sm d-none"
                                         role="status" aria-hidden="true"></span>
                                 </button>
@@ -1612,34 +1616,71 @@
                     if (tds[1]) tds[1].innerHTML = safeText(c.phone);
                     if (tds[2]) tds[2].innerHTML = safeText(c.email);
 
+                    const status = (c.status || "active").toLowerCase();
+                    const isInactive = status === "inactive";
+
+                    // ícones das plataformas (só para ativos faz diferença visual, mas deixei igual)
                     const iconsWrap = node.querySelector("tr:first-child td:nth-child(4) .d-inline-flex");
                     if (iconsWrap) iconsWrap.innerHTML = renderPlatformIcons(c.integrations);
 
-                    const hasConnected = (c.integrations || []).some(i => (i.status || "").toLowerCase() === "connected");
-                    if (tds[4]) tds[4].innerHTML = badgeStatus(hasConnected);
+                    const hasConnected = (c.integrations || []).some(
+                        i => (i.status || "").toLowerCase() === "connected"
+                    );
 
-                    // define ids do acordeão
+                    // Coluna STATUS
+                    if (tds[4]) {
+                        if (isInactive) {
+                            tds[4].innerHTML = '<span class="badge bg-label-secondary me-1">Desativado</span>';
+                        } else {
+                            tds[4].innerHTML = badgeStatus(hasConnected);
+                        }
+                    }
+
+                    // define ids do acordeão / botão expandir
                     const btnExpand = node.querySelector(".customer-expand");
                     const collapseEl = node.querySelector(".customer-details-row .collapse");
                     const detailsCol = node.querySelector(".customer-details-col");
-                    if (btnExpand && collapseEl && c.id_customer) {
-                        const collapseId = `customerPlatforms-${c.id_customer}`;
-
-                        collapseEl.id = collapseId;
-
-                        btnExpand.setAttribute("data-bs-target", `#${collapseId}`);
-                        btnExpand.setAttribute("aria-controls", collapseId);
-                    }
-                    if (detailsCol) detailsCol.id = `customerPlatforms-${c.id_customer}-col`;
                     const details = node.querySelector(".customer-platforms-container");
-                    if (details) details.innerHTML = renderIntegrationsPanel(c);
-                    // seta ids no botão editar já existente
-                    const editBtn = node.querySelector(".edit_client");
-                    if (editBtn && c.id_customer) editBtn.dataset.id = c.id_customer;
 
-                    // seta ids no botão remover já existente
-                    const removeBtn = node.querySelector(".remove-client");
-                    if (removeBtn && c.id_customer) removeBtn.dataset.id = c.id_customer;
+                    if (isInactive) {
+                        // desativa o botão de expandir e não configura o accordion
+                        if (btnExpand) {
+                            btnExpand.disabled = true;
+                            btnExpand.classList.add("disabled");
+                            btnExpand.removeAttribute("data-bs-toggle");
+                            btnExpand.removeAttribute("data-bs-target");
+                            btnExpand.setAttribute("title", "Cliente desativado");
+                        }
+                        // se quiser esconder totalmente o detalhe, descomenta a linha abaixo:
+                        // const rowDetails = node.querySelector(".customer-details-row"); if (rowDetails) rowDetails.remove();
+                    } else {
+                        if (btnExpand && collapseEl && c.id_customer) {
+                            const collapseId = `customerPlatforms-${c.id_customer}`;
+
+                            collapseEl.id = collapseId;
+
+                            btnExpand.setAttribute("data-bs-target", `#${collapseId}`);
+                            btnExpand.setAttribute("aria-controls", collapseId);
+                        }
+                        if (detailsCol) detailsCol.id = `customerPlatforms-${c.id_customer}-col`;
+                        if (details) details.innerHTML = renderIntegrationsPanel(c);
+                    }
+
+                    // Coluna AÇÕES
+                    const actionsTd = tds[5];
+                    if (isInactive) {
+                        if (actionsTd) {
+                            actionsTd.innerHTML = '<span class="text-muted small">Cliente desativado</span>';
+                        }
+                    } else {
+                        // seta ids no botão editar já existente
+                        const editBtn = node.querySelector(".edit_client");
+                        if (editBtn && c.id_customer) editBtn.dataset.id = c.id_customer;
+
+                        // seta ids no botão remover já existente
+                        const removeBtn = node.querySelector(".remove-client");
+                        if (removeBtn && c.id_customer) removeBtn.dataset.id = c.id_customer;
+                    }
 
                     tbody.appendChild(node);
                 });
@@ -1807,7 +1848,7 @@
                 if (!btn) return;
                 btn.disabled = loading;
                 if (spinner) spinner.classList.toggle("d-none", !loading);
-                if (btnText) btnText.textContent = loading ? "Removendo..." : "Remover";
+                if (btnText) btnText.textContent = loading ? "Desativando..." : "Desativar";
             };
 
             const showAlert = (type, msg) => {
@@ -1843,15 +1884,14 @@
                     const resp = await fetch(`/customer/delete/${id_customer}`, { method: "DELETE" });
                     const data = await resp.json();
 
-                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao remover cliente.");
+                    if (!resp.ok || !data.success) throw new Error(data.message || "Erro ao desativar cliente.");
 
                     modal?.hide();
 
-                    // remove da tela sem reload
-                    if (rowDetails && rowDetails.classList && rowDetails.classList.contains("customer-details-row")) rowDetails.remove();
-                    if (rowMain) rowMain.remove();
+                    // recarrega para mostrar o cliente como "Desativado" e travar ações
+                    window.location.reload();
                 } catch (err) {
-                    showAlert("danger", err.message || "Erro ao remover cliente.");
+                    showAlert("danger", err.message || "Erro ao desativar cliente.");
                 } finally {
                     setLoading(false);
                 }
