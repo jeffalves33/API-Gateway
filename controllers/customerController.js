@@ -50,7 +50,10 @@ const addCustomer = async (req, res) => {
 
     // Atualiza quantidade de clientes extras (acima de 3) no Stripe
     try {
+      console.log('[ADD_CUSTOMER] id_user=', id_user, 'created id_customer=', customer.id_customer);
+      console.log('[ADD_CUSTOMER] calling syncExtraClientsForUser...');
       await syncExtraClientsForUser(id_user);
+      console.log('[ADD_CUSTOMER] syncExtraClientsForUser done');
     } catch (err) {
       console.error('Erro ao sincronizar clientes extras no Stripe (addCustomer):', err);
       // não bloqueia criação de cliente

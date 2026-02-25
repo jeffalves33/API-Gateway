@@ -75,9 +75,14 @@ async function ensureStripeCustomer(user) {
 // Recalcula quantidade de clientes extras (acima de 3) e atualiza item extra na assinatura.
 // Por padrão, só aumenta quantidade. Redução fica para job/Lambda chamando com allowDecrease=true.
 async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) {
-    if (!EXTRA_PRICE_ID) return;
+    console.log('[SYNC_EXTRAS] start', { id_user, allowDecrease, hasExtraPrice: !!EXTRA_PRICE_ID });
 
-    // 1) Conta clientes "ativos" (vão aparecer na UI e contam para cobrança)
+    if (!EXTRA_PRICE_ID) {
+        console.log('[SYNC_EXTRAS] exit: EXTRA_PRICE_ID missing');
+        return;
+    }
+
+    // 1) Conta clientes ativos
     const { rows: rowsCount } = await pool.query(
         `SELECT COUNT(*) AS total 
            FROM customer 
@@ -89,6 +94,8 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
     const totalActive = Number(rowsCount[0]?.total || 0);
     const extrasWanted = Math.max(totalActive - 3, 0);
 
+    console.log('[SYNC_EXTRAS] counted', { totalActive, extrasWanted });
+
     // 2) Busca info de cobrança do usuário
     const { rows } = await pool.query(
         `SELECT stripe_subscription_id, stripe_extra_item_id 
@@ -97,39 +104,92 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
         [id_user]
     );
 
-    if (!rows[0]) return;
+    if (!rows[0]) {
+        console.log('[SYNC_EXTRAS] exit: user not found in DB');
+        return;
+    }
 
     const { stripe_subscription_id, stripe_extra_item_id } = rows[0];
 
-    if (!stripe_subscription_id || !stripe_extra_item_id) return;
+    console.log('[SYNC_EXTRAS] billing ids', {
+        hasSubscriptionId: !!stripe_subscription_id,
+        hasExtraItemId: !!stripe_extra_item_id,
+        sub: stripe_subscription_id ? String(stripe_subscription_id).slice(0, 12) + '...' : null,
+        item: stripe_extra_item_id ? String(stripe_extra_item_id).slice(0, 12) + '...' : null
+    });
 
-    // 3) Recupera assinatura no Stripe para ver quantidade atual do item extra
-    const sub = await stripe.subscriptions.retrieve(stripe_subscription_id);
+    if (!stripe_subscription_id || !stripe_extra_item_id) {
+        console.log('[SYNC_EXTRAS] exit: missing stripe_subscription_id or stripe_extra_item_id');
+        return;
+    }
+
+    // 3) Recupera assinatura no Stripe
+    let sub;
+    try {
+        sub = await stripe.subscriptions.retrieve(stripe_subscription_id);
+    } catch (err) {
+        console.log('[SYNC_EXTRAS] exit: stripe.subscriptions.retrieve failed', {
+            message: err?.message,
+            type: err?.type,
+            code: err?.code
+        });
+        throw err; // melhor estourar pra você ver no Render
+    }
+
     const items = sub.items?.data || [];
+    console.log('[SYNC_EXTRAS] stripe subscription retrieved', {
+        subStatus: sub.status,
+        itemsCount: items.length,
+        itemIds: items.map(i => i.id),
+        itemPriceIds: items.map(i => i.price?.id)
+    });
+
     const extraItem = items.find(i => i.id === stripe_extra_item_id);
 
-    if (!extraItem) return;
+    if (!extraItem) {
+        console.log('[SYNC_EXTRAS] exit: extraItem not found in subscription items', {
+            stripe_extra_item_id,
+            subscriptionItems: items.map(i => i.id)
+        });
+        return;
+    }
 
     const currentQty = extraItem.quantity || 0;
 
+    console.log('[SYNC_EXTRAS] quantities', { currentQty, extrasWanted });
+
     // Se não mudou, não faz nada
-    if (extrasWanted === currentQty) return;
+    if (extrasWanted === currentQty) {
+        console.log('[SYNC_EXTRAS] exit: no change needed');
+        return;
+    }
 
     // Diminuição de extras só quando allowDecrease=true (ex.: job mensal)
     if (extrasWanted < currentQty && !allowDecrease) {
+        console.log('[SYNC_EXTRAS] exit: decrease blocked by rule', { currentQty, extrasWanted });
         return;
     }
 
     // 4) Atualiza item de extra com nova quantidade
-    await stripe.subscriptions.update(stripe_subscription_id, {
-        items: [
-            {
-                id: stripe_extra_item_id,
-                quantity: extrasWanted
-            }
-        ],
-        proration_behavior: extrasWanted > currentQty ? 'create_prorations' : 'none'
-    });
+    const proration_behavior = extrasWanted > currentQty ? 'create_prorations' : 'none';
+    console.log('[SYNC_EXTRAS] updating subscription', { stripe_subscription_id, stripe_extra_item_id, extrasWanted, proration_behavior });
+
+    try {
+        const updated = await stripe.subscriptions.update(stripe_subscription_id, {
+            items: [{ id: stripe_extra_item_id, quantity: extrasWanted }],
+            proration_behavior
+        });
+
+        const updatedExtra = (updated.items?.data || []).find(i => i.id === stripe_extra_item_id);
+        console.log('[SYNC_EXTRAS] update ok', { updatedQty: updatedExtra?.quantity ?? null });
+    } catch (err) {
+        console.log('[SYNC_EXTRAS] update failed', {
+            message: err?.message,
+            type: err?.type,
+            code: err?.code
+        });
+        throw err;
+    }
 }
 
 module.exports = { ensureStripeCustomer, createBillingPortalSession, createCheckoutSession, ensureStripeCustomer, syncExtraClientsForUser };
