@@ -82,12 +82,11 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
         return;
     }
 
-    // 1) Conta clientes ativos
     const { rows: rowsCount } = await pool.query(
         `SELECT COUNT(*) AS total 
-           FROM customer 
-          WHERE id_user = $1 
-            AND status = 'active'`,
+       FROM customer 
+      WHERE id_user = $1 
+        AND status = 'active'`,
         [id_user]
     );
 
@@ -96,11 +95,10 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
 
     console.log('[SYNC_EXTRAS] counted', { totalActive, extrasWanted });
 
-    // 2) Busca info de cobrança do usuário
     const { rows } = await pool.query(
         `SELECT stripe_subscription_id, stripe_extra_item_id 
-           FROM "user" 
-          WHERE id_user = $1`,
+       FROM "user" 
+      WHERE id_user = $1`,
         [id_user]
     );
 
@@ -111,19 +109,11 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
 
     const { stripe_subscription_id, stripe_extra_item_id } = rows[0];
 
-    console.log('[SYNC_EXTRAS] billing ids', {
-        hasSubscriptionId: !!stripe_subscription_id,
-        hasExtraItemId: !!stripe_extra_item_id,
-        sub: stripe_subscription_id ? String(stripe_subscription_id).slice(0, 12) + '...' : null,
-        item: stripe_extra_item_id ? String(stripe_extra_item_id).slice(0, 12) + '...' : null
-    });
-
-    if (!stripe_subscription_id || !stripe_extra_item_id) {
-        console.log('[SYNC_EXTRAS] exit: missing stripe_subscription_id or stripe_extra_item_id');
+    if (!stripe_subscription_id) {
+        console.log('[SYNC_EXTRAS] exit: missing stripe_subscription_id');
         return;
     }
 
-    // 3) Recupera assinatura no Stripe
     let sub;
     try {
         sub = await stripe.subscriptions.retrieve(stripe_subscription_id);
@@ -133,55 +123,96 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
             type: err?.type,
             code: err?.code
         });
-        throw err; // melhor estourar pra você ver no Render
+        throw err;
     }
 
     const items = sub.items?.data || [];
-    console.log('[SYNC_EXTRAS] stripe subscription retrieved', {
-        subStatus: sub.status,
+
+    console.log('[SYNC_EXTRAS] subscription items', {
         itemsCount: items.length,
         itemIds: items.map(i => i.id),
-        itemPriceIds: items.map(i => i.price?.id)
+        priceIds: items.map(i => i.price?.id),
+        quantities: items.map(i => i.quantity)
     });
 
-    const extraItem = items.find(i => i.id === stripe_extra_item_id);
+    let extraItem = null;
+
+    if (stripe_extra_item_id) {
+        extraItem = items.find(i => i.id === stripe_extra_item_id) || null;
+    }
 
     if (!extraItem) {
-        console.log('[SYNC_EXTRAS] exit: extraItem not found in subscription items', {
-            stripe_extra_item_id,
-            subscriptionItems: items.map(i => i.id)
-        });
+        extraItem = items.find(i => i.price?.id === EXTRA_PRICE_ID) || null;
+
+        if (extraItem) {
+            await pool.query(
+                `UPDATE "user" SET stripe_extra_item_id = $1 WHERE id_user = $2`,
+                [extraItem.id, id_user]
+            );
+            console.log('[SYNC_EXTRAS] saved stripe_extra_item_id from subscription', { extraItemId: extraItem.id });
+        }
+    }
+
+    if (!extraItem) {
+        if (extrasWanted <= 0) {
+            console.log('[SYNC_EXTRAS] exit: no extra needed and no extra item exists');
+            return;
+        }
+
+        console.log('[SYNC_EXTRAS] creating extra item', { extrasWanted });
+
+        let created;
+        try {
+            created = await stripe.subscriptionItems.create({
+                subscription: stripe_subscription_id,
+                price: EXTRA_PRICE_ID,
+                quantity: extrasWanted
+            });
+        } catch (err) {
+            console.log('[SYNC_EXTRAS] create extra item failed', {
+                message: err?.message,
+                type: err?.type,
+                code: err?.code
+            });
+            throw err;
+        }
+
+        await pool.query(
+            `UPDATE "user" SET stripe_extra_item_id = $1 WHERE id_user = $2`,
+            [created.id, id_user]
+        );
+
+        console.log('[SYNC_EXTRAS] created extra item and saved', { extraItemId: created.id });
         return;
     }
 
     const currentQty = extraItem.quantity || 0;
 
-    console.log('[SYNC_EXTRAS] quantities', { currentQty, extrasWanted });
-
-    // Se não mudou, não faz nada
     if (extrasWanted === currentQty) {
         console.log('[SYNC_EXTRAS] exit: no change needed');
         return;
     }
 
-    // Diminuição de extras só quando allowDecrease=true (ex.: job mensal)
     if (extrasWanted < currentQty && !allowDecrease) {
         console.log('[SYNC_EXTRAS] exit: decrease blocked by rule', { currentQty, extrasWanted });
         return;
     }
 
-    // 4) Atualiza item de extra com nova quantidade
     const proration_behavior = extrasWanted > currentQty ? 'create_prorations' : 'none';
-    console.log('[SYNC_EXTRAS] updating subscription', { stripe_subscription_id, stripe_extra_item_id, extrasWanted, proration_behavior });
 
+    console.log('[SYNC_EXTRAS] updating subscription', {
+        stripe_subscription_id,
+        stripe_extra_item_id: extraItem.id,
+        extrasWanted,
+        proration_behavior
+    });
+
+    let updated;
     try {
-        const updated = await stripe.subscriptions.update(stripe_subscription_id, {
-            items: [{ id: stripe_extra_item_id, quantity: extrasWanted }],
+        updated = await stripe.subscriptions.update(stripe_subscription_id, {
+            items: [{ id: extraItem.id, quantity: extrasWanted }],
             proration_behavior
         });
-
-        const updatedExtra = (updated.items?.data || []).find(i => i.id === stripe_extra_item_id);
-        console.log('[SYNC_EXTRAS] update ok', { updatedQty: updatedExtra?.quantity ?? null });
     } catch (err) {
         console.log('[SYNC_EXTRAS] update failed', {
             message: err?.message,
@@ -190,6 +221,9 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
         });
         throw err;
     }
+
+    const updatedExtra = (updated.items?.data || []).find(i => i.id === extraItem.id);
+    console.log('[SYNC_EXTRAS] update ok', { updatedQty: updatedExtra?.quantity ?? null });
 }
 
 module.exports = { ensureStripeCustomer, createBillingPortalSession, createCheckoutSession, ensureStripeCustomer, syncExtraClientsForUser };
