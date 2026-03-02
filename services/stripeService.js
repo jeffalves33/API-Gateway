@@ -226,4 +226,4 @@ async function syncExtraClientsForUser(id_user, { allowDecrease = false } = {}) 
     console.log('[SYNC_EXTRAS] update ok', { updatedQty: updatedExtra?.quantity ?? null });
 }
 
-module.exports = { ensureStripeCustomer, createBillingPortalSession, createCheckoutSession, ensureStripeCustomer, syncExtraClientsForUser };
+module.exports = { ensureStripeCustomer, createBillingPortalSession, createCheckoutSession, syncExtraClientsForUser };
