@@ -21,6 +21,7 @@ const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 const rbacRoutes = require('./routes/rbacRoutes');
+const teamRoutes = require('./routes/teamRoutes');
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 const { requirePagePermission } = require('./middleware/rbacMiddleware');
 
@@ -54,6 +55,7 @@ app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/meta', metaRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/rbac', rbacRoutes);
+app.use('/api/team', teamRoutes);
 app.use('/customer', customerRoutes);
 
 // Institucional
