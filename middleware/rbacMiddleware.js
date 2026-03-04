@@ -16,7 +16,9 @@ async function ensurePermissions(req, res) {
   }
 
   // Cache por request
-  if (Array.isArray(req.user.permissions) && req.user.permissions.length > 0) return true;
+  if (Array.isArray(req.user.permissions) && req.user.permissions.length > 0) {
+    return true;
+  }
 
   const { id_team_member, id_account, id } = req.user;
   if (!id_team_member || !id_account || !id) {
@@ -62,7 +64,9 @@ function requirePermission(permissionCode) {
     if (req.user.role === 'Admin') return next();
 
     const perms = req.user.permissions || [];
-    if (perms.includes(permissionCode) || perms.includes('*')) return next();
+    if (perms.includes(permissionCode) || perms.includes('*')) {
+      return next();
+    }
 
     return res.status(403).json({
       success: false,

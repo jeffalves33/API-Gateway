@@ -2,6 +2,7 @@
 const axios = require('axios');
 const querystring = require('querystring');
 const { pool } = require('../config/db');
+const { customerBelongsToAccount } = require('../middleware/tenantGuard');
 const { getValidLinkedInAccessToken, liHeaders } = require('../helpers/linkedinHelpers');
 const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
 
@@ -44,6 +45,12 @@ exports.handleOAuthCallback = async (req, res) => {
         Buffer.from(state, 'base64').toString('utf8')
     );
     const { id_user, id_customer } = payload;
+
+    // Tenant Guard (callback não tem cookie): valida se customer pertence à account do id_user
+    const uRes = await pool.query('SELECT id_account FROM "user" WHERE id_user = $1 LIMIT 1', [Number(id_user)]);
+    if (!uRes.rows.length) return res.status(400).send('Usuário inválido.');
+    const okTenant = await customerBelongsToAccount(id_customer, uRes.rows[0].id_account);
+    if (!okTenant) return res.status(404).send('Recurso não encontrado.');
 
     try {
         const tokenRes = await axios.post(

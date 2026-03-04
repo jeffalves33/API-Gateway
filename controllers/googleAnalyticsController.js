@@ -2,6 +2,7 @@
 const { google } = require('googleapis')
 const axios = require('axios');
 const { pool } = require('../config/db');
+const { customerBelongsToAccount } = require('../middleware/tenantGuard');
 const { getValidAccessTokenCustomer } = require('../helpers/googleAnalyticsHelpers');
 const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
 
@@ -59,6 +60,14 @@ exports.handleOAuthCallback = async (req, res) => {
     if (!id_user || !id_customer) return res.status(400).send('State incompleto.');
 
     try {
+        // Tenant Guard (sem depender de cookie): garante que o customer é da mesma account do id_user
+        const uRes = await pool.query('SELECT id_account FROM "user" WHERE id_user = $1 LIMIT 1', [Number(id_user)]);
+        if (!uRes.rows.length) return res.status(400).send('Usuário inválido.');
+
+        const id_account = uRes.rows[0].id_account;
+        const ok = await customerBelongsToAccount(id_customer, id_account);
+        if (!ok) return res.status(404).send('Recurso não encontrado.');
+
         const { tokens } = await oauth2Client.getToken(code);
         oauth2Client.setCredentials(tokens);
 

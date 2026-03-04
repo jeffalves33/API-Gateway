@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const { requireCustomerInAccount } = require('../middleware/tenantGuard');
 const { uploadCardArts } = require('../middleware/uploadMiddleware');
 
 const {
@@ -62,9 +63,9 @@ router.delete('/team/:id', authenticateToken, deleteTeamMember);
 
 // CLIENTS (lista customers do usuário + profile extra)
 router.get('/clients', authenticateToken, listClientsWithProfile);
-router.put('/clients/:id_customer/profile', authenticateToken, upsertClientProfileByCustomerId);
-router.delete('/clients/:id_customer/profile', authenticateToken, deleteClientProfileByCustomerId);
-router.get('/clients/:id_customer/portal-link', authenticateToken, getClientPortalLink);
+router.put('/clients/:id_customer/profile', authenticateToken, requireCustomerInAccount(), upsertClientProfileByCustomerId);
+router.delete('/clients/:id_customer/profile', authenticateToken, requireCustomerInAccount(), deleteClientProfileByCustomerId);
+router.get('/clients/:id_customer/portal-link', authenticateToken, requireCustomerInAccount(), getClientPortalLink);
 
 
 // CARDS

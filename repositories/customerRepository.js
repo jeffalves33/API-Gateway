@@ -7,10 +7,29 @@ const {
   clearLinkedinDataCustomer, clearLinkedinDataUser
 } = require('../helpers/customerHelpers');
 
+// =============================
+// Card 5: Tenant Guard helpers
+// =============================
+async function getAccountIdByUserId(id_user) {
+  const r = await pool.query('SELECT id_account FROM "user" WHERE id_user = $1 LIMIT 1', [Number(id_user)]);
+  return r.rows[0]?.id_account || null;
+}
+
+// IMPORTANTE: agora o "dono" é a ACCOUNT, não um user específico.
+// Mantemos o nome da função para não quebrar controllers existentes.
 const checkCustomerBelongsToUser = async (id_customer, id_user) => {
+  const id_account = await getAccountIdByUserId(id_user);
+  if (!id_account) return false;
+
   const result = await pool.query(
-    'SELECT * FROM customer WHERE id_customer = $1 AND id_user = $2',
-    [id_customer, id_user]
+    `
+      SELECT 1
+      FROM customer c
+      JOIN "user" u ON u.id_user = c.id_user
+      WHERE c.id_customer = $1 AND u.id_account = $2
+      LIMIT 1
+    `,
+    [Number(id_customer), Number(id_account)]
   );
   return result.rows.length > 0;
 };
@@ -28,8 +47,20 @@ const deleteCustomer = async (id_customer, id_user) => {
   try {
     await client.query('BEGIN');
 
-    const { rows } = await client.query('SELECT 1 FROM customer WHERE id_customer = $1 AND id_user = $2 FOR UPDATE', [id_customer, id_user]);
-    if (!rows.length) throw new Error('Cliente não encontrado para este usuário');
+    const id_account = await getAccountIdByUserId(id_user);
+    if (!id_account) throw new Error('Conta inválida');
+
+    const { rows } = await client.query(
+      `
+        SELECT 1
+        FROM customer c
+        JOIN "user" u ON u.id_user = c.id_user
+        WHERE c.id_customer = $1 AND u.id_account = $2
+        FOR UPDATE
+      `,
+      [Number(id_customer), Number(id_account)]
+    );
+    if (!rows.length) throw new Error('Cliente não encontrado para esta conta');
 
     // tokens + recursos
     await client.query('DELETE FROM customer_integrations WHERE id_customer = $1', [id_customer]);
@@ -52,9 +83,20 @@ const deleteCustomer = async (id_customer, id_user) => {
 };
 
 const deactivateCustomer = async (id_customer, id_user) => {
+  const id_account = await getAccountIdByUserId(id_user);
+  if (!id_account) throw new Error('Conta inválida');
+
   const result = await pool.query(
-    'UPDATE customer SET status = $1, deactivated_at = NOW() WHERE id_customer = $2 AND id_user = $3 RETURNING *',
-    ['inactive', id_customer, id_user]
+    `
+      UPDATE customer c
+      SET status = $1, deactivated_at = NOW()
+      FROM "user" u
+      WHERE c.id_customer = $2
+        AND u.id_user = c.id_user
+        AND u.id_account = $3
+      RETURNING c.*
+    `,
+    ['inactive', Number(id_customer), Number(id_account)]
   );
 
   if (result.rows.length === 0) {
@@ -64,26 +106,56 @@ const deactivateCustomer = async (id_customer, id_user) => {
   return result.rows[0];
 };
 
-const getCustomerByIdCustomer = async (id_customer) => {
-  const result = await pool.query('SELECT * FROM customer WHERE id_customer = $1', [id_customer]);
+// Se passar id_user, valida por account. Se não passar, mantém compatibilidade (não recomendado).
+const getCustomerByIdCustomer = async (id_customer, id_user = null) => {
+  if (!id_user) {
+    const result = await pool.query('SELECT * FROM customer WHERE id_customer = $1', [Number(id_customer)]);
+    return result.rows;
+  }
+
+  const id_account = await getAccountIdByUserId(id_user);
+  if (!id_account) return [];
+
+  const result = await pool.query(
+    `
+      SELECT c.*
+      FROM customer c
+      JOIN "user" u ON u.id_user = c.id_user
+      WHERE c.id_customer = $1 AND u.id_account = $2
+    `,
+    [Number(id_customer), Number(id_account)]
+  );
   return result.rows;
 };
 
-const getCustomerKeys = async (id_customer) => {
-  const result = await pool.query('SELECT * FROM customer WHERE id_customer = $1', [id_customer]);
-  if (result.rows.length === 0) throw new Error('Nenhuma chave encontrada para este cliente');
-  return result.rows[0];
+const getCustomerKeys = async (id_customer, id_user = null) => {
+  const rows = await getCustomerByIdCustomer(id_customer, id_user);
+  if (!rows.length) throw new Error('Nenhuma chave encontrada para este cliente');
+  return rows[0];
 };
 
+// Agora lista por ACCOUNT (a partir do id_user)
 const getCustomersByUserId = async (id_user) => {
+  const id_account = await getAccountIdByUserId(id_user);
+  if (!id_account) return [];
+
   const result = await pool.query(
-    'SELECT * FROM customer WHERE id_user = $1',
-    [id_user]
+    `
+      SELECT c.*
+      FROM customer c
+      JOIN "user" u ON u.id_user = c.id_user
+      WHERE u.id_account = $1
+      ORDER BY c.created_at DESC
+    `,
+    [Number(id_account)]
   );
   return result.rows;
 };
 
 const getCustomersListByUserId = async (id_user) => {
+  const id_account = await getAccountIdByUserId(id_user);
+  if (!id_account) return [];
+
   const result = await pool.query(
     `
     SELECT
@@ -110,11 +182,13 @@ const getCustomersListByUserId = async (id_user) => {
     FROM customer c
     LEFT JOIN customer_integrations ci
       ON ci.id_customer = c.id_customer
-    WHERE c.id_user = $1
+    JOIN "user" u
+      ON u.id_user = c.id_user
+    WHERE u.id_account = $1
     GROUP BY c.id_customer
     ORDER BY c.created_at DESC
     `,
-    [id_user]
+    [Number(id_account)]
   );
 
   return result.rows;
@@ -177,9 +251,20 @@ const removePlatformFromUser = async (platform, id_user) => {
 };
 
 const updateCustomer = async (id_customer, id_user, name, email, company, phone) => {
+  const id_account = await getAccountIdByUserId(id_user);
+  if (!id_account) throw new Error('Conta inválida');
+
   const result = await pool.query(
-    'UPDATE customer SET name = $1, email = $2, company = $3, phone = $4 WHERE id_customer = $5 AND id_user = $6 RETURNING *',
-    [name, email, company, phone, id_customer, id_user]
+    `
+      UPDATE customer c
+      SET name = $1, email = $2, company = $3, phone = $4
+      FROM "user" u
+      WHERE c.id_customer = $5
+        AND u.id_user = c.id_user
+        AND u.id_account = $6
+      RETURNING c.*
+    `,
+    [name, email, company, phone, Number(id_customer), Number(id_account)]
   );
 
   if (result.rows.length === 0) throw new Error('Cliente não encontrado');

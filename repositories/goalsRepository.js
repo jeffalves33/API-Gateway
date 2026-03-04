@@ -1,6 +1,12 @@
 // Arquivo: repositories/goalsRepository.js
 const { pool } = require('../config/db');
 
+// Card 5: resolve account pelo id_user para escopar por tenant
+async function getAccountIdByUserId(id_user) {
+    const r = await pool.query('SELECT id_account FROM "user" WHERE id_user = $1 LIMIT 1', [Number(id_user)]);
+    return r.rows[0]?.id_account || null;
+}
+
 function toJsonb(value) {
     // garante que vai pro Postgres como JSONB
     if (value === null || value === undefined) return JSON.stringify([]);
@@ -48,8 +54,11 @@ async function createGoal(payload) {
 }
 
 async function listGoals({ id_user, id_customer = null, platform_name = null, status = null }) {
-    const params = [id_user];
-    let where = `WHERE id_user = $1`;
+    const id_account = await getAccountIdByUserId(id_user);
+    if (!id_account) return [];
+
+    const params = [Number(id_account)];
+    let where = `WHERE u.id_account = $1`;
 
     if (id_customer) {
         params.push(Number(id_customer));
@@ -66,10 +75,11 @@ async function listGoals({ id_user, id_customer = null, platform_name = null, st
 
     const result = await pool.query(
         `
-    SELECT *
-    FROM goals
+    SELECT g.*
+    FROM goals g
+    JOIN "user" u ON u.id_user = g.id_user
     ${where}
-    ORDER BY created_at DESC
+    ORDER BY g.created_at DESC
     `,
         params
     );
@@ -78,9 +88,17 @@ async function listGoals({ id_user, id_customer = null, platform_name = null, st
 }
 
 async function getGoalById({ id_user, id_goal }) {
+    const id_account = await getAccountIdByUserId(id_user);
+    if (!id_account) return null;
+
     const result = await pool.query(
-        `SELECT * FROM goals WHERE id_user = $1 AND id_goal = $2`,
-        [id_user, Number(id_goal)]
+        `
+        SELECT g.*
+        FROM goals g
+        JOIN "user" u ON u.id_user = g.id_user
+        WHERE u.id_account = $1 AND g.id_goal = $2
+        `,
+        [Number(id_account), Number(id_goal)]
     );
     return result.rows[0] || null;
 }
@@ -105,8 +123,11 @@ async function updateGoal({ id_user, id_goal, patch }) {
     const keys = Object.keys(patch).filter(k => allowed.includes(k));
     if (!keys.length) return await getGoalById({ id_user, id_goal });
 
+    const id_account = await getAccountIdByUserId(id_user);
+    if (!id_account) return null;
+
     const sets = [];
-    const values = [id_user, Number(id_goal)];
+    const values = [Number(id_account), Number(id_goal)];
     let idx = values.length;
 
     for (const k of keys) {
@@ -127,7 +148,8 @@ async function updateGoal({ id_user, id_goal, patch }) {
         `
     UPDATE goals
     SET ${sets.join(', ')}
-    WHERE id_user = $1 AND id_goal = $2
+    WHERE id_goal = $2
+      AND id_user IN (SELECT id_user FROM "user" WHERE id_account = $1)
     RETURNING *
     `,
         values
@@ -137,26 +159,37 @@ async function updateGoal({ id_user, id_goal, patch }) {
 }
 
 async function deleteGoal({ id_user, id_goal }) {
+    const id_account = await getAccountIdByUserId(id_user);
+    if (!id_account) return null;
+
     const result = await pool.query(
-        `DELETE FROM goals WHERE id_user = $1 AND id_goal = $2 RETURNING id_goal`,
-        [id_user, Number(id_goal)]
+        `
+        DELETE FROM goals
+        WHERE id_goal = $2
+          AND id_user IN (SELECT id_user FROM "user" WHERE id_account = $1)
+        RETURNING id_goal
+        `,
+        [Number(id_account), Number(id_goal)]
     );
     return result.rows[0] || null;
 }
 
 async function expireEndedGoals(id_user) {
+    const id_account = await getAccountIdByUserId(id_user);
+    if (!id_account) return [];
+
     // Expira metas ativas cujo data_fim já passou (CURRENT_DATE)
     // (não mexe em concluido/cancelado/expirado)
     const result = await pool.query(
         `
     UPDATE goals
     SET status = 'expirado', updated_at = NOW()
-    WHERE id_user = $1
+    WHERE id_user IN (SELECT id_user FROM "user" WHERE id_account = $1)
       AND status = 'ativo'
       AND data_fim < CURRENT_DATE
     RETURNING id_goal
     `,
-        [id_user]
+        [Number(id_account)]
     );
 
     return result.rows; // lista de ids expirados (se precisar logar)

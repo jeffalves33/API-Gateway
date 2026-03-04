@@ -1,6 +1,7 @@
 // Arquivo: controllers/youtubeController.js
 const { google } = require('googleapis')
 const { pool } = require('../config/db');
+const { customerBelongsToAccount } = require('../middleware/tenantGuard');
 const { getValidYouTubeClientCustomer } = require('../helpers/youtubeHelpers');
 const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
 require('dotenv').config();
@@ -50,8 +51,14 @@ exports.handleOAuthCallback = async (req, res) => {
     let decoded;
     try { decoded = decodeState(state); } catch (e) { return res.status(400).send('State inválido.'); }
 
-    const { id_customer } = decoded || {};
-    if (!id_customer) return res.status(400).send('State incompleto.');
+    const { id_user, id_customer } = decoded || {};
+    if (!id_user || !id_customer) return res.status(400).send('State incompleto.');
+
+    // Tenant Guard (callback não tem cookie)
+    const uRes = await pool.query('SELECT id_account FROM "user" WHERE id_user = $1 LIMIT 1', [Number(id_user)]);
+    if (!uRes.rows.length) return res.status(400).send('Usuário inválido.');
+    const okTenant = await customerBelongsToAccount(id_customer, uRes.rows[0].id_account);
+    if (!okTenant) return res.status(404).send('Recurso não encontrado.');
 
     try {
         const { tokens } = await oauth2Client.getToken(code);
