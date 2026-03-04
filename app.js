@@ -90,6 +90,7 @@ app.get('/register.html', (req, res) => { res.sendFile(path.join(__dirname, 'pub
 app.get('/privacyPolicyPage.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'privacyPolicyPage.html')); });
 app.get('/termsUse.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'termsUse.html')); });
 app.get("/aprovacoes/:cliente", (req, res, next) => { res.sendFile(path.join(__dirname, 'public', 'externoPage.html')); });
+app.get('/acceptInvite.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'acceptInvite.html')); });
 // === Área do usuário com ID ===
 app.get('/:userId', authenticatePageAccess, (req, res, next) => {
   const userId = req.params.userId;

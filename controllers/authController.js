@@ -612,6 +612,227 @@ const deleteUserAccount = async (req, res) => {
   }
 };
 
+const validateInviteToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ success: false, message: 'Token é obrigatório.' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const invite = await pool.query(
+      `
+      SELECT id_invite, id_account, email, expires_at, accepted_at
+      FROM invites
+      WHERE token_hash = $1
+      LIMIT 1
+      `,
+      [tokenHash]
+    );
+
+    if (invite.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Convite inválido.' });
+    }
+
+    const row = invite.rows[0];
+
+    if (row.accepted_at) {
+      return res.status(409).json({ success: false, message: 'Este convite já foi utilizado.' });
+    }
+
+    const now = new Date();
+    if (new Date(row.expires_at) < now) {
+      return res.status(410).json({ success: false, message: 'Convite expirado.' });
+    }
+
+    return res.json({
+      success: true,
+      invite: {
+        id_invite: row.id_invite,
+        email: row.email,
+        expires_at: row.expires_at
+      }
+    });
+  } catch (err) {
+    console.error('validateInviteToken error:', err);
+    return res.status(500).json({ success: false, message: 'Erro ao validar convite.' });
+  }
+};
+
+const acceptInvite = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { token, password, confirmPassword, name } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ success: false, message: 'Token é obrigatório.' });
+    }
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Senha inválida (mínimo 6 caracteres).' });
+    }
+    if (password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'As senhas não conferem.' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    await client.query('BEGIN');
+
+    // 1) Carrega convite (trava linha)
+    const inviteRes = await client.query(
+      `
+      SELECT id_invite, id_account, email, expires_at, accepted_at
+      FROM invites
+      WHERE token_hash = $1
+      FOR UPDATE
+      `,
+      [tokenHash]
+    );
+
+    if (inviteRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, message: 'Convite inválido.' });
+    }
+
+    const invite = inviteRes.rows[0];
+
+    if (invite.accepted_at) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ success: false, message: 'Este convite já foi utilizado.' });
+    }
+
+    if (new Date(invite.expires_at) < new Date()) {
+      await client.query('ROLLBACK');
+      return res.status(410).json({ success: false, message: 'Convite expirado.' });
+    }
+
+    const email = String(invite.email).toLowerCase().trim();
+
+    // 2) Busca ou cria user
+    const userRes = await client.query(
+      `SELECT id_user, id_account, email FROM "user" WHERE lower(email) = $1 LIMIT 1`,
+      [email]
+    );
+
+    let id_user;
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    if (userRes.rows.length === 0) {
+      // cria user já na account do convite
+      const created = await client.query(
+        `
+        INSERT INTO "user" (name, email, password, id_account, created_at)
+        VALUES ($1, $2, $3, $4, now())
+        RETURNING id_user
+        `,
+        [name || email, email, hashed, invite.id_account]
+      );
+      id_user = created.rows[0].id_user;
+    } else {
+      // user existe: não deixa "mudar" de account
+      const u = userRes.rows[0];
+
+      if (Number(u.id_account) !== Number(invite.id_account)) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          message: 'Este email já pertence a outra conta. Não é possível aceitar este convite.'
+        });
+      }
+
+      id_user = u.id_user;
+
+      // atualiza senha (e nome se vier)
+      await client.query(
+        `UPDATE "user" SET password = $1, name = COALESCE($2, name) WHERE id_user = $3`,
+        [hashed, name || null, id_user]
+      );
+    }
+
+    // 3) cria/garante team_member
+    const tmRes = await client.query(
+      `
+      INSERT INTO team_members (id_account, id_user, status, invited_at, joined_at, created_at)
+      VALUES ($1, $2, 'active', now(), now(), now())
+      ON CONFLICT (id_account, id_user)
+      DO UPDATE SET status = 'active', joined_at = COALESCE(team_members.joined_at, now())
+      RETURNING id_team_member
+      `,
+      [invite.id_account, id_user]
+    );
+
+    const id_team_member = tmRes.rows[0].id_team_member;
+
+    // 4) atribui role "Equipe"
+    const roleRes = await client.query(
+      `SELECT id_role FROM roles WHERE id_account = $1 AND lower(name) = 'equipe' LIMIT 1`,
+      [invite.id_account]
+    );
+
+    if (roleRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(500).json({ success: false, message: 'Role Equipe não encontrada para a conta.' });
+    }
+
+    const id_role = roleRes.rows[0].id_role;
+
+    // member_roles tem UNIQUE(team_member) no seu modelo (1 role por membro)
+    await client.query(
+      `
+      INSERT INTO member_roles (id_team_member, id_role)
+      VALUES ($1, $2)
+      ON CONFLICT (id_team_member, id_role) DO NOTHING
+      `,
+      [id_team_member, id_role]
+    );
+
+    // 5) marca convite como aceito
+    await client.query(
+      `UPDATE invites SET accepted_at = now() WHERE id_invite = $1`,
+      [invite.id_invite]
+    );
+
+    await client.query('COMMIT');
+
+    // 6) gera JWT + cookie e finaliza
+    const tokenPayload = {
+      id: id_user,
+      email,
+      id_account: invite.id_account,
+      id_team_member,
+      role: 'Equipe'
+    };
+
+    const jwtToken = jwt.sign(
+      tokenPayload,
+      process.env.JWT_SECRET || 'seu_segredo_jwt',
+      { expiresIn: '1h' }
+    );
+
+    res.cookie('jwt', jwtToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3600000
+    });
+
+    return res.json({
+      success: true,
+      message: 'Acesso ativado com sucesso.',
+      redirectTo: '/dashboardPage.html'
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('acceptInvite error:', err);
+    return res.status(500).json({ success: false, message: 'Erro ao aceitar convite.' });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   addAvatarProfileBucket,
   checkAuthStatus,
@@ -623,5 +844,7 @@ module.exports = {
   registerUser,
   resetPassword,
   updateUserProfile,
-  verifyEmail
+  verifyEmail,
+  validateInviteToken,
+  acceptInvite
 };

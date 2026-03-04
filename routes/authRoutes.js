@@ -14,7 +14,9 @@ const {
   registerUser,
   resetPassword,
   updateUserProfile,
-  verifyEmail
+  verifyEmail,
+  validateInviteToken,
+  acceptInvite
 } = require('../controllers/authController');
 
 router.post('/register', registerUser);
@@ -28,5 +30,7 @@ router.post('/logout', authenticateToken, logoutUser);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.get('/verify-email', verifyEmail);
+router.get('/invites/validate', validateInviteToken);
+router.post('/invites/accept', acceptInvite);
 
 module.exports = router;
