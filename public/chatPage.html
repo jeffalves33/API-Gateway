@@ -507,28 +507,28 @@
                         <span class="menu-header-text">Páginas</span>
                     </li>
                     <!-- Apps -->
-                    <li class="menu-item">
+                    <li class="menu-item" id="menu-dashboard">
                         <a href="/dashboardPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-layout"></i>
                             <div data-i18n="Email">Dashboard</div>
                         </a>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="menu-analyses">
                         <a href="/analyzesPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-robot"></i>
                             <div data-i18n="Calendar">Análises</div>
                         </a>
                     </li>
 
-                    <li class="menu-item active">
+                    <li class="menu-item active" id="menu-chat">
                         <a href="/chatPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-chat"></i>
                             <div data-i18n="Chat">Chat</div>
                         </a>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="menu-food-model">
                         <a href="/foodModelPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-menu-up"></i>
                             <div data-i18n="Chat">Alimentar modelo</div>
@@ -539,7 +539,7 @@
                         <span class="menu-header-text">Plataformas & Clientes</span>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="menu-my-customers">
                         <a href="myCustomersPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-people"></i>
                             <div data-i18n="Without menu">Meus Clientes</div>
@@ -550,14 +550,14 @@
                         <span class="menu-header-text">Outros</span>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="menu-settings">
                         <a href="javascript:void(0);" class="menu-link menu-toggle">
                             <i class="menu-icon tf-icons bi bi-gear"></i>
                             <div data-i18n="Chat">Configurações</div>
                         </a>
 
                         <ul class="menu-sub">
-                            <li class="menu-item">
+                            <li class="menu-item" id="menu-settings-account">
                                 <a href="/settingsAccountPage.html" class="menu-link">
                                     <div data-i18n="Without menu">Conta</div>
                                 </a>
@@ -654,7 +654,7 @@
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <span class="fw-medium d-block" id="user-name"></span>
-                                                    <small class="text-muted">Admin</small>
+                                                    <small class="text-muted" id="user-role"></small>
                                                 </div>
                                             </div>
                                         </a>
@@ -1056,6 +1056,19 @@
             }
         })();
     </script>
+
+<script src="/assets/js/rbacClient.js"></script>
+<script>
+  RBAC.guardPage('page:chat:view');
+  RBAC.applyMenuPermissions({
+    'page:food_model:view': '#menu-food-model',
+    'page:settings:view': '#menu-settings'
+  });
+  RBAC.applyMenuPermissions({
+    'page:settings:view': '#menu-settings-account'
+  });
+  RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
+</script>
 </body>
 
 </html>
