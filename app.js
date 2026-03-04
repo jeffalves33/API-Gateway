@@ -21,9 +21,7 @@ const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
-
-// removi o middleware pois o redirecionamento de planos é pelo modal em cada tela
-const requireSubscription = require('./middleware/subscriptionMiddleware');
+const { requirePagePermission } = require('./middleware/rbacMiddleware');
 
 const landingDir = path.join(__dirname, 'public', 'institutional', 'out');
 
@@ -73,11 +71,12 @@ app.get('/', (req, res) => {
 app.get('/analyzesPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'analyzesPage.html')); });
 //app.get('/chatPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'chatPage.html')); });
 app.get('/dashboardPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'dashboardPage.html')); });
-app.get('/foodModelPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html')); });
+app.get('/platformsPage.html', authenticatePageAccess, requirePagePermission('page:platforms:view'), (req, res) => { res.sendFile(path.join(__dirname, 'public', 'platformsPage.html')); });
+app.get('/foodModelPage.html', authenticatePageAccess, requirePagePermission('page:food_model:view'), (req, res) => { res.sendFile(path.join(__dirname, 'public', 'foodModelPage.html')); });
 app.get('/goalsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'goalsPage.html')); });
 app.get('/kanbanPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'kanbanPage.html')); });
 app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
-app.get('/settingsAccountPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html')); });
+app.get('/settingsAccountPage.html', authenticatePageAccess, requirePagePermission('page:settings:view'), (req, res) => { res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html')); });
 
 // === Páginas públicas ===
 app.get('/login.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'login.html')); });

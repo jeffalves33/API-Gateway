@@ -191,10 +191,46 @@ const loginUser = async (req, res) => {
 
     if (!validPassword) return res.status(400).json({ success: false, message: 'Email ou senha incorretos' });
 
+    // ====== RBAC context (Account + Team Member + Role) ======
+    const tmResult = await pool.query(
+      `
+        SELECT tm.id_team_member, tm.status, r.name AS role_name
+        FROM team_members tm
+        JOIN member_roles mr ON mr.id_team_member = tm.id_team_member
+        JOIN roles r ON r.id_role = mr.id_role
+        WHERE tm.id_user = $1 AND tm.id_account = $2
+        LIMIT 1
+      `,
+      [user.id_user, user.id_account]
+    );
+
+    if (tmResult.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'Seu acesso não está vinculado a nenhuma conta. Contate o suporte.'
+      });
+    }
+
+    const teamMember = tmResult.rows[0];
+
+    if (teamMember.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        message: 'Seu acesso está desativado. Contate o administrador da conta.'
+      });
+    }
+
+    const tokenPayload = {
+      id: user.id_user,               // mantém compatibilidade com req.user.id
+      email: user.email,
+      id_account: user.id_account,
+      id_team_member: teamMember.id_team_member,
+      role: teamMember.role_name      // "Admin" ou "Equipe"
+    };
 
     // Criar e atribuir um token JWT
     const token = jwt.sign(
-      { id: user.id_user, email: user.email },
+      tokenPayload,
       process.env.JWT_SECRET || 'seu_segredo_jwt',
       { expiresIn: '1h' }
     );
@@ -360,7 +396,7 @@ const checkAuthStatus = async (req, res) => {
     }
 
     // Buscar dados atualizados do usuário no banco
-    const result = await pool.query('SELECT id_user, name, email FROM "user" WHERE id_user = $1', [req.user.id]);
+    const result = await pool.query('SELECT id_user, name, email, id_account FROM "user" WHERE id_user = $1', [req.user.id]);
 
     if (result.rows.length === 0) {
       return res.status(200).json({
@@ -379,7 +415,9 @@ const checkAuthStatus = async (req, res) => {
       user: {
         id: user.id_user,
         name: user.name,
-        email: user.email
+        email: user.email,
+        id_account: user.id_account,
+        role: req.user.role
       }
     });
   } catch (error) {
