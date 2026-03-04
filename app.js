@@ -20,6 +20,7 @@ const googleAnalyticsRoutes = require('./routes/googleAnalyticsRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
+const rbacRoutes = require('./routes/rbacRoutes');
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 const { requirePagePermission } = require('./middleware/rbacMiddleware');
 
@@ -52,6 +53,7 @@ app.use('/api/googleAnalytics', googleAnalyticsRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/meta', metaRoutes);
 app.use('/api/youtube', youtubeRoutes);
+app.use('/api/rbac', rbacRoutes);
 app.use('/customer', customerRoutes);
 
 // Institucional
