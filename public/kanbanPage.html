@@ -35,7 +35,8 @@
     <!-- Core CSS -->
     <link rel="stylesheet" href="/assets/vendor/css/core.css" class="template-customizer-core-css" />
     <link rel="stylesheet" href="/assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
-<link rel="stylesheet" href="/assets/vendor/css/hoko-design-system.css" class="template-customizer-design-system-css" />
+    <link rel="stylesheet" href="/assets/vendor/css/hoko-design-system.css"
+        class="template-customizer-design-system-css" />
     <link rel="stylesheet" href="/assets/css/demo.css" />
 
     <!-- Vendors CSS -->
@@ -274,6 +275,13 @@
                         <a href="myCustomersPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-people"></i>
                             <div data-i18n="Without menu">Meus Clientes</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item" id="menu-team">
+                        <a href="/teamPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-group"></i>
+                            <div>Equipe</div>
                         </a>
                     </li>
 
@@ -1591,17 +1599,17 @@
     <script src="/assets/js/kanbanAdmin.js"></script>
     <script src="/assets/js/kanbanBoard.js"></script>
 
-<script src="/assets/js/rbacClient.js"></script>
-<script>
-  RBAC.applyMenuPermissions({
-    'page:food_model:view': '#menu-food-model',
-    'page:settings:view': '#menu-settings'
-  });
-  RBAC.applyMenuPermissions({
-    'page:settings:view': '#menu-settings-account'
-  });
-  RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
-</script>
+    <script src="/assets/js/rbacClient.js"></script>
+    <script>
+        RBAC.applyMenuPermissions({
+            'page:food_model:view': '#menu-food-model',
+            'page:settings:view': '#menu-settings'
+        });
+        RBAC.applyMenuPermissions({
+            'page:settings:view': '#menu-settings-account'
+        });
+        RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
+    </script>
 </body>
 
 </html>

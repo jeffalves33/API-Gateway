@@ -8,7 +8,7 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Alimentar modelo - Analytics </title>
+    <title>Equipe</title>
 
     <meta name="description" content="" />
 
@@ -48,17 +48,6 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="/assets/js/config.js"></script>
-
-    <!-- ADICIONE este bloco como módulo -->
-    <script type="module">
-        import * as pdfjs from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.min.mjs";
-        // o worker também é módulo na v4
-        pdfjs.GlobalWorkerOptions.workerSrc =
-            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs";
-
-        // expõe no global para o resto do seu código que usa pdfjsLib
-        window.pdfjsLib = pdfjs;
-    </script>
     <!-- manter layout correto quando menu estiver colapsado -->
     <style>
         /* ho.ko fix — manter layout correto quando menu estiver colapsado */
@@ -126,7 +115,7 @@
                         </a>
                     </li>
 
-                    <li class="menu-item active" id="menu-food-model">
+                    <li class="menu-item" id="menu-food-model">
                         <a href="/foodModelPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-menu-up"></i>
                             <div data-i18n="Chat">Alimentar modelo</div>
@@ -144,7 +133,7 @@
                         </a>
                     </li>
 
-                    <li class="menu-item" id="menu-team">
+                    <li class="menu-item active" id="menu-team">
                         <a href="/teamPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-group"></i>
                             <div>Equipe</div>
@@ -229,8 +218,40 @@
                     </div>
 
                     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+                        <!-- Objetivo 
+            <div class="navbar-nav align-items-center">
+              <div class="nav-item d-flex align-items-center">
+                <ul class="navbar-nav flex-row align-items-center ms-auto">
+                  <!-- Place this tag where you want the button to render. 
+                  <li class="nav-item lh-1 me-3">
+                    <div class="dropdown">
+                      <button class="btn border d-flex align-items-center justify-content-between w-100 py-2"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                          class="bi bi-chevron-down" viewBox="0 0 16 16">
+                          <path fill-rule="evenodd"
+                            d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708" />
+                        </svg>
+                        <span class="mx-3">Objetivo do cliente</span>
+                      </button>
+                      <ul class="dropdown-menu w-100">
+                        <li><a class="dropdown-item" href="#">Profile 1</a></li>
+                        <li><a class="dropdown-item" href="#">Profile 2</a></li>
+                        <li><a class="dropdown-item" href="#">Profile 3</a></li>
+                        <li>
+                          <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#">Add new profile</a></li>
+                      </ul>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!-- /Objetivo -->
 
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
+                            <!-- Place this tag where you want the button to render. -->
                             <li class="nav-item lh-1 me-3">
                                 <div class="dropdown">
                                     <button
@@ -312,185 +333,122 @@
                         </ul>
                     </div>
                 </nav>
-                <div class="container-fluid pt-4">
-                    <h4 class="py-2">
-                        Alimentar Modelo
-                    </h4>
-                    <div id="feedback-message" class="alert" style="display: none; margin-top: 10px;"></div>
-                    <div class="row">
-                        <div class="col-xxl">
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <form id="upload-document-form" enctype="multipart/form-data">
-                                        <!-- Escopo -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="document-scope">Escopo</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-layer"></i></span>
-                                                    <select class="form-control" id="document-scope" required>
-                                                        <option value="">Selecione o escopo</option>
-                                                        <option value="client" selected>Cliente</option>
-                                                        <!--<option value="agency">Agência</option>
-                                                        <option value="global">Global</option>-->
-                                                    </select>
-                                                </div>
-                                                <div class="form-text">Se o documento é sobre sua agência ou seu
-                                                    cliente.</div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Tipo de Documento -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="doc-type">Tipo de
-                                                Documento</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-file"></i></span>
-                                                    <select class="form-control" id="doc-type" required>
-                                                        <option value="">Selecione o escopo</option>
-                                                        <option value="identidade">Identidade e posicionamento</option>
-                                                        <option value="estrategia">Estratégia e planejamento</option>
-                                                        <option value="comunicacao">Comunicação e marca</option>
-                                                        <option value="performance">Performance e dados</option>
-                                                        <option value="produtos">Produtos e serviços</option>
-                                                        <option value="vendas">Vendas e crescimento</option>
-                                                        <option value="operacao">Operação e tecnologia</option>
-                                                        <option value="suporte">Suporte e documentação</option>
-                                                        <option value="cases">Cases e referências</option>
-                                                    </select>
-                                                </div>
-                                                <div id="doc-type-categorization" class="form-text"></div>
-                                            </div>
-                                        </div>
+                <div class="container-fluid py-4">
+                    <div class="d-flex align-items-center justify-content-between py-2">
+                        <h4 class="mb-0">
+                            <span class="text-muted fw-light">Plataformas & Páginas /</span> Equipe
+                        </h4>
+                    </div>
 
-                                        <!-- Nível de Confidencialidade -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label"
-                                                for="confidentiality">Confidencialidade</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-shield"></i></span>
-                                                    <select class="form-control" id="confidentiality" required>
-                                                        <option value="">Selecione o nível</option>
-                                                        <option value="baixa">Baixa</option>
-                                                        <option value="media">Média</option>
-                                                        <option value="alta">Alta</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
+                    <!-- convite -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            Convidar novo membro
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-md-8">
+                                    <label class="form-label mb-1">Email</label>
+                                    <input type="email" id="inviteEmail" class="form-control"
+                                        placeholder="email@empresa.com">
+                                </div>
 
-                                        <!-- Autor -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="document-author">Autor</label>
-                                            <div class="col-sm-6">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i
-                                                            class="bx bx-user-circle"></i></span>
-                                                    <input type="text" class="form-control" id="document-author"
-                                                        placeholder="Fulano Silva" />
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i
-                                                            class="bi bi-buildings"></i></span>
-                                                    <select class="form-control" id="document-setor" required>
-                                                        <option value="">Selecione o setor</option>
-                                                        <option value="administrativo">Administrativo</option>
-                                                        <option value="financeiro">Financeiro</option>
-                                                        <option value="rh">Recursos Humanos</option>
-                                                        <option value="vendas">Vendas</option>
-                                                        <option value="ti">TI</option>
-                                                        <option value="marketing">Marketing</option>
-                                                        <option value="logistica">Logística</option>
-                                                        <option value="juridico">Jurídico</option>
-                                                        <option value="operacoes">Operações</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Tags -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="document-tags">Tags</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-tag"></i></span>
-                                                    <input type="text" class="form-control" id="document-tags"
-                                                        placeholder="financeiro, relatorio, ROI (separadas por vírgula)" />
-                                                </div>
-                                                <div class="form-text">Separe as tags com vírgulas e insira pelo menos
-                                                    5.</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Upload de Arquivo -->
-                                        <div class="row mb-3">
-                                            <h5 class="card-header">Upload do Documento</h5>
-
-                                            <!-- Tipo de Upload -->
-                                            <div class="col-12 pt-3">
-                                                <label class="form-label">Tipo de Upload</label>
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio"
-                                                                name="upload-type" id="upload-text" value="text"
-                                                                checked>
-                                                            <label class="form-check-label" for="upload-text">
-                                                                <i class="bx bx-text me-2"></i>Texto
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio"
-                                                                name="upload-type" id="upload-pdf" value="pdf">
-                                                            <label class="form-check-label" for="upload-pdf">
-                                                                <i class="bx bx-file-blank me-2"></i>Arquivo
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Área de Texto -->
-                                            <div class="col-12 pt-3" id="text-upload-area">
-                                                <label class="form-label" for="document-text">Conteúdo do
-                                                    Documento</label>
-                                                <textarea class="form-control" id="document-text" rows="8"
-                                                    placeholder="Cole ou digite o conteúdo do documento aqui..."></textarea>
-                                            </div>
-
-                                            <div class="col-12 pt-3" id="file-upload-area" style="display: none;">
-                                                <label class="form-label" for="document-file">Selecionar Arquivo</label>
-                                                <input type="file" class="form-control" id="document-file"
-                                                    accept=".pdf,.txt,.csv">
-                                                <div class="form-text">Formatos aceitos: PDF, TXT, CSV</div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="bx bx-upload me-2"></i>Enviar Documento
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
+                                <div class="col-12 col-md-4 d-grid">
+                                    <button class="btn btn-primary" id="btnInvite">Convidar</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- membros -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            Membros da equipe
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Nível</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamMembersTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- convites -->
+                    <div class="card">
+                        <div class="card-header">
+                            Convites pendentes
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Expira</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invitesTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- / Intervalo de busca -->
+                <!-- / Navbar -->
+
+                <!-- Modal Fale Conosco -->
+                <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="contactModalLabel">
+                                    <i class="bi bi-headset me-2"></i>Fale Conosco
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Fechar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p class="mb-2"><i
+                                        class="bi bi-telephone me-2 text-primary"></i><strong>Telefone:</strong> +55 19
+                                    99714-8221 </p>
+                                <p class="mb-2"><i class="bi bi-envelope me-2 text-danger"></i><strong>Email:</strong>
+                                    contato@hokocomunicacao.com.br</p>
+                                <p class="mb-0"><i
+                                        class="bi bi-geo-alt me-2 text-success"></i><strong>Endereço:</strong> R.
+                                    Comendador Tórlogo Dauntre, n.74 Sala 1207
+                                    13.025-270
+                                    Cambui, Campinas SP</p>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
             <!-- / Layout page -->
         </div>
+
         <!-- Overlay -->
         <div class="layout-overlay layout-menu-toggle"></div>
     </div>
+    <!-- / Layout wrapper -->
 
     <!-- Modal: Assinatura / Pagamento -->
     <div class="modal fade" id="billingModal" tabindex="-1" aria-labelledby="billingModalLabel" aria-hidden="true"
@@ -538,40 +496,8 @@
                     </button>
                     <div class="d-flex gap-2">
                         <a href="/settingsAccountPage.html" class="btn btn-light">Ver opções completas</a>
-                        <button id="closeBillingBtn" type="button" class="btn btn-secondary">Fechar</button>
+                        <!--<button id="closeBillingBtn" type="button" class="btn btn-secondary">Fechar</button>-->
                     </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Fale Conosco -->
-    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 class="modal-title" id="contactModalLabel">
-                        <i class="bi bi-headset me-2"></i>Fale Conosco
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-
-                <div class="modal-body">
-                    <p class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i><strong>Telefone:</strong>
-                        +55 19
-                        99714-8221 </p>
-                    <p class="mb-2"><i class="bi bi-envelope me-2 text-danger"></i><strong>Email:</strong>
-                        contato@hokocomunicacao.com.br</p>
-                    <p class="mb-0"><i class="bi bi-geo-alt me-2 text-success"></i><strong>Endereço:</strong> R.
-                        Comendador Tórlogo Dauntre, n.74 Sala 1207
-                        13.025-270
-                        Cambui, Campinas SP</p>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                 </div>
 
             </div>
@@ -580,6 +506,7 @@
 
     <!-- Jeferson: container para mensagem -->
     <div id="alert-container"></div>
+
 
     <!-- Core JS -->
     <!-- build:js assets/vendor/js/core.js -->
@@ -590,6 +517,11 @@
     <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
     <script src="/assets/vendor/js/menu.js"></script>
 
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+
     <!-- Main JS -->
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/notifications.js"></script>
@@ -597,28 +529,39 @@
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
+    <!-- Lógica para os inputs de data -->
+    <!-- Jeferson: Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Localization para português (opcional) -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
     <!-- Jeferson: dados do cliente logado -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Jeferson: dados do cliente logado -->
-    <script src="/assets/js/foodModelPage.js"></script>
+    <script src="/assets/js/dashboardPlatformsCard.js"></script>
     <!-- Jeferson: Check pagamentos -->
     <script src="/assets/js/checkPayments.js"></script>
 
     <script src="/assets/js/rbacClient.js"></script>
     <script>
-        RBAC.guardPage('page:food_model:view');
+        RBAC.guardPage('page:team:view');
+
         RBAC.applyMenuPermissions({
-            'page:food_model:view': '#menu-food-model',
-            'page:settings:view': '#menu-settings'
+            'page:team:view': '#menu-team'
         });
-        RBAC.applyMenuPermissions({
-            'page:settings:view': '#menu-settings-account'
-        });
+
+        // preenche nome/nível no dropdown (você já tem #user-name e #user-role na página)
         RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
+
+        // deixa o "me" acessível pro teamPage.js bloquear ações (ex.: impedir desativar a si mesmo)
+        (async () => {
+            window.__ME__ = await RBAC.fetchMe();
+        })();
     </script>
+    <script src="/assets/js/teamPage.js"></script>
 </body>
 
 </html>

@@ -8,7 +8,7 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-  <title>Dashboard - Analytics </title>
+  <title>Dashboard</title>
 
   <meta name="description" content="" />
 
@@ -146,6 +146,13 @@
             <a href="myCustomersPage.html" class="menu-link">
               <i class="menu-icon tf-icons bi bi-people"></i>
               <div data-i18n="Without menu">Meus Clientes</div>
+            </a>
+          </li>
+
+          <li class="menu-item" id="menu-team">
+            <a href="/teamPage.html" class="menu-link">
+              <i class="menu-icon tf-icons bx bx-group"></i>
+              <div>Equipe</div>
             </a>
           </li>
 
@@ -1153,18 +1160,18 @@
   <!-- Jeferson: Check pagamentos -->
   <script src="/assets/js/checkPayments.js"></script>
 
-<script src="/assets/js/rbacClient.js"></script>
-<script>
-  RBAC.guardPage('page:dashboard:view');
-  RBAC.applyMenuPermissions({
-    'page:food_model:view': '#menu-food-model',
-    'page:settings:view': '#menu-settings'
-  });
-  RBAC.applyMenuPermissions({
-    'page:settings:view': '#menu-settings-account'
-  });
-  RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
-</script>
+  <script src="/assets/js/rbacClient.js"></script>
+  <script>
+    RBAC.guardPage('page:dashboard:view');
+    RBAC.applyMenuPermissions({
+      'page:food_model:view': '#menu-food-model',
+      'page:settings:view': '#menu-settings'
+    });
+    RBAC.applyMenuPermissions({
+      'page:settings:view': '#menu-settings-account'
+    });
+    RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
+  </script>
 </body>
 
 </html>

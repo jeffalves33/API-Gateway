@@ -80,6 +80,7 @@ app.get('/foodModelPage.html', authenticatePageAccess, requirePagePermission('pa
 app.get('/goalsPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'goalsPage.html')); });
 app.get('/kanbanPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'kanbanPage.html')); });
 app.get('/myCustomersPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'myCustomersPage.html')); });
+app.get('/teamPage.html', authenticatePageAccess, (req, res) => { res.sendFile(path.join(__dirname, 'public', 'teamPage.html')); });
 app.get('/settingsAccountPage.html', authenticatePageAccess, requirePagePermission('page:settings:view'), (req, res) => { res.sendFile(path.join(__dirname, 'public', 'settingsAccountPage.html')); });
 
 // === Páginas públicas ===
