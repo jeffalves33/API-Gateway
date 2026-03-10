@@ -214,12 +214,49 @@ document.addEventListener('DOMContentLoaded', async function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
-            if (!res.ok) {
-                throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
-            }
+
+            if (!res.ok) throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
+
             const data = await res.json();
-            renderTrafficLineChart(data);    // Gráfico de linha principal
-            renderTrafficSourcesChart(data); // Pizza + lista de fontes
+
+            const trafficRow = document.getElementById('trafficChartRow');
+
+            const hasTrafficData =
+                data &&
+                Array.isArray(data.sessions) &&
+                data.sessions.length > 0 &&
+                data.sessions.some(v => Number(v) > 0);
+
+            if (!hasTrafficData) {
+                if (trafficChartInstance) {
+                    trafficChartInstance.destroy();
+                    trafficChartInstance = null;
+                }
+
+                if (trafficSourcesChartInstance) {
+                    trafficSourcesChartInstance.destroy();
+                    trafficSourcesChartInstance = null;
+                }
+
+                const trafficChart = document.getElementById('trafficChart');
+                const pizzaChart = document.getElementById('orderTrafficPizzaChart');
+                const trafficSourcesList = document.getElementById('traffic-sources-list');
+                const totalTrafficElement = document.getElementById('total-traffic-period');
+
+                if (trafficChart) trafficChart.innerHTML = '';
+                if (pizzaChart) pizzaChart.innerHTML = '';
+                if (trafficSourcesList) trafficSourcesList.innerHTML = '';
+                if (totalTrafficElement) totalTrafficElement.textContent = '';
+
+                if (trafficRow) trafficRow.style.display = 'none';
+                return;
+            }
+
+            if (trafficRow) trafficRow.style.display = '';
+
+            await renderTrafficLineChart(data);
+            await renderTrafficSourcesChart(data);
+
         } catch (error) {
             showError('Erro ao buscar dados de tráfego', error);
         }
@@ -232,9 +269,34 @@ document.addEventListener('DOMContentLoaded', async function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_customer, startDate, endDate })
             });
+
             if (!res.ok) throw new Error(`Erro HTTP: ${res.status} - ${res.statusText}`);
 
             const data = await res.json();
+
+            const searchVolumeRow = document.getElementById('searchVolumeChartRow');
+
+            const hasSearchVolumeData =
+                data &&
+                Array.isArray(data.organicSessions) &&
+                data.organicSessions.length > 0 &&
+                data.organicSessions.some(v => Number(v) > 0);
+
+            if (!hasSearchVolumeData) {
+                if (searchVolumeChartInstance) {
+                    searchVolumeChartInstance.destroy();
+                    searchVolumeChartInstance = null;
+                }
+
+                const searchVolumeChart = document.getElementById('searchVolumChart');
+                if (searchVolumeChart) searchVolumeChart.innerHTML = '';
+
+                if (searchVolumeRow) searchVolumeRow.style.display = 'none';
+                return;
+            }
+
+            if (searchVolumeRow) searchVolumeRow.style.display = '';
+
             renderSearchVolumeLineChart(data);
             renderSearchVolumeCards(data);
         } catch (error) {
@@ -297,10 +359,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 xaxis: {
                     categories: data.labels,
                     labels: {
-                        formatter: val => new Date(val).toLocaleDateString('pt-BR'),
-                        style: { fontSize: '10px', fontWeight: 500 }
+                        show: false
                     },
-                    crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
                 },
                 yaxis: {
                     labels: {
@@ -385,10 +445,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 xaxis: {
                     categories: data.labels,
                     labels: {
-                        formatter: val => new Date(val).toLocaleDateString('pt-BR'),
-                        style: { fontSize: '10px', fontWeight: 500 }
+                        show: false
                     },
-                    crosshairs: { show: true, stroke: { color: '#b6b6b6', width: 1, dashArray: 3 } }
                 },
                 yaxis: {
                     labels: {
@@ -610,7 +668,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 ],
                 xaxis: {
-                    categories: formattedDates
+                    categories: formattedDates,
+                    labels: {
+                        show: false,
+                    }
                 },
                 stroke: {
                     curve: 'smooth',
@@ -637,10 +698,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderTrafficSourcesChart(data) {
-        if (!data || !data.sessions || !data.labels) {
-            showError('Dados inválidos recebidos', data);
-            return;
-        }
         return new Promise((resolve) => {
             const pizzaChartContainer = document.querySelector('#orderTrafficPizzaChart');
             const trafficSourcesList = document.querySelector('#traffic-sources-list');
@@ -779,7 +836,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 ],
                 xaxis: {
-                    categories: formattedDates
+                    categories: formattedDates,
+                    labels: {
+                        show: false
+                    }
                 },
                 stroke: {
                     curve: 'smooth',

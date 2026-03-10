@@ -299,7 +299,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="/settingsAccountPage.html">
                       <div class="d-flex">
                         <div class="flex-shrink-0 me-3">
                           <div class="avatar avatar-online">
@@ -314,24 +314,6 @@
                       </div>
                     </a>
                   </li>
-                  <li>
-                    <div class="dropdown-divider"></div>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="/settingsAccountPage.html">
-                      <i class="bx bx-user me-2"></i>
-                      <span class="align-middle">Perfil</span>
-                    </a>
-                  </li>
-                  <!--<li>
-                    <a class="dropdown-item" href="#">
-                      <span class="d-flex align-items-center align-middle">
-                        <i class="flex-shrink-0 bx bx-credit-card me-2"></i>
-                        <span class="flex-grow-1 align-middle ms-1">Billing</span>
-                        <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger w-px-20 h-px-20">4</span>
-                      </span>
-                    </a>
-                  </li>-->
                   <li>
                     <div class="dropdown-divider"></div>
                   </li>
@@ -761,8 +743,8 @@
                           <small id="content-total-comments-delta" class="text-muted">-</small>
                         </div>
                         <div class="avatar">
-                          <span class="avatar-initial rounded bg-label-light">
-                            <i class="bx bx-message-circle-captions"></i>
+                          <span class="avatar-initial rounded bg-label-gray">
+                            <i class="bx bx-message-detail"></i>
                           </span>
                         </div>
                       </div>
@@ -775,13 +757,13 @@
               <div class="col-12 mb-4">
                 <div class="card">
                   <div class="card-header d-flex align-items-start justify-content-between">
-                    <div>
+                    <div class="card-title mb-0">
                       <h5 class="mb-1">Top Posts do Período</h5>
                       <small class="text-muted">Posts com melhor desempenho de engajamento</small>
                     </div>
                   </div>
 
-                  <div class="card-body">
+                  <div class="card-body pt-4">
                     <div class="row g-3" id="topPostsRow">
                       <!-- JS injeta os 3 cards aqui -->
                     </div>
@@ -855,7 +837,7 @@
             <!-- / CONTEÚDOS -->
 
             <!-- Tráfego de site -->
-            <div class="row">
+            <div class="row" id="trafficChartRow">
               <div class="col-lg-8 mb-4 order-0">
                 <div class="card">
                   <div class="d-flex align-items-end row">
@@ -904,7 +886,7 @@
             <!-- / Tráfego de site -->
 
             <!-- Volume de pesquisa -->
-            <div class="row">
+            <div class="row" id="searchVolumeChartRow">
               <div class="col-lg-8 mb-4 order-0">
                 <div class="card">
                   <div class="d-flex align-items-end row">

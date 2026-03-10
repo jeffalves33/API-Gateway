@@ -3939,7 +3939,7 @@ fieldset:disabled .btn {
   margin-bottom: 0;
   color: var(--bs-card-cap-color);
   background-color: var(--bs-card-cap-bg);
-  border-bottom: var(--bs-card-border-width) solid var(--bs-card-border-color);
+  /*border-bottom: var(--bs-card-border-width) solid var(--bs-card-border-color);*/
 }
 .card-header:first-child {
   border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
@@ -6921,12 +6921,12 @@ input:-internal-autofill-selected {
 }
 
 .bg-label-dark {
-  background-color: #dcdfe1 !important;
+  background-color: #a0a0a0 !important;
   color: #233446 !important;
 }
 
 .border-label-dark {
-  border: 3px solid #a7aeb5 !important;
+  border: 3px solid #a0a0a0 !important;
 }
 
 .border-light-dark {
