@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (isBusiness) {
                 // Enviesamento de negócio → esconde Período, Tipo de análise e Plataformas
-                if (datesRow) datesRow.classList.add('d-none');
+                //if (datesRow) datesRow.classList.add('d-none');
                 if (typeColumn) typeColumn.classList.add('d-none');
                 if (platformsColumn) platformsColumn.classList.add('d-none');
             } else {
