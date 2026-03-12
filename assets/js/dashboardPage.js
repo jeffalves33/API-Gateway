@@ -221,28 +221,25 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const trafficRow = document.getElementById('trafficChartRow');
 
-            const hasTrafficData =
-                data &&
-                Array.isArray(data.sessions) &&
-                data.sessions.length > 0 &&
-                data.sessions.some(v => Number(v) > 0);
+            console.log("aqui 2")
+            const hasTrafficData = data && Array.isArray(data.sessions) && data.sessions.length > 0 && data.sessions.some(v => Number(v) > 0);
 
             if (!hasTrafficData) {
                 if (trafficChartInstance) {
                     trafficChartInstance.destroy();
                     trafficChartInstance = null;
                 }
-
+                console.log("aqui 3")
                 if (trafficSourcesChartInstance) {
                     trafficSourcesChartInstance.destroy();
                     trafficSourcesChartInstance = null;
                 }
-
+                console.log("aqui 4")
                 const trafficChart = document.getElementById('trafficChart');
                 const pizzaChart = document.getElementById('orderTrafficPizzaChart');
                 const trafficSourcesList = document.getElementById('traffic-sources-list');
                 const totalTrafficElement = document.getElementById('total-traffic-period');
-
+                console.log("aqui 5")
                 if (trafficChart) trafficChart.innerHTML = '';
                 if (pizzaChart) pizzaChart.innerHTML = '';
                 if (trafficSourcesList) trafficSourcesList.innerHTML = '';
@@ -635,18 +632,30 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderTrafficLineChart(data) {
         if (!data || !data.sessions || !data.labels) {
-            showError('Dados inválidos recebidos', data);
-            return;
+            console.error('Dados inválidos recebidos', data);
+            return Promise.resolve();
         }
-        return new Promise((resolve) => {
+
+        return new Promise((resolve, reject) => {
             const trafficChartContainer = document.querySelector('#trafficChart');
 
-            if (trafficChartInstance) trafficChartInstance.destroy();
+            if (!trafficChartContainer) {
+                console.error('Container #trafficChart não encontrado.');
+                resolve();
+                return;
+            }
+
+            if (trafficChartInstance) {
+                trafficChartInstance.destroy();
+                trafficChartInstance = null;
+            }
 
             const formattedDates = data.labels.map(dateStr => {
                 if (!dateStr) return '';
                 return new Date(
-                    dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8)
+                    dateStr.substring(0, 4) + '-' +
+                    dateStr.substring(4, 6) + '-' +
+                    dateStr.substring(6, 8)
                 ).toLocaleDateString('pt-BR');
             });
 
@@ -654,12 +663,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 chart: {
                     height: 400,
                     type: 'line',
-                    toolbar: { show: true },
-                    events: {
-                        animationEnd: function () {
-                            resolve();
-                        }
-                    }
+                    toolbar: { show: true }
                 },
                 series: [
                     {
@@ -670,7 +674,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 xaxis: {
                     categories: formattedDates,
                     labels: {
-                        show: false,
+                        show: false
                     }
                 },
                 stroke: {
@@ -693,7 +697,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
             });
 
-            trafficChartInstance.render();
+            trafficChartInstance.render().then(() => { resolve(); }).catch((err) => { reject(err); });
         });
     }
 
