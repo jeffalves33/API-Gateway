@@ -81,9 +81,7 @@ exports.inviteMember = async (req, res) => {
     const { id_account, id: id_user } = req.user;
     const { email } = req.body;
 
-    if (!email || typeof email !== 'string') {
-      return res.status(400).json({ success: false, message: 'Email é obrigatório.' });
-    }
+    if (!email || typeof email !== 'string') return res.status(400).json({ success: false, message: 'Email é obrigatório.' });
 
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -143,8 +141,11 @@ exports.inviteMember = async (req, res) => {
     }
 
     const rawToken = crypto.randomBytes(32).toString('hex');
+    console.log("🚀 ~ exports.inviteMember= ~ rawToken: ", rawToken)
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    console.log("🚀 ~ exports.inviteMember= ~ tokenHash: ", tokenHash)
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    console.log("🚀 ~ exports.inviteMember= ~ expiresAt: ", expiresAt)
 
     const insert = await pool.query(
       `
@@ -154,11 +155,12 @@ exports.inviteMember = async (req, res) => {
       `,
       [id_account, normalizedEmail, tokenHash, expiresAt, id_user]
     );
+    console.log("🚀 ~ exports.inviteMember= ~ insert.rows[0]: ", insert.rows[0])
 
     const inviteLink = `${getBaseUrl()}/acceptInvite.html?token=${rawToken}`;
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: process.env.MAIL_FROM,
       to: normalizedEmail,
       subject: 'Convite para acessar a plataforma',
       html: `
@@ -191,13 +193,9 @@ exports.resendInvite = async (req, res) => {
       [id_invite, id_account]
     );
 
-    if (inv.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Convite não encontrado.' });
-    }
+    if (inv.rows.length === 0) return res.status(404).json({ success: false, message: 'Convite não encontrado.' });
 
-    if (inv.rows[0].accepted_at) {
-      return res.status(409).json({ success: false, message: 'Convite já foi aceito.' });
-    }
+    if (inv.rows[0].accepted_at) return res.status(409).json({ success: false, message: 'Convite já foi aceito.' });
 
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
@@ -218,7 +216,7 @@ exports.resendInvite = async (req, res) => {
     const inviteLink = `${getBaseUrl()}/acceptInvite.html?token=${rawToken}`;
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: process.env.MAIL_FROM,
       to: inv.rows[0].email,
       subject: 'Reenvio de convite - Acesso à plataforma',
       html: `
