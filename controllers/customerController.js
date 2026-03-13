@@ -144,13 +144,57 @@ const getCustomersList = async (req, res) => {
 
 const refreshCustomerKeys = async (req, res) => {
   try {
-    const id_user = req.user.id;
     const { id_customer } = req.body;
-    await refreshKeysForCustomer(id_user, id_customer);
-    res.status(200).json({ success: true, message: 'Chaves atualizadas em cache' });
+    const id_account = req.user.id_account;
+
+    if (!id_customer) {
+      return res.status(400).json({
+        success: false,
+        message: 'id_customer é obrigatório.'
+      });
+    }
+
+    const adminResult = await pool.query(
+      `
+      SELECT u.id_user
+      FROM "user" u
+      JOIN team_members tm
+        ON tm.id_user = u.id_user
+       AND tm.id_account = u.id_account
+       AND tm.status = 'active'
+      JOIN member_roles mr
+        ON mr.id_team_member = tm.id_team_member
+      JOIN roles r
+        ON r.id_role = mr.id_role
+      WHERE u.id_account = $1
+        AND lower(r.name) = 'admin'
+      ORDER BY u.id_user ASC
+      LIMIT 1
+      `,
+      [id_account]
+    );
+
+    if (adminResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Administrador da conta não encontrado.'
+      });
+    }
+
+    const owner_user_id = adminResult.rows[0].id_user;
+
+    await refreshKeysForCustomer(owner_user_id, id_customer);
+
+    res.status(200).json({
+      success: true,
+      message: 'Chaves atualizadas em cache'
+    });
   } catch (error) {
     console.error(error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 

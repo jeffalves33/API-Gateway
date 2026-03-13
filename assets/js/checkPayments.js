@@ -14,6 +14,17 @@
     async function loadStatusAndMaybeOpen() {
         try {
             const r = await fetch('/api/billing/me', { credentials: 'same-origin' });
+
+            if (r.status === 403) {
+                console.warn('Usuário sem acesso ao billing');
+                return;
+            }
+
+            if (!r.ok) {
+                console.error('Erro ao consultar billing:', r.status);
+                return;
+            }
+
             const { subscription: s } = await r.json();
 
             const now = new Date();

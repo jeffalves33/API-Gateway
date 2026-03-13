@@ -9,6 +9,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             fetch('/api/youtube/status')
         ]);
 
+        if (metaR.status === 403 || gaR.status === 403 || ytR.status === 403) {
+            console.warn('Usuário sem permissão para status de plataformas');
+            return;
+        }
+
         const { facebookConnected, instagramConnected, facebookDaysLeft, needsReauthFacebook, instagramDaysLeft, needsReauthInstagram } = await metaR.json();
         //const { googleAnalyticsConnected, gaDaysLeft, needsReauthGA } = await gaR.json();
         const { youtubeConnected } = await ytR.json();

@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             const response = await fetch('/customer/cache', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ id_user: userId, id_customer: id })
+                                body: JSON.stringify({ id_customer: id })
                             });
 
                             if (!response.ok) {

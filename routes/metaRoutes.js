@@ -16,6 +16,6 @@ router.get('/pages', authenticateToken, requirePermission('platforms:connect'), 
 router.post('/connect', authenticateToken, requirePermission('platforms:connect'), requireCustomerInAccount(), metaController.connectResource);
 
 // (opcional/legado) status
-router.get('/status', authenticateToken, requirePermission('page:platforms:view'), requireCustomerInAccount(), metaController.checkMetaStatus);
+router.get('/status', authenticateToken, requireCustomerInAccount(), metaController.checkMetaStatus);
 
 module.exports = router;

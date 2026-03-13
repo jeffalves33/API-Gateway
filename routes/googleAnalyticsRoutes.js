@@ -12,6 +12,6 @@ router.get('/auth/callback', googleAnalyticsController.handleOAuthCallback);
 router.get('/properties', authenticateToken, requirePermission('platforms:connect'), requireCustomerInAccount(), googleAnalyticsController.getProperties);
 router.post('/connect', authenticateToken, requirePermission('platforms:connect'), requireCustomerInAccount(), googleAnalyticsController.connectProperty);
 
-router.get('/status', authenticateToken, requirePermission('page:platforms:view'), requireCustomerInAccount(), googleAnalyticsController.checkStatus);
+router.get('/status', authenticateToken, requireCustomerInAccount(), googleAnalyticsController.checkStatus);
 
 module.exports = router;

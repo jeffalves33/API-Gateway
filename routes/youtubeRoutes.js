@@ -12,6 +12,6 @@ router.get('/auth/callback', youtubeController.handleOAuthCallback);
 router.get('/channels', authenticateToken, requirePermission('platforms:connect'), requireCustomerInAccount(), youtubeController.getChannels);
 router.post('/connect', authenticateToken, requirePermission('platforms:connect'), requireCustomerInAccount(), youtubeController.connectChannel);
 
-router.get('/status', authenticateToken, requirePermission('page:platforms:view'), requireCustomerInAccount(), youtubeController.checkStatus);
+router.get('/status', authenticateToken, requireCustomerInAccount(), youtubeController.checkStatus);
 
 module.exports = router;

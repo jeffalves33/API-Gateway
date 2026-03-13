@@ -6,8 +6,30 @@ const { getValidAccessTokenCustomer } = require('./googleAnalyticsHelpers');
 const cache = new Map();
 
 const refreshKeysForCustomer = async (id_user, id_customer) => {
-  const belongs = await checkCustomerBelongsToUser(id_customer, id_user);
-  if (!belongs) throw new Error('Cliente não pertence ao usuário autenticado.');
+  // Busca a account do usuário "dono" das chaves
+  const userAccountResult = await pool.query(
+    `SELECT id_account FROM "user" WHERE id_user = $1 LIMIT 1`,
+    [id_user]
+  );
+
+  if (userAccountResult.rows.length === 0) throw new Error('Usuário administrador não encontrado.');
+
+  const id_account = userAccountResult.rows[0].id_account;
+
+  // Valida se o cliente pertence à mesma account
+  const customerAccountResult = await pool.query(
+    `
+    SELECT c.id_customer
+    FROM customer c
+    JOIN "user" u ON u.id_user = c.id_user
+    WHERE c.id_customer = $1
+      AND u.id_account = $2
+    LIMIT 1
+    `,
+    [id_customer, id_account]
+  );
+
+  if (customerAccountResult.rows.length === 0) throw new Error('Cliente não pertence à conta autenticada.');
 
   try {
     const customerKeys = await getCustomerKeys(id_customer);
