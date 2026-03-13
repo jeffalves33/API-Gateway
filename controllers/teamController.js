@@ -107,13 +107,13 @@ exports.inviteMember = async (req, res) => {
       );
 
       if (alreadyMember.rows.length > 0) {
-        return res.status(409).json({
+        return res.status(410).json({
           success: false,
           message: 'Este usuário já faz parte da equipe desta conta.'
         });
       }
 
-      return res.status(409).json({
+      return res.status(411).json({
         success: false,
         message: 'Usuário já existe nesta conta, mas não está vinculado como membro. Verifique a migração.'
       });
@@ -141,11 +141,8 @@ exports.inviteMember = async (req, res) => {
     }
 
     const rawToken = crypto.randomBytes(32).toString('hex');
-    console.log("🚀 ~ exports.inviteMember= ~ rawToken: ", rawToken)
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-    console.log("🚀 ~ exports.inviteMember= ~ tokenHash: ", tokenHash)
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-    console.log("🚀 ~ exports.inviteMember= ~ expiresAt: ", expiresAt)
 
     const insert = await pool.query(
       `
@@ -155,7 +152,6 @@ exports.inviteMember = async (req, res) => {
       `,
       [id_account, normalizedEmail, tokenHash, expiresAt, id_user]
     );
-    console.log("🚀 ~ exports.inviteMember= ~ insert.rows[0]: ", insert.rows[0])
 
     const inviteLink = `${getBaseUrl()}/acceptInvite.html?token=${rawToken}`;
 
@@ -301,15 +297,11 @@ exports.updateMemberRole = async (req, res) => {
     const { id_team_member } = req.params;
     const { role } = req.body;
 
-    if (!role || typeof role !== 'string') {
-      return res.status(400).json({ success: false, message: 'Role é obrigatório.' });
-    }
+    if (!role || typeof role !== 'string') return res.status(400).json({ success: false, message: 'Role é obrigatório.' });
 
     const roleName = role.trim();
-    if (!['Admin', 'Equipe', 'admin', 'equipe'].includes(roleName)) {
-      return res.status(400).json({ success: false, message: 'Role inválido. Use Admin ou Equipe.' });
-    }
-
+    if (!['Admin', 'Equipe', 'admin', 'equipe'].includes(roleName)) return res.status(400).json({ success: false, message: 'Role inválido. Use Admin ou Equipe.' });
+    
     const target = await pool.query(
       `
       SELECT tm.id_team_member, tm.id_user, r.name AS current_role
@@ -322,9 +314,7 @@ exports.updateMemberRole = async (req, res) => {
       [id_team_member, id_account]
     );
 
-    if (target.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Membro não encontrado.' });
-    }
+    if (target.rows.length === 0) return res.status(404).json({ success: false, message: 'Membro não encontrado.' });
 
     if (
       Number(target.rows[0].id_user) === Number(myUserId) &&
@@ -335,9 +325,7 @@ exports.updateMemberRole = async (req, res) => {
     }
 
     const newRoleId = await getRoleIdByName(id_account, roleName);
-    if (!newRoleId) {
-      return res.status(404).json({ success: false, message: 'Role não encontrado nesta conta.' });
-    }
+    if (!newRoleId) return res.status(404).json({ success: false, message: 'Role não encontrado nesta conta.' });
 
     await pool.query(
       `UPDATE member_roles SET id_role = $1 WHERE id_team_member = $2`,

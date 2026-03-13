@@ -77,14 +77,49 @@ async function loadInvites() {
 }
 
 async function inviteMember() {
-    const email = document.getElementById('inviteEmail').value
-    await fetch('/api/team/invites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-    })
-    document.getElementById('inviteEmail').value = ''
-    loadInvites()
+    const input = document.getElementById('inviteEmail');
+    const email = input.value.trim();
+
+    if (!email) {
+        showError('Informe um email.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/team/invites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        if (!response.ok) {
+            if (response.status === 400) {
+                showError('Email inválido ou não informado.');
+                return;
+            }
+
+            if (response.status === 409) {
+                showWarning('Email já cadastrado em outra conta.');
+                return;
+            }
+
+            if (response.status === 410) {
+                showWarning('Usuário já faz parte da equipe desta conta.');
+                return;
+            }
+
+            showError('Erro desconhecido. Tente novamente mais tarde.');
+            return;
+        }
+
+        // Sucesso
+        showSuccess('Convite enviado com sucesso.');
+        input.value = '';
+        loadInvites();
+    } catch (error) {
+        console.error('Erro ao enviar convite:', error);
+        showError('Erro de conexão ao enviar convite.');
+    }
 }
 
 async function resendInvite(id) {

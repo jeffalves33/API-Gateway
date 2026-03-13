@@ -172,9 +172,7 @@ const loginUser = async (req, res) => {
     // Buscar usuário pelo email
     const result = await pool.query('SELECT * FROM "user" WHERE email = $1', [email]);
 
-    if (result.rows.length === 0) {
-      return res.status(400).json({ success: false, message: 'Email ou senha incorretos' });
-    }
+    if (result.rows.length === 0) return res.status(400).json({ success: false, message: 'Email ou senha incorretos' });
 
     const user = result.rows[0];
 
@@ -616,9 +614,7 @@ const validateInviteToken = async (req, res) => {
   try {
     const { token } = req.query;
 
-    if (!token || typeof token !== 'string') {
-      return res.status(400).json({ success: false, message: 'Token é obrigatório.' });
-    }
+    if (!token || typeof token !== 'string') return res.status(400).json({ success: false, message: 'Token é obrigatório.' });
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -632,21 +628,15 @@ const validateInviteToken = async (req, res) => {
       [tokenHash]
     );
 
-    if (invite.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Convite inválido.' });
-    }
+    if (invite.rows.length === 0) return res.status(404).json({ success: false, message: 'Convite inválido.' });
 
     const row = invite.rows[0];
 
-    if (row.accepted_at) {
-      return res.status(409).json({ success: false, message: 'Este convite já foi utilizado.' });
-    }
+    if (row.accepted_at) return res.status(409).json({ success: false, message: 'Este convite já foi utilizado.' });
 
     const now = new Date();
-    if (new Date(row.expires_at) < now) {
-      return res.status(410).json({ success: false, message: 'Convite expirado.' });
-    }
-
+    if (new Date(row.expires_at) < now) return res.status(410).json({ success: false, message: 'Convite expirado.' });
+    
     return res.json({
       success: true,
       invite: {
@@ -666,15 +656,9 @@ const acceptInvite = async (req, res) => {
   try {
     const { token, password, confirmPassword, name } = req.body;
 
-    if (!token || typeof token !== 'string') {
-      return res.status(400).json({ success: false, message: 'Token é obrigatório.' });
-    }
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Senha inválida (mínimo 6 caracteres).' });
-    }
-    if (password !== confirmPassword) {
-      return res.status(400).json({ success: false, message: 'As senhas não conferem.' });
-    }
+    if (!token || typeof token !== 'string') return res.status(400).json({ success: false, message: 'Token é obrigatório.' });
+    if (!password || typeof password !== 'string' || password.length < 6) return res.status(400).json({ success: false, message: 'Senha inválida (mínimo 6 caracteres).' });
+    if (password !== confirmPassword) return res.status(400).json({ success: false, message: 'As senhas não conferem.' });
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -724,13 +708,15 @@ const acceptInvite = async (req, res) => {
       // cria user já na account do convite
       const created = await client.query(
         `
-        INSERT INTO "user" (name, email, password, id_account, created_at)
-        VALUES ($1, $2, $3, $4, now())
+        INSERT INTO "user" (name, email, password, id_account, created_at, email_verified)
+        VALUES ($1, $2, $3, $4, now(), $5)
         RETURNING id_user
         `,
-        [name || email, email, hashed, invite.id_account]
+        [name || email, email, hashed, invite.id_account, true]
       );
       id_user = created.rows[0].id_user;
+
+      await client.query('DELETE FROM invites WHERE id_invite = $1', [invite.id_invite]);
     } else {
       // user existe: não deixa "mudar" de account
       const u = userRes.rows[0];

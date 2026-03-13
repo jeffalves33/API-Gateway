@@ -75,9 +75,8 @@
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
 
-        if (!token) {
-            info.textContent = 'Token ausente no link.';
-        } else {
+        if (!token) info.textContent = 'Token ausente no link.';
+        else {
             fetch(`/api/invites/validate?token=${encodeURIComponent(token)}`)
                 .then(r => r.json().then(data => ({ ok: r.ok, data })))
                 .then(({ ok, data }) => {

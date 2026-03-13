@@ -2,6 +2,30 @@
 const { pool } = require('../config/db');
 const { createCheckoutSession, createBillingPortalSession } = require('../services/stripeService');
 
+async function getBillingOwnerByAccount(id_account) {
+    const { rows } = await pool.query(`
+        SELECT u.id_user, u.name, u.email, u.stripe_customer_id,
+               u.plan_code, u.stripe_subscription_id, u.subscription_status,
+               u.current_period_start, u.current_period_end,
+               u.trial_start, u.trial_end, u.cancel_at, u.cancel_at_period_end
+        FROM "user" u
+        JOIN team_members tm
+          ON tm.id_user = u.id_user
+         AND tm.id_account = u.id_account
+         AND tm.status = 'active'
+        JOIN member_roles mr
+          ON mr.id_team_member = tm.id_team_member
+        JOIN roles r
+          ON r.id_role = mr.id_role
+        WHERE u.id_account = $1
+          AND lower(r.name) = 'admin'
+        ORDER BY u.id_user ASC
+        LIMIT 1
+    `, [id_account]);
+
+    return rows[0] || null;
+}
+
 // GET /api/billing/plans
 exports.listPlans = async (req, res) => {
     try {
@@ -21,12 +45,30 @@ exports.listPlans = async (req, res) => {
 // GET /api/billing/me
 exports.getMySubscription = async (req, res) => {
     try {
-        const { rows } = await pool.query(`
-      SELECT id_user, plan_code, stripe_subscription_id, subscription_status,
-             current_period_start, current_period_end, trial_start, trial_end, cancel_at, cancel_at_period_end
-      FROM "user" WHERE id_user=$1
-    `, [req.user.id]);
-        res.json({ success: true, subscription: rows[0] || null });
+        const owner = await getBillingOwnerByAccount(req.user.id_account);
+
+        if (!owner) {
+            return res.status(404).json({
+                success: false,
+                message: 'Conta administradora não encontrada para esta assinatura.'
+            });
+        }
+
+        res.json({
+            success: true,
+            subscription: {
+                id_user: owner.id_user,
+                plan_code: owner.plan_code,
+                stripe_subscription_id: owner.stripe_subscription_id,
+                subscription_status: owner.subscription_status,
+                current_period_start: owner.current_period_start,
+                current_period_end: owner.current_period_end,
+                trial_start: owner.trial_start,
+                trial_end: owner.trial_end,
+                cancel_at: owner.cancel_at,
+                cancel_at_period_end: owner.cancel_at_period_end
+            }
+        });
     } catch (e) {
         console.error(e);
         res.status(500).json({ success: false, message: 'Erro ao buscar assinatura' });
@@ -39,8 +81,14 @@ exports.startCheckout = async (req, res) => {
         const { plan_code, promo_code } = req.body;
         if (!plan_code) return res.status(400).json({ success: false, message: 'plan_code é obrigatório' });
 
-        const u = await pool.query('SELECT id_user, name, email, stripe_customer_id FROM "user" WHERE id_user=$1', [req.user.id]);
-        const user = u.rows[0];
+        const user = await getBillingOwnerByAccount(req.user.id_account);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Conta administradora não encontrada para checkout.'
+            });
+        }
 
         // Preferir env STRIPE_PRICE_*; fallback: buscar price no banco por plan_code
         const envPrice = process.env[`STRIPE_PRICE_${plan_code.toUpperCase()}`];
@@ -62,8 +110,14 @@ exports.startCheckout = async (req, res) => {
 // POST /api/billing/portal
 exports.openBillingPortal = async (req, res) => {
     try {
-        const u = await pool.query('SELECT id_user, name, email, stripe_customer_id FROM "user" WHERE id_user=$1', [req.user.id]);
-        const user = u.rows[0];
+        const user = await getBillingOwnerByAccount(req.user.id_account);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Conta administradora não encontrada para portal de cobrança.'
+            });
+        }
         const url = await createBillingPortalSession({ user });
         res.json({ success: true, url });
     } catch (e) {
