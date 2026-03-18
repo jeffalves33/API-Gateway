@@ -221,7 +221,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const trafficRow = document.getElementById('trafficChartRow');
 
-            console.log("aqui 2")
             const hasTrafficData = data && Array.isArray(data.sessions) && data.sessions.length > 0 && data.sessions.some(v => Number(v) > 0);
 
             if (!hasTrafficData) {
@@ -229,17 +228,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                     trafficChartInstance.destroy();
                     trafficChartInstance = null;
                 }
-                console.log("aqui 3")
+
                 if (trafficSourcesChartInstance) {
                     trafficSourcesChartInstance.destroy();
                     trafficSourcesChartInstance = null;
                 }
-                console.log("aqui 4")
+
                 const trafficChart = document.getElementById('trafficChart');
                 const pizzaChart = document.getElementById('orderTrafficPizzaChart');
                 const trafficSourcesList = document.getElementById('traffic-sources-list');
                 const totalTrafficElement = document.getElementById('total-traffic-period');
-                console.log("aqui 5")
+
                 if (trafficChart) trafficChart.innerHTML = '';
                 if (pizzaChart) pizzaChart.innerHTML = '';
                 if (trafficSourcesList) trafficSourcesList.innerHTML = '';

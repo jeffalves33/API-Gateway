@@ -1,4 +1,5 @@
 // Arquivo: controllers/customerController.js
+const { pool } = require('../config/db');
 const { createCustomer, deleteCustomer, deactivateCustomer, getCustomerByIdCustomer, getCustomersByUserId, getCustomersListByUserId, removeCustomerPlatformAuth, updateCustomer, checkCustomerBelongsToUser } = require('../repositories/customerRepository');
 const { refreshKeysForCustomer, getGoogleAnalyticsKeys, getLinkedinKeys, clearCacheForUser } = require('../helpers/keyHelper');
 const metricsOrchestrator = require('../usecases/processCustomerMetricsUseCase');
