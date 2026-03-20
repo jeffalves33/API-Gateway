@@ -11,8 +11,11 @@ require('dotenv').config();
 
 // Função para registrar um novo usuário
 const registerUser = async (req, res) => {
+  const client = await pool.connect();
+
   try {
     const { name, email, password } = req.body;
+
     const mailer = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -22,34 +25,37 @@ const registerUser = async (req, res) => {
     });
 
     // Verificar se o usuário já existe
-    const userExists = await pool.query('SELECT id_user, email_verified, name FROM "user" WHERE email = $1', [email]);
+    const userExists = await client.query(
+      'SELECT id_user, email_verified, name FROM "user" WHERE lower(email) = lower($1)',
+      [email]
+    );
 
     if (userExists.rows.length > 0) {
       const existing = userExists.rows[0];
 
-      // 1) Já verificado -> bloqueia cadastro
       if (existing.email_verified) {
-        return res
-          .status(400)
-          .json({ success: false, message: 'Email já registrado' });
+        return res.status(400).json({
+          success: false,
+          message: 'Email já registrado'
+        });
       }
 
-      // 2) Não verificado -> REENVIA link de verificação
-      const userId = existing.id_user;
-
-      // invalida tokens antigos
-      await pool.query('UPDATE email_verification_tokens SET used = TRUE WHERE user_id = $1', [userId]);
-
-      const token = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
-
-      await pool.query(
-        `INSERT INTO email_verification_tokens (user_id, token, expires_at)
-         VALUES ($1, $2, $3)`,
-        [userId, token, expiresAt]
+      // Reenvia verificação para cadastro pendente
+      await client.query(
+        'UPDATE email_verification_tokens SET used = TRUE WHERE user_id = $1',
+        [existing.id_user]
       );
 
-      const baseUrl = process.env.BASE_URL || 'https://www.hokoainalytics.com.br';
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await client.query(
+        `INSERT INTO email_verification_tokens (user_id, token, expires_at)
+         VALUES ($1, $2, $3)`,
+        [existing.id_user, token, expiresAt]
+      );
+
+      const baseUrl = process.env.FRONTEND_BASE_URL || 'https://www.hokoainalytics.com.br';
       const verifyLink = `${baseUrl}/api/verify-email?token=${token}`;
 
       await mailer.sendMail({
@@ -67,30 +73,124 @@ const registerUser = async (req, res) => {
 
       return res.json({
         success: true,
-        message:
-          'Você já tinha um cadastro pendente. Reenviamos o link de confirmação para seu email.'
+        message: 'Você já tinha um cadastro pendente. Reenviamos o link de confirmação para seu email.'
       });
     }
 
-    // ===== fluxo normal de criação =====
+    await client.query('BEGIN');
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await pool.query(
-      'INSERT INTO "user" (name, email, password, email_verified) VALUES ($1, $2, $3, FALSE) RETURNING id_user, name, email',
-      [name, email, hashedPassword]
+    // 1) cria account
+    const accountResult = await client.query(
+      `
+      INSERT INTO accounts (name, status, created_at, updated_at)
+      VALUES ($1, 'active', now(), now())
+      RETURNING id_account
+      `,
+      [name]
+    );
+
+    const id_account = accountResult.rows[0].id_account;
+
+    // 2) cria user vinculado à account
+    const newUser = await client.query(
+      `
+      INSERT INTO "user" (name, email, password, email_verified, id_account)
+      VALUES ($1, $2, $3, FALSE, $4)
+      RETURNING id_user, name, email
+      `,
+      [name, email, hashedPassword, id_account]
     );
 
     const userId = newUser.rows[0].id_user;
 
+    // 3) cria roles Admin e Equipe
+    const adminRoleResult = await client.query(
+      `
+      INSERT INTO roles (id_account, name, is_system, created_at)
+      VALUES ($1, 'Admin', true, now())
+      RETURNING id_role
+      `,
+      [id_account]
+    );
+
+    const equipeRoleResult = await client.query(
+      `
+      INSERT INTO roles (id_account, name, is_system, created_at)
+      VALUES ($1, 'Equipe', true, now())
+      RETURNING id_role
+      `,
+      [id_account]
+    );
+
+    const adminRoleId = adminRoleResult.rows[0].id_role;
+    const equipeRoleId = equipeRoleResult.rows[0].id_role;
+
+    // 4) associa permissions
+    await client.query(
+      `
+      INSERT INTO role_permissions (id_role, id_permission)
+      SELECT $1, id_permission
+      FROM permissions
+      ON CONFLICT DO NOTHING
+      `,
+      [adminRoleId]
+    );
+
+    await client.query(
+      `
+      INSERT INTO role_permissions (id_role, id_permission)
+      SELECT $1, id_permission
+      FROM permissions
+      WHERE lower(code) IN (
+        'page:dashboard:view',
+        'page:analyses:view',
+        'page:customers:view',
+        'page:chat:view',
+        'customers:manage',
+        'analyses:run'
+      )
+      ON CONFLICT DO NOTHING
+      `,
+      [equipeRoleId]
+    );
+
+    // 5) cria team_member do próprio dono da conta
+    const teamMemberResult = await client.query(
+      `
+      INSERT INTO team_members (id_account, id_user, status, joined_at, created_at)
+      VALUES ($1, $2, 'active', now(), now())
+      RETURNING id_team_member
+      `,
+      [id_account, userId]
+    );
+
+    const id_team_member = teamMemberResult.rows[0].id_team_member;
+
+    // 6) vincula como Admin
+    await client.query(
+      `
+      INSERT INTO member_roles (id_team_member, id_role)
+      VALUES ($1, $2)
+      `,
+      [id_team_member, adminRoleId]
+    );
+
+    // 7) token de verificação de email
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    await pool.query(
-      `INSERT INTO email_verification_tokens (user_id, token, expires_at)
-       VALUES ($1, $2, $3)`,
+    await client.query(
+      `
+      INSERT INTO email_verification_tokens (user_id, token, expires_at)
+      VALUES ($1, $2, $3)
+      `,
       [userId, token, expiresAt]
     );
+
+    await client.query('COMMIT');
 
     const baseUrl = process.env.FRONTEND_BASE_URL || 'https://www.hokoainalytics.com.br';
     const verifyLink = `${baseUrl}/api/verify-email?token=${token}`;
@@ -108,19 +208,25 @@ const registerUser = async (req, res) => {
       `
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message:
-        'Conta criada! Verifique seu email para ativar o acesso.',
+      message: 'Conta criada! Verifique seu email para ativar o acesso.',
       user: {
         id: userId,
         name: newUser.rows[0].name,
         email: newUser.rows[0].email
       }
     });
+
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Erro ao registrar usuário:', error);
-    res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    return res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  } finally {
+    client.release();
   }
 };
 
@@ -636,7 +742,7 @@ const validateInviteToken = async (req, res) => {
 
     const now = new Date();
     if (new Date(row.expires_at) < now) return res.status(410).json({ success: false, message: 'Convite expirado.' });
-    
+
     return res.json({
       success: true,
       invite: {
