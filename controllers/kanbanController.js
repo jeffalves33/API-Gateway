@@ -1,433 +1,243 @@
-// Arquivo: controllers/kanbanController.js
 const repo = require('../repositories/kanbanRepository');
 
-const send = (res, status, data) => res.status(status).json(data);
-const ok = (res, data) => send(res, 200, data);
-const bad = (res, e) => send(res, 400, { success: false, message: e?.message || 'Erro' });
+const ok = (res, data) => res.status(200).json(data);
+const fail = (res, error) => res.status(400).json({ success: false, message: error?.message || 'Erro no Kanban.' });
 
-// ===== helpers =====
-const toMonthKey = (v) => {
-    const m = String(v || '').trim();
-    if (!/^\d{4}-\d{2}$/.test(m)) throw new Error('month inválido (YYYY-MM)');
-    return m;
-};
+async function getBoardData(req, res) {
+  try {
+    return ok(res, await repo.listBoardData(req.user.id, req.user.id_account));
+  } catch (error) {
+    console.error('kanbanController.getBoardData:', error);
+    return fail(res, error);
+  }
+}
 
-const weekToInt = (w) => {
-    if (typeof w === 'number') return w;
-    const s = String(w || '').toUpperCase().trim(); // "S1..S4"
-    const m = s.match(/^S([1-4])$/);
-    return m ? Number(m[1]) : 2;
-};
-
-const intToWeek = (n) => `S${Math.min(4, Math.max(1, Number(n || 2)))}`;
-
-// =======================
-// TEAM
-// =======================
 async function listTeam(req, res) {
-    try {
-        const id_user = req.user.id;
-        const team = await repo.listTeam(id_user);
-        return ok(res, team); // kanbanAdmin.js espera array direto
-    } catch (e) {
-        return bad(res, e);
-    }
+  try {
+    return ok(res, { success: true, team: await repo.listTeam(req.user.id, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.listTeam:', error);
+    return fail(res, error);
+  }
 }
 
-async function addTeamMember(req, res) {
-    try {
-        const id_user = req.user.id;
-        const name = String(req.body?.name || '').trim();
-        if (!name) throw new Error('Nome obrigatório');
-        const member = await repo.addTeamMember(id_user, name);
-        return ok(res, member);
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function deleteTeamMember(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id = req.params.id;
-        await repo.removeTeamMember(id_user, id);
-        return res.status(204).send();
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-// =======================
-// CLIENTS (customer + profile extra)
-// =======================
 async function listClientsWithProfile(req, res) {
-    try {
-        const id_user = req.user.id;
-        const clients = await repo.listClientsWithProfile(id_user);
-        return ok(res, clients); // kanbanAdmin.js espera array direto
-    } catch (e) {
-        return bad(res, e);
-    }
+  try {
+    return ok(res, { success: true, clients: await repo.listClientsWithProfile(req.user.id, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.listClientsWithProfile:', error);
+    return fail(res, error);
+  }
 }
 
 async function upsertClientProfileByCustomerId(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id_customer = Number(req.params.id_customer);
-        if (!id_customer) throw new Error('id_customer inválido');
-
-        const approval_name = String(req.body?.approval_name || '').trim() || null;
-
-        // kanbanAdmin manda string, eu aceito string CSV ou array
-        const approval_emails_raw = req.body?.approval_emails ?? [];
-        const approval_emails = Array.isArray(approval_emails_raw)
-            ? approval_emails_raw
-            : String(approval_emails_raw || '')
-                .split(',')
-                .map(s => s.trim())
-                .filter(Boolean);
-
-        const roles = req.body?.roles || {};
-
-        const profile = await repo.upsertClientProfile(id_user, id_customer, {
-            approval_name,
-            approval_emails,
-            roles,
-        });
-
-        return ok(res, profile);
-    } catch (e) {
-        return bad(res, e);
-    }
+  try {
+    const idCustomer = Number(req.params.id_customer);
+    if (!idCustomer) throw new Error('id_customer inválido.');
+    const profile = await repo.upsertClientProfile(req.user.id, idCustomer, req.body || {}, req.user.id_account);
+    return ok(res, { success: true, profile });
+  } catch (error) {
+    console.error('kanbanController.upsertClientProfileByCustomerId:', error);
+    return fail(res, error);
+  }
 }
 
 async function deleteClientProfileByCustomerId(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id_customer = Number(req.params.id_customer);
-        if (!id_customer) throw new Error('id_customer inválido');
-        await repo.deleteClientProfile(id_user, id_customer);
-        return res.status(204).send();
-    } catch (e) {
-        return bad(res, e);
-    }
+  try {
+    const idCustomer = Number(req.params.id_customer);
+    if (!idCustomer) throw new Error('id_customer inválido.');
+    await repo.deleteClientProfile(req.user.id, idCustomer, req.user.id_account);
+    return res.status(204).send();
+  } catch (error) {
+    console.error('kanbanController.deleteClientProfileByCustomerId:', error);
+    return fail(res, error);
+  }
 }
 
 async function getClientPortalLink(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id_customer = Number(req.params.id_customer);
-        if (!id_customer) throw new Error("id_customer inválido");
-
-        const { token, client_name } =
-            await repo.getOrCreateClientPortalToken(id_user, id_customer);
-
-        const base = `${req.protocol}://${req.get("host")}`;
-        const slug = String(client_name || "")
-            .toLowerCase()
-            .trim()
-            .replace(/\s+/g, "-")
-            .replace(/[^a-z0-9\-_.]/g, "");
-
-        const url = `${base}/aprovacoes/${encodeURIComponent(slug)}?token=${encodeURIComponent(token)}`;
-
-        return ok(res, { url, token });
-    } catch (e) {
-        return bad(res, e);
-    }
+  try {
+    const idCustomer = Number(req.params.id_customer);
+    if (!idCustomer) throw new Error('id_customer inválido.');
+    const { external_token, client_name } = await repo.getOrCreateClientPortalToken(req.user.id, idCustomer, req.user.id_account);
+    const base = `${req.protocol}://${req.get('host')}`;
+    const slug = String(client_name || 'cliente')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+    return ok(res, {
+      success: true,
+      token: external_token,
+      url: `${base}/aprovacoes/${encodeURIComponent(slug || 'cliente')}?token=${encodeURIComponent(external_token)}`
+    });
+  } catch (error) {
+    console.error('kanbanController.getClientPortalLink:', error);
+    return fail(res, error);
+  }
 }
 
-// =======================
-// CARDS
-// =======================
+async function listLabels(req, res) {
+  try {
+    return ok(res, { success: true, labels: await repo.listLabels(req.user.id, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.listLabels:', error);
+    return fail(res, error);
+  }
+}
+
+async function createLabel(req, res) {
+  try {
+    return ok(res, { success: true, label: await repo.createLabel(req.user.id, req.body || {}, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.createLabel:', error);
+    return fail(res, error);
+  }
+}
+
+async function updateLabel(req, res) {
+  try {
+    return ok(res, { success: true, label: await repo.updateLabel(req.user.id, req.params.id, req.body || {}, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.updateLabel:', error);
+    return fail(res, error);
+  }
+}
+
+async function deleteLabel(req, res) {
+  try {
+    await repo.deleteLabel(req.user.id, req.params.id, req.user.id_account);
+    return res.status(204).send();
+  } catch (error) {
+    console.error('kanbanController.deleteLabel:', error);
+    return fail(res, error);
+  }
+}
+
+async function listColumns(req, res) {
+  try {
+    return ok(res, { success: true, columns: await repo.listColumns(req.user.id, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.listColumns:', error);
+    return fail(res, error);
+  }
+}
+
+async function createColumn(req, res) {
+  try {
+    return ok(res, { success: true, column: await repo.createColumn(req.user.id, req.body || {}, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.createColumn:', error);
+    return fail(res, error);
+  }
+}
+
+async function updateColumn(req, res) {
+  try {
+    return ok(res, { success: true, column: await repo.updateColumn(req.user.id, req.params.id, req.body || {}, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.updateColumn:', error);
+    return fail(res, error);
+  }
+}
+
+async function deleteColumn(req, res) {
+  try {
+    await repo.deleteColumn(req.user.id, req.params.id, req.user.id_account);
+    return res.status(204).send();
+  } catch (error) {
+    console.error('kanbanController.deleteColumn:', error);
+    return fail(res, error);
+  }
+}
+
+async function reorderColumns(req, res) {
+  try {
+    const columnIds = Array.isArray(req.body?.column_ids) ? req.body.column_ids : [];
+    await repo.reorderColumns(req.user.id, columnIds, req.user.id_account);
+    return ok(res, { success: true });
+  } catch (error) {
+    console.error('kanbanController.reorderColumns:', error);
+    return fail(res, error);
+  }
+}
+
 async function listCards(req, res) {
-    try {
-        const id_user = req.user.id;
-        const month = req.query?.month ? toMonthKey(req.query.month) : null;
-
-        const cards = month ? await repo.listCardsByMonth(id_user, month) : await repo.listCardsAll(id_user);
-
-        // front (kanbanBoard.js) espera array direto
-        // map mínimo pro formato do front (sem quebrar)
-        const out = (cards || []).map(c => ({
-            id: c.id,
-            title: c.title,
-            client_name: c.client_name || c.customer_name || c.name || null,
-            status: c.status,
-            week: typeof c.week === 'number' ? intToWeek(c.week) : (c.week || 'S2'),
-            due_date: c.due_date,
-            desc: c.description ?? c.desc ?? null,
-            briefing: c.briefing ?? null,
-            copy_text: c.copy_text ?? null,
-            tags: c.tags || [],
-            roles: c.roles || {},
-            owners: c.owners || {
-                briefing: c.owner_briefing_name || "",
-                design: c.owner_design_name || "",
-                text: c.owner_text_name || "",
-                review: c.owner_review_name || "",
-                schedule: c.owner_schedule_name || "",
-            },
-            approval_name: c.approval_name || "",
-            feedback_count: Number(c.feedback_count || 0),
-            published_at: c.published_at || null,
-            assets: c.assets || [],
-            role_runs: c.role_runs || [],
-            client_comments: c.client_comments || []
-        }));
-
-        return ok(res, out);
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function createCard(req, res) {
-    try {
-        const id_user = req.user.id;
-
-        const payload = req.body || {};
-        const card = await repo.createCardNormalized(id_user, payload);
-        return ok(res, card);
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function updateCard(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id = req.params.id;
-        const payload = req.body || {};
-
-        const card = await repo.updateCardNormalized(id_user, id, payload);
-        return ok(res, card);
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function deleteCard(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id = req.params.id;
-        await repo.deleteCard(id_user, id);
-        return res.status(204).send();
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-// action-based (kanbanBoard.js)
-async function transitionCard(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id = req.params.id;
-        const { action } = req.body || {};
-
-        const result = await repo.transitionCard(id_user, id, req.body || {});
-        return ok(res, result || { success: true });
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-// assets (stub agora: só retorna ok; você implementa S3 na próxima task)
-async function uploadCardAssets(req, res) {
-    try {
-        const id_user = req.user.id;
-        const id = req.params.id;
-
-        // req.files existe (multer)
-        const files = req.files || [];
-        const result = await repo.addCardArts(id_user, id, files);
-
-        return ok(res, { success: true });
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function uploadArts(req, res) {
-    try {
-        const id_user = req.user.id;
-        const card_id = req.params.card_id;
-        const files = req.files || [];
-
-        await repo.addCardArts(id_user, card_id, files);
-
-        // devolve lista já com presigned url
-        const arts = await repo.listCardArts(id_user, card_id);
-        return ok(res, { arts });
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function listArts(req, res) {
-    try {
-        const id_user = req.user.id;
-        const card_id = req.params.card_id;
-
-        const arts = await repo.listCardArts(id_user, card_id);
-        return ok(res, { arts });
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function deleteArt(req, res) {
-    try {
-        const id_user = req.user.id;
-        const card_id = req.params.card_id;
-        const art_id = req.params.art_id;
-
-        await repo.deleteCardArt(id_user, card_id, art_id);
-        return ok(res, { success: true });
-    } catch (e) {
-        return bad(res, e);
-    }
+  try {
+    return ok(res, { success: true, cards: await repo.listCardsAll(req.user.id, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.listCards:', error);
+    return fail(res, error);
+  }
 }
 
 async function getCardExpanded(req, res) {
-    try {
-        const id_user = req.user.id;
-        const { id } = req.params;
-        const card = await repo.getCardByIdExpanded(id_user, id);
-        return ok(res, card);
-    } catch (e) {
-        return bad(res, e);
-    }
+  try {
+    return ok(res, { success: true, card: await repo.getCardByIdExpanded(req.user.id, req.params.id, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.getCardExpanded:', error);
+    return fail(res, error);
+  }
 }
 
-
-// =======================
-// GOALS (mês)
-// =======================
-async function getGoalsByMonth(req, res) {
-    try {
-        const id_user = req.user.id;
-        const month = toMonthKey(req.query.month);
-
-        const data = await repo.getGoalsByMonthNormalized(id_user, month);
-        return ok(res, data); // kanbanBoard.js espera objeto com .clients
-    } catch (e) {
-        return bad(res, e);
-    }
+async function createCard(req, res) {
+  try {
+    return ok(res, { success: true, card: await repo.createCard(req.user.id, req.body || {}, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.createCard:', error);
+    return fail(res, error);
+  }
 }
 
-async function upsertGoalsByMonth(req, res) {
-    try {
-        const id_user = req.user.id;
-        const month = toMonthKey(req.query.month);
-
-        // kanbanBoard.js envia { clients: [...] }
-        const clients = Array.isArray(req.body?.clients) ? req.body.clients : [];
-        await repo.upsertGoalsByMonthNormalized(id_user, month, clients);
-
-        return ok(res, { success: true });
-    } catch (e) {
-        return bad(res, e);
-    }
+async function updateCard(req, res) {
+  try {
+    return ok(res, { success: true, card: await repo.updateCard(req.user.id, req.params.id, req.body || {}, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.updateCard:', error);
+    return fail(res, error);
+  }
 }
 
-// =======================
-// EXTERNAL (cliente aprovador)
-// =======================
-async function externalListCards(req, res) {
-    try {
-        const token = String(req.query?.token || '').trim();
-        const data = await repo.listExternalCards(token);
-        return ok(res, data);
-    } catch (e) {
-        return bad(res, e);
-    }
+async function deleteCard(req, res) {
+  try {
+    await repo.deleteCard(req.user.id, req.params.id, req.user.id_account);
+    return res.status(204).send();
+  } catch (error) {
+    console.error('kanbanController.deleteCard:', error);
+    return fail(res, error);
+  }
 }
 
-async function externalGetCard(req, res) {
-    try {
-        const token = String(req.query?.token || '').trim();
-        const id = req.params.id;
-        const data = await repo.externalGetCard(token, id);
-        return ok(res, data);
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function externalApproveCard(req, res) {
-    try {
-        const token = String(req.body?.token || '').trim();
-        const id = req.params.id;
-        const data = await repo.externalApprove(token, id);
-        return ok(res, data);
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function externalRequestChange(req, res) {
-    try {
-        const token = String(req.body?.token || '').trim();
-        const id = req.params.id;
-        const targets = Array.isArray(req.body?.targets) ? req.body.targets : [];
-        const comment = String(req.body?.comment || '').trim() || null;
-        const author = String(req.body?.author || '').trim() || null;
-
-        const data = await repo.externalRequestChanges(token, id, { targets, comment, author });
-        return ok(res, data);
-    } catch (e) {
-        return bad(res, e);
-    }
-}
-
-async function externalAddComment(req, res) {
-    try {
-        const token = String(req.body?.token || '').trim();
-        const id = req.params.id;
-        const text = String(req.body?.text || '').trim();
-        const target = String(req.body?.target || '').trim() || null;
-        const author = String(req.body?.author || '').trim() || null;
-
-        const data = await repo.externalAddComment(token, id, { text, target, author });
-        return ok(res, data);
-    } catch (e) {
-        return bad(res, e);
-    }
+async function moveCard(req, res) {
+  try {
+    return ok(res, { success: true, card: await repo.moveCard(req.user.id, req.params.id, req.body || {}, req.user.id_account) });
+  } catch (error) {
+    console.error('kanbanController.moveCard:', error);
+    return fail(res, error);
+  }
 }
 
 module.exports = {
-    // TEAM
-    listTeam,
-    addTeamMember,
-    deleteTeamMember,
-
-    // CLIENTS
-    listClientsWithProfile,
-    upsertClientProfileByCustomerId,
-    deleteClientProfileByCustomerId,
-    getClientPortalLink,
-
-    // CARDS
-    listCards,
-    createCard,
-    updateCard,
-    deleteCard,
-    transitionCard,
-    uploadCardAssets,
-    uploadArts,
-    deleteArt,
-    getCardExpanded,
-    listArts,
-
-    // GOALS
-    getGoalsByMonth,
-    upsertGoalsByMonth,
-
-    // EXTERNAL
-    externalListCards,
-    externalGetCard,
-    externalApproveCard,
-    externalRequestChange,
-    externalAddComment,
+  getBoardData,
+  listTeam,
+  listClientsWithProfile,
+  upsertClientProfileByCustomerId,
+  deleteClientProfileByCustomerId,
+  getClientPortalLink,
+  listLabels,
+  createLabel,
+  updateLabel,
+  deleteLabel,
+  listColumns,
+  createColumn,
+  updateColumn,
+  deleteColumn,
+  reorderColumns,
+  listCards,
+  getCardExpanded,
+  createCard,
+  updateCard,
+  deleteCard,
+  moveCard
 };
