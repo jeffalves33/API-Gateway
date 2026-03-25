@@ -8,7 +8,7 @@ const goals = require('../controllers/goalsController');
 
 router.get('/', authenticateToken, goals.list);
 router.get('/:id_goal', authenticateToken, goals.get);
-router.post('/', authenticateToken, goals.create);
+router.post('/', authenticateToken, requirePermission('analyses:run'), goals.create);
 router.put('/:id_goal', authenticateToken, goals.update);
 router.delete('/:id_goal', authenticateToken, goals.remove);
 

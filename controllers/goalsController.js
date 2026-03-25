@@ -11,6 +11,16 @@ function isValidKpis(kpis) {
     return Array.isArray(kpis) && kpis.length > 0 && kpis.every(k => k.kpi && k.label);
 }
 
+function normalizeGoalPlatform(platform) {
+    const p = String(platform || '').trim().toLowerCase();
+
+    if (p === 'ga4' || p === 'googleanalytics' || p === 'google_analytics') {
+        return 'google_analytics';
+    }
+
+    return p;
+}
+
 // =============================
 // CRUD
 // =============================
@@ -138,9 +148,7 @@ exports.suggestions = async (req, res) => {
         const id_user = req.user.id;
         const { id_customer, platform_name, context = null } = req.body;
 
-        if (!id_customer || !platform_name) {
-            return res.status(400).json({ success: false, message: 'id_customer e platform_name são obrigatórios' });
-        }
+        if (!id_customer || !platform_name) return res.status(400).json({ success: false, message: 'id_customer e platform_name são obrigatórios' });
 
         const belongs = await checkCustomerBelongsToUser(Number(id_customer), id_user);
         if (!belongs) return res.status(403).json({ success: false, message: 'Cliente não pertence ao usuário.' });
@@ -181,11 +189,16 @@ exports.generateAnalysis = async (req, res) => {
         const id_goal = Number(req.params.id_goal);
 
         const goal = await goalsRepo.getGoalById({ id_user, id_goal });
-        if (!goal) return res.status(404).json({ success: false, message: 'Meta não encontrada' });
+        if (!goal) {
+            return res.status(404).json({ success: false, message: 'Meta não encontrada' });
+        }
 
-        // trava: só depois do período
-        const today = new Date(); today.setHours(0, 0, 0, 0);
-        const end = new Date(`${goal.data_fim}T00:00:00`); end.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const end = new Date(`${goal.data_fim}T00:00:00`);
+        end.setHours(0, 0, 0, 0);
+
         if (today <= end) {
             const br = end.toLocaleDateString('pt-BR');
             return res.status(400).json({
@@ -194,26 +207,47 @@ exports.generateAnalysis = async (req, res) => {
             });
         }
 
+        const normalizedPlatform = normalizeGoalPlatform(goal.platform_name);
+        const analysisQuery = [
+            `Avalie o encerramento da meta "${goal.title}".`,
+            `Use os dados reais do período de ${goal.data_inicio} até ${goal.data_fim}.`,
+            `Cruze os números com a meta definida e conclua se houve atingimento total, parcial ou não atingimento.`,
+            `Quero uma análise densa em informação, mas concisa, com no máximo 3000 caracteres.`,
+            `Evite introduções longas, repetições, excesso de contexto e parágrafos desnecessários.`,
+            `Priorize descrição objetiva dos dados, interpretação estratégica e recomendações práticas curtas.`,
+            `Não fale nada de banco de dados, arquitetura, sistema... o cliente só precisa saber dos dados e informações dele.`
+        ].join(' ');
+
         const pyRes = await fetch(`https://analyze-backend-5jyg.onrender.com/goals/generate-analysis`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                agency_id: id_user,
+                agency_id: Number(id_user),
                 client_id: Number(goal.id_customer),
                 goal_id: Number(goal.id_goal),
-                platform_name: goal.platform_name,
+
+                platform_name: normalizedPlatform,
+                platforms: [normalizedPlatform],
+
                 title: goal.title,
                 descricao: goal.descricao,
                 data_inicio: goal.data_inicio,
                 data_fim: goal.data_fim,
                 kpis: Array.isArray(goal.kpis) ? goal.kpis : [],
+
+                analysis_type: 'descriptive',
+                analysis_query: analysisQuery,
+
                 metrics_summary: null
             })
         });
 
         const pyData = await pyRes.json();
         if (!pyRes.ok || !pyData.success) {
-            return res.status(500).json({ success: false, message: pyData.detail || 'Falha ao gerar análise (modelo).' });
+            return res.status(500).json({
+                success: false,
+                message: pyData.detail || pyData.message || 'Falha ao gerar análise (modelo).'
+            });
         }
 
         const updated = await goalsRepo.updateGoal({

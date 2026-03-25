@@ -461,6 +461,47 @@ async function generateAnalysis(id_goal, btnEl) {
   }
 }
 
+function formatAnalysisText(text) {
+  if (!text) return '<div class="text-muted">Sem análise ainda.</div>';
+
+  let html = escapeHtml(text);
+
+  // negrito estilo markdown: **texto**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // títulos numerados no início da linha: 1) Resumo executivo
+  html = html.replace(
+    /(^|\n)(\d+\)\s+([^\n]+))/g,
+    '$1<h6 class="analysis-section-title">$2</h6>'
+  );
+
+  // linhas iniciadas com "- "
+  html = html.replace(/(^|\n)-\s+([^\n]+)/g, '$1<li>$2</li>');
+
+  // agrupa li seguidos em ul
+  html = html.replace(/(?:<li>.*?<\/li>\s*)+/gs, (match) => `<ul class="analysis-list">${match}</ul>`);
+
+  // parágrafos: quebra dupla vira bloco
+  const blocks = html
+    .split(/\n\s*\n/)
+    .map(block => block.trim())
+    .filter(Boolean)
+    .map(block => {
+      if (
+        block.startsWith('<h6') ||
+        block.startsWith('<ul') ||
+        block.startsWith('<div')
+      ) {
+        return block;
+      }
+
+      // sobrou texto simples dentro do bloco
+      return `<p class="analysis-paragraph">${block.replace(/\n/g, '<br>')}</p>`;
+    });
+
+  return blocks.join('');
+}
+
 async function viewAnalysis(id_goal) {
   const res = await fetch(`/api/goals/${id_goal}`, { method: 'GET' });
   const data = await res.json();
@@ -470,7 +511,7 @@ async function viewAnalysis(id_goal) {
   const goal = data.goal;
 
   document.getElementById('analysisModalTitle').textContent = `Análise — ${goal.title}`;
-  document.getElementById('analysisModalText').textContent = goal.analysis_text || 'Sem análise ainda.';
+  document.getElementById('analysisModalText').innerHTML = formatAnalysisText(goal.analysis_text);
 
   new bootstrap.Modal(document.getElementById('modalViewAnalysis')).show();
 }

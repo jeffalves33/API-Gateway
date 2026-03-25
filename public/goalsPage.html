@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
-<html lang="en" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default"
-    data-assets-path="/assets/" data-template="vertical-menu-template-free">
+<html lang="en" class="light-style layout-menu-fixed layout-compact layout-menu-collapsed" dir="ltr"
+    data-theme="theme-default" data-assets-path="/assets/" data-template="vertical-menu-template-free">
 
 <head>
     <meta charset="utf-8" />
@@ -35,7 +35,8 @@
     <!-- Core CSS -->
     <link rel="stylesheet" href="/assets/vendor/css/core.css" class="template-customizer-core-css" />
     <link rel="stylesheet" href="/assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
-<link rel="stylesheet" href="/assets/vendor/css/hoko-design-system.css" class="template-customizer-design-system-css" />
+    <link rel="stylesheet" href="/assets/vendor/css/hoko-design-system.css"
+        class="template-customizer-design-system-css" />
     <link rel="stylesheet" href="/assets/css/demo.css" />
 
     <!-- Vendors CSS -->
@@ -47,6 +48,30 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="/assets/js/config.js"></script>
+    <!-- manter layout correto quando menu estiver colapsado -->
+    <style>
+        /* ho.ko fix — manter layout correto quando menu estiver colapsado */
+        @media (min-width: 1200px) {
+
+            /* Quando estiver colapsado, a página precisa continuar “respeitando” 5.25rem */
+            html.layout-menu-fixed.layout-menu-collapsed .layout-page,
+            html.layout-menu-fixed-offcanvas.layout-menu-collapsed .layout-page {
+                padding-left: 5.25rem;
+            }
+
+            /* Navbar fixa também precisa acompanhar */
+            html.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar,
+            html.layout-menu-fixed.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar,
+            html.layout-menu-fixed-offcanvas.layout-navbar-fixed.layout-menu-collapsed .layout-content-navbar:not(.layout-without-menu) .layout-navbar {
+                left: 5.25rem;
+            }
+
+            /* Footer fixo também */
+            html.layout-footer-fixed.layout-menu-collapsed .layout-wrapper:not(.layout-without-menu) .content-footer {
+                left: 5.25rem;
+            }
+        }
+    </style>
 
     <style>
         .goal-card-kpis td,
@@ -75,7 +100,6 @@
         }
     </style>
 
-
 </head>
 
 <body>
@@ -90,11 +114,9 @@
                         <div class="avatar">
                             <img src="/assets/img/favicon/Logo1.png" alt class="w-px-40 h-auto" />
                         </div>
-                        <span class="app-brand-text demo menu-text fw-bold ms-2">ho.ko AI.nalytics</span>
                     </a>
 
-                    <a href="javascript:void(0);"
-                        class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
                         <i class="bx bx-chevron-left bx-sm align-middle"></i>
                     </a>
                 </div>
@@ -121,17 +143,24 @@
                         </a>
                     </li>
 
-                    <li class="menu-item" id="menu-chat">
-                        <a href="/chatPage.html" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-chat"></i>
-                            <div data-i18n="Chat">Chat</div>
-                        </a>
-                    </li>
+                    <!--<li class="menu-item" id="menu-chat">
+            <a href="/chatPage.html" class="menu-link">
+              <i class="menu-icon tf-icons bx bx-chat"></i>
+              <div data-i18n="Chat">Chat</div>
+            </a>
+          </li>-->
 
-                    <li class="menu-item active" id="menu-food-model">
+                    <li class="menu-item" id="menu-food-model">
                         <a href="/foodModelPage.html" class="menu-link">
                             <i class="menu-icon tf-icons bi bi-menu-up"></i>
                             <div data-i18n="Chat">Alimentar modelo</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item active">
+                        <a href="/goalsPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-bullseye"></i>
+                            <div data-i18n="Chat">Metas</div>
                         </a>
                     </li>
 
@@ -139,39 +168,37 @@
                         <span class="menu-header-text">Plataformas & Clientes</span>
                     </li>
 
-                    <li class="menu-item">
-                        <a href="/platformsPage.html" class="menu-link">
-                            <i class="menu-icon tf-icons bi bi-link-45deg"></i>
-                            <div data-i18n="Chat">Plataformas</div>
+                    <li class="menu-item" id="menu-my-customers">
+                        <a href="myCustomersPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-people"></i>
+                            <div data-i18n="Without menu">Meus Clientes</div>
                         </a>
                     </li>
 
-                    <!-- Layouts -->
-                    <li class="menu-item" id="menu-settings">
-                        <a href="javascript:void(0);" class="menu-link menu-toggle">
-                            <i class="menu-icon tf-icons bi bi-people"></i>
-                            <div data-i18n="Chat">Clientes</div>
+                    <li class="menu-item" id="menu-team">
+                        <a href="/teamPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-group"></i>
+                            <div>Equipe</div>
                         </a>
+                    </li>
 
-                        <ul class="menu-sub">
-                            <li class="menu-item" id="menu-my-customers">
-                                <a href="myCustomersPage.html" class="menu-link">
-                                    <div data-i18n="Without menu">Meus Clientes</div>
-                                </a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="customersPage.html" class="menu-link">
-                                    <div data-i18n="Without navbar">Adicionar Clientes</div>
-                                </a>
-                            </li>
-                        </ul>
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">Equipe</span>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="/kanbanPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-grid"></i>
+                            <div data-i18n="Kanban">Kanban</div>
+                            <!--<div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>-->
+                        </a>
                     </li>
 
                     <li class="menu-header small text-uppercase">
                         <span class="menu-header-text">Outros</span>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="menu-settings">
                         <a href="javascript:void(0);" class="menu-link menu-toggle">
                             <i class="menu-icon tf-icons bi bi-gear"></i>
                             <div data-i18n="Chat">Configurações</div>
@@ -184,10 +211,10 @@
                                 </a>
                             </li>
                             <!--<li class="menu-item">
-                                <a href="/notificationsPage.html" class="menu-link">
-                                    <div data-i18n="Without navbar">Notificações</div>
-                                </a>
-                            </li>-->
+                <a href="/notificationsPage.html" class="menu-link">
+                  <div data-i18n="Without navbar">Notificações</div>
+                </a>
+              </li>-->
                         </ul>
                     </li>
 
@@ -625,17 +652,17 @@
     <!-- Jeferson: Check pagamentos -->
     <script src="/assets/js/checkPayments.js"></script>
 
-<script src="/assets/js/rbacClient.js"></script>
-<script>
-  RBAC.applyMenuPermissions({
-    'page:food_model:view': '#menu-food-model',
-    'page:settings:view': '#menu-settings'
-  });
-  RBAC.applyMenuPermissions({
-    'page:settings:view': '#menu-settings-account'
-  });
-  RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
-</script>
+    <script src="/assets/js/rbacClient.js"></script>
+    <script>
+        RBAC.applyMenuPermissions({
+            'page:food_model:view': '#menu-food-model',
+            'page:settings:view': '#menu-settings'
+        });
+        RBAC.applyMenuPermissions({
+            'page:settings:view': '#menu-settings-account'
+        });
+        RBAC.fillUserUI({ name: '#user-name', role: '#user-role' });
+    </script>
 </body>
 
 </html>
