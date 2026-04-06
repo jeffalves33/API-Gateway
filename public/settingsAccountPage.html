@@ -131,12 +131,12 @@
                         </a>
                     </li>
 
-<li class="menu-item">
-            <a href="/goalsPage.html" class="menu-link">
-              <i class="menu-icon tf-icons bi bi-bullseye"></i>
-              <div data-i18n="Chat">Metas</div>
-            </a>
-          </li>
+                    <li class="menu-item">
+                        <a href="/goalsPage.html" class="menu-link">
+                            <i class="menu-icon tf-icons bi bi-bullseye"></i>
+                            <div data-i18n="Chat">Metas</div>
+                        </a>
+                    </li>
 
                     <li class="menu-header small text-uppercase">
                         <span class="menu-header-text">Plataformas & Clientes</span>
@@ -526,16 +526,20 @@
                         return;
                     }
 
-                    const badge = ['active', 'trialing'].includes(s.subscription_status)
+                    const now = new Date();
+                    const ativo = s &&
+                        ['active', 'trialing'].includes(s.subscription_status) &&
+                        (!s.current_period_end || new Date(s.current_period_end) >= now);
+
+                    const badge = ativo
                         ? '<span class="badge bg-success">Ativa</span>'
-                        : `<span class="badge bg-warning text-dark">${s.subscription_status}</span>`;
+                        : '<span class="badge bg-danger">Inativa</span>';
 
                     const vigencia = `· Vigência.: ${fmt(s.current_period_start)} → ${fmt(s.current_period_end)} · Trial até: ${fmt(s.trial_end)}`;
 
                     elStatus.innerHTML = `${badge} <small class="ms-2">Plano: ${s.plan_code || 'nenhum plano'} ${s.current_period_start ? vigencia : ''}</small>`;
 
-                    // portal só habilita se tiver assinatura/trial
-                    portalBtn.disabled = !['active', 'trialing'].includes(s.subscription_status);
+                    portalBtn.disabled = !ativo;
                     portalBtn.title = portalBtn.disabled ? 'Disponível após iniciar o trial/assinatura' : '';
                 } catch (e) {
                     elStatus.textContent = 'Não foi possível carregar sua assinatura.';

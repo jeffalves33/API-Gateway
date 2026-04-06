@@ -48,8 +48,23 @@ async function handleStripeWebhook(req, res) {
                     }
 
                     const planCode = sub.metadata?.plan_code || session.metadata?.plan_code || null;
-                    const periodStart = sub.current_period_start ?? sub.trial_start ?? sub.start_date ?? null;
-                    const periodEnd = sub.current_period_end ?? sub.trial_end ?? sub.billing_cycle_anchor ?? null;
+
+                    const baseItem =
+                        items.find(i => i.price?.id !== EXTRA_PRICE_ID) ||
+                        items[0] ||
+                        null;
+
+                    const periodStart =
+                        baseItem?.current_period_start ??
+                        sub.trial_start ??
+                        sub.start_date ??
+                        null;
+
+                    const periodEnd =
+                        baseItem?.current_period_end ??
+                        sub.trial_end ??
+                        sub.billing_cycle_anchor ??
+                        null;
                     let userId = sub.metadata?.app_user_id || session.metadata?.app_user_id || null;
 
                     if (!userId) {
@@ -106,40 +121,99 @@ async function handleStripeWebhook(req, res) {
 
                     basePriceId = baseItem?.price?.id || null;
                     extraItemId = extraItem?.id || null;
-                } else basePriceId = items[0]?.price?.id || null;
 
+                    const periodStart =
+                        baseItem?.current_period_start ??
+                        sub.trial_start ??
+                        sub.start_date ??
+                        null;
 
-                const periodStart = sub.current_period_start ?? sub.trial_start ?? sub.start_date ?? null;
-                const periodEnd = sub.current_period_end ?? sub.trial_end ?? sub.billing_cycle_anchor ?? null;
-                const q = await pool.query('SELECT id_user FROM "user" WHERE stripe_customer_id = $1', [sub.customer]);
+                    const periodEnd =
+                        baseItem?.current_period_end ??
+                        sub.trial_end ??
+                        sub.billing_cycle_anchor ??
+                        null;
 
-                if (q.rows[0]) {
-                    await pool.query(`
-                        UPDATE "user"
-                            SET stripe_subscription_id = $1,
-                                subscription_status    = $2,
-                                stripe_price_id        = $3,
-                                stripe_extra_item_id   = COALESCE($4, stripe_extra_item_id),
-                                current_period_start   = COALESCE(to_timestamp($5::double precision), current_period_start),
-                                current_period_end     = COALESCE(to_timestamp($6::double precision), current_period_end),
-                                trial_start            = COALESCE(to_timestamp($7::double precision), trial_start),
-                                trial_end              = COALESCE(to_timestamp($8::double precision), trial_end),
-                                cancel_at              = COALESCE(to_timestamp($9::double precision), cancel_at),
-                                cancel_at_period_end   = $10
-                        WHERE id_user = $11
-                    `, [
-                        sub.id,
-                        sub.status || null,
-                        basePriceId,
-                        extraItemId,
-                        periodStart,
-                        periodEnd,
-                        sub.trial_start ?? null,
-                        sub.trial_end ?? null,
-                        sub.cancel_at ?? null,
-                        sub.cancel_at_period_end ?? false,
-                        q.rows[0].id_user
-                    ]);
+                    const q = await pool.query(
+                        'SELECT id_user FROM "user" WHERE stripe_customer_id = $1',
+                        [sub.customer]
+                    );
+
+                    if (q.rows[0]) {
+                        await pool.query(`
+                            UPDATE "user"
+                                SET stripe_subscription_id = $1,
+                                    subscription_status    = $2,
+                                    stripe_price_id        = $3,
+                                    stripe_extra_item_id   = COALESCE($4, stripe_extra_item_id),
+                                    current_period_start   = COALESCE(to_timestamp($5::double precision), current_period_start),
+                                    current_period_end     = COALESCE(to_timestamp($6::double precision), current_period_end),
+                                    trial_start            = COALESCE(to_timestamp($7::double precision), trial_start),
+                                    trial_end              = COALESCE(to_timestamp($8::double precision), trial_end),
+                                    cancel_at              = COALESCE(to_timestamp($9::double precision), cancel_at),
+                                    cancel_at_period_end   = $10
+                                WHERE id_user = $11
+                            `, [
+                            sub.id,
+                            sub.status || null,
+                            basePriceId,
+                            extraItemId,
+                            periodStart,
+                            periodEnd,
+                            sub.trial_start ?? null,
+                            sub.trial_end ?? null,
+                            sub.cancel_at ?? null,
+                            sub.cancel_at_period_end ?? false,
+                            q.rows[0].id_user
+                        ]);
+                    }
+                } else {
+                    const baseItem = items[0] || null;
+                    basePriceId = baseItem?.price?.id || null;
+
+                    const periodStart =
+                        baseItem?.current_period_start ??
+                        sub.trial_start ??
+                        sub.start_date ??
+                        null;
+
+                    const periodEnd =
+                        baseItem?.current_period_end ??
+                        sub.trial_end ??
+                        sub.billing_cycle_anchor ??
+                        null;
+
+                    const q = await pool.query(
+                        'SELECT id_user FROM "user" WHERE stripe_customer_id = $1',
+                        [sub.customer]
+                    );
+
+                    if (q.rows[0]) {
+                        await pool.query(`
+                                UPDATE "user"
+                                SET stripe_subscription_id = $1,
+                                    subscription_status    = $2,
+                                    stripe_price_id        = $3,
+                                    current_period_start   = COALESCE(to_timestamp($4::double precision), current_period_start),
+                                    current_period_end     = COALESCE(to_timestamp($5::double precision), current_period_end),
+                                    trial_start            = COALESCE(to_timestamp($6::double precision), trial_start),
+                                    trial_end              = COALESCE(to_timestamp($7::double precision), trial_end),
+                                    cancel_at              = COALESCE(to_timestamp($8::double precision), cancel_at),
+                                    cancel_at_period_end   = $9
+                                WHERE id_user = $10
+                            `, [
+                            sub.id,
+                            sub.status || null,
+                            basePriceId,
+                            periodStart,
+                            periodEnd,
+                            sub.trial_start ?? null,
+                            sub.trial_end ?? null,
+                            sub.cancel_at ?? null,
+                            sub.cancel_at_period_end ?? false,
+                            q.rows[0].id_user
+                        ]);
+                    }
                 }
                 break;
             }
