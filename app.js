@@ -1,4 +1,5 @@
 // Arquivo: app.js
+const cors = require('cors');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -28,6 +29,30 @@ const { requirePagePermission } = require('./middleware/rbacMiddleware');
 const landingDir = path.join(__dirname, 'public', 'institutional', 'out');
 
 const app = express();
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://front-end-r0ap.onrender.com',
+  'https://www.hokoainalytics.com.br',
+  'https://hokoainalytics.com.br'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permite requests sem Origin (Postman, server-to-server, etc.)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin não permitida: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), handleStripeWebhook); // <-- RAW! :contentReference[oaicite:20]{index=20}
 const port = process.env.PORT || 3000;
 

@@ -9,6 +9,23 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+function getJwtCookieOptions(req) {
+  const origin = req.headers.origin;
+
+  const crossSiteOrigins = [
+    'https://front-end-r0ap.onrender.com'
+  ];
+
+  const isCrossSite = crossSiteOrigins.includes(origin);
+
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: isCrossSite ? 'none' : 'lax',
+    maxAge: 3600000
+  };
+}
+
 // Função para registrar um novo usuário
 const registerUser = async (req, res) => {
   const client = await pool.connect();
@@ -340,11 +357,7 @@ const loginUser = async (req, res) => {
     );
 
     // Configurar o cookie
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      maxAge: 3600000, // 1 hora em milissegundos
-      // Em produção, adicione: secure: true (para HTTPS apenas)
-    });
+    res.cookie('jwt', token, getJwtCookieOptions(req));
 
     res.status(200).json({
       success: true,
@@ -485,7 +498,12 @@ const logoutUser = (req, res) => {
   const id_user = req.user?.id;
   if (id_user) clearCacheForUser(id_user);
 
-  res.clearCookie('jwt');
+  const cookieOptions = getJwtCookieOptions(req);
+  res.clearCookie('jwt', {
+    httpOnly: cookieOptions.httpOnly,
+    secure: cookieOptions.secure,
+    sameSite: cookieOptions.sameSite
+  });
   res.status(200).json({ success: true, message: 'Logout realizado com sucesso' });
 };
 
@@ -700,7 +718,12 @@ const deleteUserAccount = async (req, res) => {
     clearCacheForUser(userId);
 
     // Limpar cookie
-    res.clearCookie('jwt');
+    const cookieOptions = getJwtCookieOptions(req);
+    res.clearCookie('jwt', {
+      httpOnly: cookieOptions.httpOnly,
+      secure: cookieOptions.secure,
+      sameSite: cookieOptions.sameSite
+    });
 
     res.status(200).json({
       success: true,
@@ -904,12 +927,7 @@ const acceptInvite = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.cookie('jwt', jwtToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3600000
-    });
+    res.cookie('jwt', jwtToken, getJwtCookieOptions(req));
 
     return res.json({
       success: true,

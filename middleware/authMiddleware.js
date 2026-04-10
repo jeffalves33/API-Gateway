@@ -2,6 +2,22 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+function getJwtClearCookieOptions(req) {
+  const origin = req.headers.origin;
+
+  const crossSiteOrigins = [
+    'https://front-end-r0ap.onrender.com'
+  ];
+
+  const isCrossSite = crossSiteOrigins.includes(origin);
+
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: isCrossSite ? 'none' : 'lax'
+  };
+}
+
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.jwt;
 
@@ -14,7 +30,7 @@ const authenticateToken = (req, res, next) => {
     req.user = verified;
     next();
   } catch (error) {
-    res.clearCookie('jwt');
+    res.clearCookie('jwt', getJwtClearCookieOptions(req));
     res.status(400).json({ success: false, message: 'Token inválido ou expirado' });
   }
 };
@@ -31,7 +47,7 @@ const authenticatePageAccess = (req, res, next) => {
     req.user = verified;
     next();
   } catch (error) {
-    res.clearCookie('jwt');
+    res.clearCookie('jwt', getJwtClearCookieOptions(req));
     res.redirect('/login.html');
   }
 };
@@ -46,7 +62,7 @@ const checkAuthStatus = (req, res, next) => {
       req.isLoggedIn = true;
     } catch (error) {
       // Token inválido, limpar cookie
-      res.clearCookie('jwt');
+      res.clearCookie('jwt', getJwtClearCookieOptions(req));
       req.user = null;
       req.isLoggedIn = false;
     }
