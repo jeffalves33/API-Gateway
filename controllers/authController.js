@@ -10,18 +10,10 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 function getJwtCookieOptions(req) {
-  const origin = req.headers.origin;
-
-  const crossSiteOrigins = [
-    'https://front-end-r0ap.onrender.com'
-  ];
-
-  const isCrossSite = crossSiteOrigins.includes(origin);
-
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: isCrossSite ? 'none' : 'lax',
+    sameSite: 'lax',
     maxAge: 3600000
   };
 }
