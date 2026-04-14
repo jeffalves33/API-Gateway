@@ -323,172 +323,302 @@
                     <h4 class="py-2">
                         Alimentar Modelo
                     </h4>
-                    <div id="feedback-message" class="alert" style="display: none; margin-top: 10px;"></div>
-                    <div class="row">
-                        <div class="col-xxl">
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <form id="upload-document-form" enctype="multipart/form-data">
-                                        <!-- Escopo -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="document-scope">Escopo</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-layer"></i></span>
-                                                    <select class="form-control" id="document-scope" required>
-                                                        <option value="">Selecione o escopo</option>
-                                                        <option value="client" selected>Cliente</option>
-                                                        <!--<option value="agency">Agência</option>
-                                                        <option value="global">Global</option>-->
-                                                    </select>
-                                                </div>
-                                                <div class="form-text">Se o documento é sobre sua agência ou seu
-                                                    cliente.</div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Tipo de Documento -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="doc-type">Tipo de
-                                                Documento</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-file"></i></span>
-                                                    <select class="form-control" id="doc-type" required>
-                                                        <option value="">Selecione o escopo</option>
-                                                        <option value="identidade">Identidade e posicionamento</option>
-                                                        <option value="estrategia">Estratégia e planejamento</option>
-                                                        <option value="comunicacao">Comunicação e marca</option>
-                                                        <option value="performance">Performance e dados</option>
-                                                        <option value="produtos">Produtos e serviços</option>
-                                                        <option value="vendas">Vendas e crescimento</option>
-                                                        <option value="operacao">Operação e tecnologia</option>
-                                                        <option value="suporte">Suporte e documentação</option>
-                                                        <option value="cases">Cases e referências</option>
-                                                    </select>
-                                                </div>
-                                                <div id="doc-type-categorization" class="form-text"></div>
-                                            </div>
-                                        </div>
+                    <!-- Tabs de navegação -->
+                    <ul class="nav nav-tabs mb-3" id="foodModelTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-upload-btn" data-bs-toggle="tab"
+                                data-bs-target="#tab-upload" type="button" role="tab" aria-controls="tab-upload"
+                                aria-selected="true">
+                                <i class="bx bx-upload me-2"></i>Enviar Documento
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-documents-btn" data-bs-toggle="tab"
+                                data-bs-target="#tab-documents" type="button" role="tab"
+                                aria-controls="tab-documents" aria-selected="false">
+                                <i class="bi bi-database me-2"></i>Gerenciar Documentos
+                            </button>
+                        </li>
+                    </ul>
 
-                                        <!-- Nível de Confidencialidade -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label"
-                                                for="confidentiality">Confidencialidade</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-shield"></i></span>
-                                                    <select class="form-control" id="confidentiality" required>
-                                                        <option value="">Selecione o nível</option>
-                                                        <option value="baixa">Baixa</option>
-                                                        <option value="media">Média</option>
-                                                        <option value="alta">Alta</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
+                    <div class="tab-content" id="foodModelTabContent">
 
-                                        <!-- Autor -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="document-author">Autor</label>
-                                            <div class="col-sm-6">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i
-                                                            class="bx bx-user-circle"></i></span>
-                                                    <input type="text" class="form-control" id="document-author"
-                                                        placeholder="Fulano Silva" />
+                        <!-- ABA 1: ENVIAR DOCUMENTO -->
+                        <div class="tab-pane fade show active" id="tab-upload" role="tabpanel"
+                            aria-labelledby="tab-upload-btn">
+                            <div id="feedback-message" class="alert" style="display: none; margin-top: 10px;"></div>
+                            <div class="row">
+                                <div class="col-xxl">
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <form id="upload-document-form" enctype="multipart/form-data">
+                                                <!-- Escopo -->
+                                                <div class="row mb-3">
+                                                    <label class="col-sm-2 col-form-label"
+                                                        for="document-scope">Escopo</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="bx bx-layer"></i></span>
+                                                            <select class="form-control" id="document-scope" required>
+                                                                <option value="">Selecione o escopo</option>
+                                                                <option value="client" selected>Cliente</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-text">Se o documento é sobre sua agência ou
+                                                            seu cliente.</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-sm-4">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i
-                                                            class="bi bi-buildings"></i></span>
-                                                    <select class="form-control" id="document-setor" required>
-                                                        <option value="">Selecione o setor</option>
-                                                        <option value="administrativo">Administrativo</option>
-                                                        <option value="financeiro">Financeiro</option>
-                                                        <option value="rh">Recursos Humanos</option>
-                                                        <option value="vendas">Vendas</option>
-                                                        <option value="ti">TI</option>
-                                                        <option value="marketing">Marketing</option>
-                                                        <option value="logistica">Logística</option>
-                                                        <option value="juridico">Jurídico</option>
-                                                        <option value="operacoes">Operações</option>
-                                                    </select>
+
+                                                <!-- Tipo de Documento -->
+                                                <div class="row mb-3">
+                                                    <label class="col-sm-2 col-form-label" for="doc-type">Tipo de
+                                                        Documento</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="bx bx-file"></i></span>
+                                                            <select class="form-control" id="doc-type" required>
+                                                                <option value="">Selecione o escopo</option>
+                                                                <option value="identidade">Identidade e
+                                                                    posicionamento</option>
+                                                                <option value="estrategia">Estratégia e
+                                                                    planejamento</option>
+                                                                <option value="comunicacao">Comunicação e marca</option>
+                                                                <option value="performance">Performance e dados</option>
+                                                                <option value="produtos">Produtos e serviços</option>
+                                                                <option value="vendas">Vendas e crescimento</option>
+                                                                <option value="operacao">Operação e tecnologia</option>
+                                                                <option value="suporte">Suporte e documentação</option>
+                                                                <option value="cases">Cases e referências</option>
+                                                            </select>
+                                                        </div>
+                                                        <div id="doc-type-categorization" class="form-text"></div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Tags -->
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="document-tags">Tags</label>
-                                            <div class="col-sm-10">
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="bx bx-tag"></i></span>
-                                                    <input type="text" class="form-control" id="document-tags"
-                                                        placeholder="financeiro, relatorio, ROI (separadas por vírgula)" />
+                                                <!-- Nível de Confidencialidade -->
+                                                <div class="row mb-3">
+                                                    <label class="col-sm-2 col-form-label"
+                                                        for="confidentiality">Confidencialidade</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="bx bx-shield"></i></span>
+                                                            <select class="form-control" id="confidentiality" required>
+                                                                <option value="">Selecione o nível</option>
+                                                                <option value="baixa">Baixa</option>
+                                                                <option value="media">Média</option>
+                                                                <option value="alta">Alta</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="form-text">Separe as tags com vírgulas e insira pelo menos
-                                                    5.</div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Upload de Arquivo -->
-                                        <div class="row mb-3">
-                                            <h5 class="card-header">Upload do Documento</h5>
+                                                <!-- Autor -->
+                                                <div class="row mb-3">
+                                                    <label class="col-sm-2 col-form-label"
+                                                        for="document-author">Autor</label>
+                                                    <div class="col-sm-6">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="bx bx-user-circle"></i></span>
+                                                            <input type="text" class="form-control"
+                                                                id="document-author" placeholder="Fulano Silva" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-4">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="bi bi-buildings"></i></span>
+                                                            <select class="form-control" id="document-setor" required>
+                                                                <option value="">Selecione o setor</option>
+                                                                <option value="administrativo">Administrativo</option>
+                                                                <option value="financeiro">Financeiro</option>
+                                                                <option value="rh">Recursos Humanos</option>
+                                                                <option value="vendas">Vendas</option>
+                                                                <option value="ti">TI</option>
+                                                                <option value="marketing">Marketing</option>
+                                                                <option value="logistica">Logística</option>
+                                                                <option value="juridico">Jurídico</option>
+                                                                <option value="operacoes">Operações</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                            <!-- Tipo de Upload -->
-                                            <div class="col-12 pt-3">
-                                                <label class="form-label">Tipo de Upload</label>
+                                                <!-- Tags -->
+                                                <div class="row mb-3">
+                                                    <label class="col-sm-2 col-form-label"
+                                                        for="document-tags">Tags</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="bx bx-tag"></i></span>
+                                                            <input type="text" class="form-control" id="document-tags"
+                                                                placeholder="financeiro, relatorio, ROI (separadas por vírgula)" />
+                                                        </div>
+                                                        <div class="form-text">Separe as tags com vírgulas e insira
+                                                            pelo menos 5.</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Upload de Arquivo -->
+                                                <div class="row mb-3">
+                                                    <h5 class="card-header">Upload do Documento</h5>
+
+                                                    <div class="col-12 pt-3">
+                                                        <label class="form-label">Tipo de Upload</label>
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio"
+                                                                        name="upload-type" id="upload-text"
+                                                                        value="text" checked>
+                                                                    <label class="form-check-label"
+                                                                        for="upload-text">
+                                                                        <i class="bx bx-text me-2"></i>Texto
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio"
+                                                                        name="upload-type" id="upload-pdf"
+                                                                        value="pdf">
+                                                                    <label class="form-check-label" for="upload-pdf">
+                                                                        <i class="bx bx-file-blank me-2"></i>Arquivo
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12 pt-3" id="text-upload-area">
+                                                        <label class="form-label" for="document-text">Conteúdo do
+                                                            Documento</label>
+                                                        <textarea class="form-control" id="document-text" rows="8"
+                                                            placeholder="Cole ou digite o conteúdo do documento aqui..."></textarea>
+                                                    </div>
+
+                                                    <div class="col-12 pt-3" id="file-upload-area"
+                                                        style="display: none;">
+                                                        <label class="form-label" for="document-file">Selecionar
+                                                            Arquivo</label>
+                                                        <input type="file" class="form-control" id="document-file"
+                                                            accept=".pdf,.txt,.csv">
+                                                        <div class="form-text">Formatos aceitos: PDF, TXT, CSV</div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio"
-                                                                name="upload-type" id="upload-text" value="text"
-                                                                checked>
-                                                            <label class="form-check-label" for="upload-text">
-                                                                <i class="bx bx-text me-2"></i>Texto
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio"
-                                                                name="upload-type" id="upload-pdf" value="pdf">
-                                                            <label class="form-check-label" for="upload-pdf">
-                                                                <i class="bx bx-file-blank me-2"></i>Arquivo
-                                                            </label>
-                                                        </div>
+                                                    <div class="col-sm-12">
+                                                        <button type="submit" class="btn btn-primary">
+                                                            <i class="bx bx-upload me-2"></i>Enviar Documento
+                                                        </button>
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            <!-- Área de Texto -->
-                                            <div class="col-12 pt-3" id="text-upload-area">
-                                                <label class="form-label" for="document-text">Conteúdo do
-                                                    Documento</label>
-                                                <textarea class="form-control" id="document-text" rows="8"
-                                                    placeholder="Cole ou digite o conteúdo do documento aqui..."></textarea>
-                                            </div>
-
-                                            <div class="col-12 pt-3" id="file-upload-area" style="display: none;">
-                                                <label class="form-label" for="document-file">Selecionar Arquivo</label>
-                                                <input type="file" class="form-control" id="document-file"
-                                                    accept=".pdf,.txt,.csv">
-                                                <div class="form-text">Formatos aceitos: PDF, TXT, CSV</div>
-                                            </div>
+                                            </form>
                                         </div>
-
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="bx bx-upload me-2"></i>Enviar Documento
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- ABA 2: GERENCIAR DOCUMENTOS -->
+                        <div class="tab-pane fade" id="tab-documents" role="tabpanel"
+                            aria-labelledby="tab-documents-btn">
+
+                            <!-- Filtros -->
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-3">
+                                            <label class="form-label" for="filter-doc-type">Tipo de Documento</label>
+                                            <select class="form-select" id="filter-doc-type">
+                                                <option value="">Todos os tipos</option>
+                                                <option value="identidade">Identidade e posicionamento</option>
+                                                <option value="estrategia">Estratégia e planejamento</option>
+                                                <option value="comunicacao">Comunicação e marca</option>
+                                                <option value="performance">Performance e dados</option>
+                                                <option value="produtos">Produtos e serviços</option>
+                                                <option value="vendas">Vendas e crescimento</option>
+                                                <option value="operacao">Operação e tecnologia</option>
+                                                <option value="suporte">Suporte e documentação</option>
+                                                <option value="cases">Cases e referências</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label" for="filter-scope">Escopo</label>
+                                            <select class="form-select" id="filter-scope">
+                                                <option value="client">Cliente</option>
+                                                <option value="agency">Agência</option>
+                                                <option value="global">Global</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label" for="filter-limit">Limite</label>
+                                            <select class="form-select" id="filter-limit">
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                                <option value="200">200</option>
+                                                <option value="500">500</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-primary w-100" id="btn-load-documents">
+                                                <i class="bi bi-search me-1"></i>Buscar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feedback da aba de documentos -->
+                            <div id="docs-feedback" class="alert" style="display: none;"></div>
+
+                            <!-- Barra de ações em lote -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span id="docs-count-label" class="text-muted small"></span>
+                                <button class="btn btn-sm btn-outline-danger d-none" id="btn-delete-batch"
+                                    disabled>
+                                    <i class="bi bi-trash me-1"></i>Excluir selecionados (<span
+                                        id="selected-count">0</span>)
+                                </button>
+                            </div>
+
+                            <!-- Tabela de documentos -->
+                            <div class="card">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0" id="documents-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:40px;">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="check-all-docs" title="Selecionar todos">
+                                                </th>
+                                                <th>Tipo</th>
+                                                <th>Autor</th>
+                                                <th>Cliente</th>
+                                                <th>Confidencialidade</th>
+                                                <th>Tags</th>
+                                                <th>Data</th>
+                                                <th style="width:120px;">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="documents-tbody">
+                                            <tr id="docs-empty-row">
+                                                <td colspan="8" class="text-center text-muted py-4">
+                                                    <i class="bi bi-database-slash fs-4 d-block mb-2"></i>
+                                                    Selecione um cliente e clique em "Buscar" para listar os documentos.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -497,6 +627,143 @@
         </div>
         <!-- Overlay -->
         <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Modal: Detalhes do Documento -->
+    <div class="modal fade" id="documentDetailsModal" tabindex="-1" aria-labelledby="documentDetailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentDetailsModalLabel">
+                        <i class="bi bi-file-earmark-text me-2"></i>Detalhes do Documento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Loading -->
+                    <div id="details-loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Carregando documento...</p>
+                    </div>
+                    <!-- Conteúdo -->
+                    <div id="details-content" style="display:none;">
+                        <!-- Metadados -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Tipo</small>
+                                <span id="det-doc-type" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Autor</small>
+                                <span id="det-author" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Cliente</small>
+                                <span id="det-customer" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Escopo</small>
+                                <span id="det-scope" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Confidencialidade</small>
+                                <span id="det-confidentiality" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Fonte</small>
+                                <span id="det-source" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Categoria principal</small>
+                                <span id="det-main-category" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Subcategoria</small>
+                                <span id="det-subcategory" class="fw-medium"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Data de criação</small>
+                                <span id="det-created-at" class="fw-medium"></span>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted d-block">Tags</small>
+                                <div id="det-tags"></div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted d-block">ID Vetorial</small>
+                                <code id="det-vector-id" class="text-break small"></code>
+                            </div>
+                        </div>
+                        <hr>
+                        <!-- Conteúdo do documento -->
+                        <h6 class="mb-2"><i class="bi bi-card-text me-1"></i>Conteúdo do Documento</h6>
+                        <div id="det-text"
+                            style="white-space: pre-wrap; background:#f8f8f8; border-radius:6px; padding:1rem; max-height:400px; overflow-y:auto; font-size:0.875rem; border:1px solid #e0e0e0;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar Exclusão Individual -->
+    <div class="modal fade" id="deleteDocModal" tabindex="-1" aria-labelledby="deleteDocModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="deleteDocModalLabel">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Exclusão
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir este documento?</p>
+                    <p class="text-muted small mb-0">Esta ação é <strong>irreversível</strong>. O documento será
+                        removido permanentemente do Pinecone.</p>
+                    <code id="delete-doc-id-preview" class="d-block mt-2 small text-break"></code>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+                        <i class="bi bi-trash me-1"></i>Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar Exclusão em Lote -->
+    <div class="modal fade" id="deleteBatchModal" tabindex="-1" aria-labelledby="deleteBatchModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="deleteBatchModalLabel">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Exclusão em Lote
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir <strong id="batch-delete-count">0</strong> documento(s)
+                        selecionado(s)?</p>
+                    <p class="text-muted small mb-0">Esta ação é <strong>irreversível</strong>. Os documentos serão
+                        removidos permanentemente do Pinecone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-delete-batch">
+                        <i class="bi bi-trash me-1"></i>Excluir todos selecionados
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal: Assinatura / Pagamento -->

@@ -315,6 +315,424 @@ document.querySelectorAll('input[name="upload-type"]').forEach(function (radio) 
     });
 });
 
+// ═══════════════════════════════════════════════════════════════════
+// GERENCIAMENTO DE DOCUMENTOS — Pinecone
+// ═══════════════════════════════════════════════════════════════════
+
+const DOCS_API_BASE = 'https://analyze-backend-5jyg.onrender.com';
+
+// Estado da aba de documentos
+const docsState = {
+    documents: [],
+    selectedIds: new Set(),
+    pendingDeleteId: null
+};
+
+// Rótulos amigáveis para tipos de documento
+const docTypeLabels = {
+    identidade: 'Identidade e posicionamento',
+    estrategia: 'Estratégia e planejamento',
+    comunicacao: 'Comunicação e marca',
+    performance: 'Performance e dados',
+    produtos: 'Produtos e serviços',
+    vendas: 'Vendas e crescimento',
+    operacao: 'Operação e tecnologia',
+    suporte: 'Suporte e documentação',
+    cases: 'Cases e referências'
+};
+
+// Rótulos de confidencialidade com badge
+function confidentialityBadge(value) {
+    const map = {
+        baixa: ['success', 'Baixa'],
+        media: ['warning', 'Média'],
+        alta: ['danger', 'Alta']
+    };
+    const [color, label] = map[value] || ['secondary', value || '—'];
+    return `<span class="badge bg-label-${color}">${label}</span>`;
+}
+
+// Formata data ISO para pt-BR
+function formatDate(iso) {
+    if (!iso) return '—';
+    try {
+        return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    } catch {
+        return iso;
+    }
+}
+
+// Mostra feedback na aba de documentos
+function showDocsFeedback(message, type = 'info') {
+    const el = document.getElementById('docs-feedback');
+    el.className = `alert alert-${type}`;
+    el.textContent = message;
+    el.style.display = 'block';
+    if (type === 'success') {
+        setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+}
+
+// Atualiza o contador de selecionados e o botão de exclusão em lote
+function updateBatchDeleteBtn() {
+    const count = docsState.selectedIds.size;
+    const btn = document.getElementById('btn-delete-batch');
+    const span = document.getElementById('selected-count');
+    span.textContent = count;
+    if (count > 0) {
+        btn.classList.remove('d-none');
+        btn.disabled = false;
+    } else {
+        btn.classList.add('d-none');
+        btn.disabled = true;
+    }
+    // Sincroniza o "check-all"
+    const checkAll = document.getElementById('check-all-docs');
+    if (checkAll) {
+        checkAll.checked = docsState.documents.length > 0 && count === docsState.documents.length;
+        checkAll.indeterminate = count > 0 && count < docsState.documents.length;
+    }
+}
+
+// Renderiza a tabela de documentos
+function renderDocumentsTable(documents) {
+    const tbody = document.getElementById('documents-tbody');
+    const countLabel = document.getElementById('docs-count-label');
+
+    docsState.documents = documents;
+    docsState.selectedIds.clear();
+    updateBatchDeleteBtn();
+
+    if (!documents || documents.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    <i class="bi bi-database-slash fs-4 d-block mb-2"></i>
+                    Nenhum documento encontrado para os filtros selecionados.
+                </td>
+            </tr>`;
+        countLabel.textContent = '0 documentos encontrados';
+        return;
+    }
+
+    countLabel.textContent = `${documents.length} documento(s) encontrado(s)`;
+
+    tbody.innerHTML = documents.map(doc => {
+        const tags = Array.isArray(doc.tags)
+            ? doc.tags.slice(0, 3).map(t => `<span class="badge bg-label-secondary me-1">${t}</span>`).join('')
+            : '—';
+        const moreTags = Array.isArray(doc.tags) && doc.tags.length > 3
+            ? `<span class="text-muted small">+${doc.tags.length - 3}</span>` : '';
+
+        return `
+            <tr data-id="${doc.id}">
+                <td>
+                    <input class="form-check-input doc-checkbox" type="checkbox"
+                        data-id="${doc.id}" value="${doc.id}">
+                </td>
+                <td>
+                    <span class="fw-medium">${docTypeLabels[doc.doc_type] || doc.doc_type || '—'}</span>
+                    <small class="d-block text-muted">${doc.scope || ''}</small>
+                </td>
+                <td>${doc.author || '—'}</td>
+                <td>${doc.ctx_customer_name || doc.client_id || '—'}</td>
+                <td>${confidentialityBadge(doc.confidentiality)}</td>
+                <td>${tags}${moreTags}</td>
+                <td class="text-nowrap">${formatDate(doc.created_at)}</td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-primary btn-view-details"
+                            data-id="${doc.id}" title="Ver detalhes">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete-single"
+                            data-id="${doc.id}" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+
+    // Checkboxes individuais
+    tbody.querySelectorAll('.doc-checkbox').forEach(cb => {
+        cb.addEventListener('change', function () {
+            if (this.checked) {
+                docsState.selectedIds.add(this.value);
+            } else {
+                docsState.selectedIds.delete(this.value);
+            }
+            updateBatchDeleteBtn();
+        });
+    });
+
+    // Botões "Ver detalhes"
+    tbody.querySelectorAll('.btn-view-details').forEach(btn => {
+        btn.addEventListener('click', function () {
+            openDocumentDetails(this.dataset.id);
+        });
+    });
+
+    // Botões "Excluir individual"
+    tbody.querySelectorAll('.btn-delete-single').forEach(btn => {
+        btn.addEventListener('click', function () {
+            openDeleteConfirm(this.dataset.id);
+        });
+    });
+}
+
+// Carrega documentos da API
+async function loadDocuments() {
+    const agencyId = String(userId || '');
+    const clientId = localStorage.getItem('selectedCustomerId') || '';
+    const scope = document.getElementById('filter-scope').value;
+    const docType = document.getElementById('filter-doc-type').value;
+    const limit = parseInt(document.getElementById('filter-limit').value, 10) || 50;
+
+    if (!clientId && scope === 'client') {
+        showDocsFeedback('Selecione um cliente no menu superior antes de buscar.', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('btn-load-documents');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Buscando...';
+    document.getElementById('docs-feedback').style.display = 'none';
+
+    const body = { agency_id: agencyId, scope, limit };
+    if (docType) body.doc_type = docType;
+    if (scope === 'client' && clientId) body.client_id = clientId;
+
+    try {
+        const response = await fetch(`${DOCS_API_BASE}/documents/list`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.detail || `Erro ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderDocumentsTable(data.documents || []);
+
+    } catch (error) {
+        showDocsFeedback(`Erro ao carregar documentos: ${error.message}`, 'danger');
+        renderDocumentsTable([]);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-search me-1"></i>Buscar';
+    }
+}
+
+// Abre o modal de detalhes de um documento
+async function openDocumentDetails(vectorId) {
+    const modal = new bootstrap.Modal(document.getElementById('documentDetailsModal'));
+    document.getElementById('details-loading').style.display = 'block';
+    document.getElementById('details-content').style.display = 'none';
+    modal.show();
+
+    const agencyId = String(userId || '');
+    const clientId = localStorage.getItem('selectedCustomerId') || '';
+    const scope = document.getElementById('filter-scope').value;
+
+    try {
+        const body = { vector_id: vectorId, agency_id: agencyId, scope };
+        if (clientId) body.client_id = clientId;
+
+        const response = await fetch(`${DOCS_API_BASE}/documents/details`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.detail || `Erro ${response.status}`);
+        }
+
+        const data = await response.json();
+        const doc = data.document;
+
+        // Preenche os campos do modal
+        document.getElementById('det-doc-type').textContent = docTypeLabels[doc.doc_type] || doc.doc_type || '—';
+        document.getElementById('det-author').textContent = doc.author || '—';
+        document.getElementById('det-customer').textContent = doc.ctx_customer_name || doc.client_id || '—';
+        document.getElementById('det-scope').textContent = doc.scope || '—';
+        document.getElementById('det-confidentiality').innerHTML = confidentialityBadge(doc.confidentiality);
+        document.getElementById('det-source').textContent = doc.source || '—';
+        document.getElementById('det-main-category').textContent = doc.main_category || '—';
+        document.getElementById('det-subcategory').textContent = doc.subcategory || '—';
+        document.getElementById('det-created-at').textContent = formatDate(doc.created_at);
+        document.getElementById('det-vector-id').textContent = doc.id || '—';
+        document.getElementById('det-text').textContent = doc.text || '(sem conteúdo)';
+
+        const tagsEl = document.getElementById('det-tags');
+        if (Array.isArray(doc.tags) && doc.tags.length > 0) {
+            tagsEl.innerHTML = doc.tags
+                .map(t => `<span class="badge bg-label-secondary me-1 mb-1">${t}</span>`)
+                .join('');
+        } else {
+            tagsEl.textContent = '—';
+        }
+
+        document.getElementById('details-loading').style.display = 'none';
+        document.getElementById('details-content').style.display = 'block';
+
+    } catch (error) {
+        document.getElementById('details-loading').innerHTML =
+            `<div class="alert alert-danger">Erro ao carregar detalhes: ${error.message}</div>`;
+    }
+}
+
+// Abre modal de confirmação de exclusão individual
+function openDeleteConfirm(vectorId) {
+    docsState.pendingDeleteId = vectorId;
+    document.getElementById('delete-doc-id-preview').textContent = `ID: ${vectorId}`;
+    const modal = new bootstrap.Modal(document.getElementById('deleteDocModal'));
+    modal.show();
+}
+
+// Executa exclusão individual
+async function executeDeleteSingle() {
+    const vectorId = docsState.pendingDeleteId;
+    if (!vectorId) return;
+
+    const agencyId = String(userId || '');
+    const clientId = localStorage.getItem('selectedCustomerId') || '';
+    const scope = document.getElementById('filter-scope').value;
+
+    const btnConfirm = document.getElementById('btn-confirm-delete');
+    btnConfirm.disabled = true;
+    btnConfirm.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Excluindo...';
+
+    try {
+        const body = { vector_id: vectorId, agency_id: agencyId, scope };
+        if (clientId) body.client_id = clientId;
+
+        const response = await fetch(`${DOCS_API_BASE}/documents/delete`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.detail || `Erro ${response.status}`);
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('deleteDocModal')).hide();
+        showDocsFeedback('Documento excluído com sucesso.', 'success');
+
+        // Remove da lista local
+        docsState.documents = docsState.documents.filter(d => d.id !== vectorId);
+        docsState.selectedIds.delete(vectorId);
+        renderDocumentsTable(docsState.documents);
+
+    } catch (error) {
+        showDocsFeedback(`Erro ao excluir documento: ${error.message}`, 'danger');
+        bootstrap.Modal.getInstance(document.getElementById('deleteDocModal'))?.hide();
+    } finally {
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = '<i class="bi bi-trash me-1"></i>Excluir';
+        docsState.pendingDeleteId = null;
+    }
+}
+
+// Executa exclusão em lote
+async function executeDeleteBatch() {
+    const vectorIds = Array.from(docsState.selectedIds);
+    if (vectorIds.length === 0) return;
+
+    const agencyId = String(userId || '');
+    const clientId = localStorage.getItem('selectedCustomerId') || '';
+    const scope = document.getElementById('filter-scope').value;
+
+    const btnConfirm = document.getElementById('btn-confirm-delete-batch');
+    btnConfirm.disabled = true;
+    btnConfirm.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Excluindo...';
+
+    try {
+        const body = { vector_ids: vectorIds, agency_id: agencyId, scope };
+        if (clientId) body.client_id = clientId;
+
+        const response = await fetch(`${DOCS_API_BASE}/documents/delete/batch`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.detail || `Erro ${response.status}`);
+        }
+
+        const result = await response.json();
+        bootstrap.Modal.getInstance(document.getElementById('deleteBatchModal')).hide();
+        showDocsFeedback(result.message || `${vectorIds.length} documento(s) excluído(s) com sucesso.`, 'success');
+
+        // Remove da lista local
+        docsState.documents = docsState.documents.filter(d => !docsState.selectedIds.has(d.id));
+        docsState.selectedIds.clear();
+        renderDocumentsTable(docsState.documents);
+
+    } catch (error) {
+        showDocsFeedback(`Erro ao excluir documentos: ${error.message}`, 'danger');
+        bootstrap.Modal.getInstance(document.getElementById('deleteBatchModal'))?.hide();
+    } finally {
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = '<i class="bi bi-trash me-1"></i>Excluir todos selecionados';
+    }
+}
+
+// ── Inicializa os event listeners da aba de documentos ──────────────
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Botão buscar
+    document.getElementById('btn-load-documents')?.addEventListener('click', loadDocuments);
+
+    // Check-all
+    document.getElementById('check-all-docs')?.addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.doc-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = this.checked;
+            if (this.checked) {
+                docsState.selectedIds.add(cb.value);
+            } else {
+                docsState.selectedIds.delete(cb.value);
+            }
+        });
+        updateBatchDeleteBtn();
+    });
+
+    // Botão excluir em lote (abre modal de confirmação)
+    document.getElementById('btn-delete-batch')?.addEventListener('click', function () {
+        const count = docsState.selectedIds.size;
+        document.getElementById('batch-delete-count').textContent = count;
+        new bootstrap.Modal(document.getElementById('deleteBatchModal')).show();
+    });
+
+    // Confirmar exclusão individual
+    document.getElementById('btn-confirm-delete')?.addEventListener('click', executeDeleteSingle);
+
+    // Confirmar exclusão em lote
+    document.getElementById('btn-confirm-delete-batch')?.addEventListener('click', executeDeleteBatch);
+
+    // Ao trocar para a aba de documentos, carrega automaticamente se houver cliente selecionado
+    document.getElementById('tab-documents-btn')?.addEventListener('shown.bs.tab', function () {
+        const clientId = localStorage.getItem('selectedCustomerId');
+        if (clientId && docsState.documents.length === 0) {
+            loadDocuments();
+        }
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// FIM — GERENCIAMENTO DE DOCUMENTOS
+// ═══════════════════════════════════════════════════════════════════
+
 // Event listener para submissão do formulário
 document.getElementById('upload-document-form').addEventListener('submit', async function (e) {
     e.preventDefault();
