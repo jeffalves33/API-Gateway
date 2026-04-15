@@ -483,11 +483,30 @@ function renderDocumentsTable(documents) {
 
 // Carrega documentos da API
 async function loadDocuments() {
+    // userId é preenchido de forma assíncrona; aguarda até 3s se ainda for null
+    if (!userId) {
+        let waited = 0;
+        await new Promise(resolve => {
+            const poll = setInterval(() => {
+                waited += 100;
+                if (userId || waited >= 3000) {
+                    clearInterval(poll);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+
     const agencyId = String(userId || '');
     const clientId = localStorage.getItem('selectedCustomerId') || '';
     const scope = document.getElementById('filter-scope').value;
     const docType = document.getElementById('filter-doc-type').value;
     const limit = parseInt(document.getElementById('filter-limit').value, 10) || 50;
+
+    if (!agencyId) {
+        showDocsFeedback('Não foi possível identificar o usuário. Recarregue a página.', 'danger');
+        return;
+    }
 
     if (!clientId && scope === 'client') {
         showDocsFeedback('Selecione um cliente no menu superior antes de buscar.', 'warning');
@@ -503,6 +522,8 @@ async function loadDocuments() {
     if (docType) body.doc_type = docType;
     if (scope === 'client' && clientId) body.client_id = clientId;
 
+    console.debug('[loadDocuments] body enviado:', JSON.stringify(body));
+
     try {
         const response = await fetch(`${DOCS_API_BASE}/documents/list`, {
             method: 'POST',
@@ -516,6 +537,7 @@ async function loadDocuments() {
         }
 
         const data = await response.json();
+        console.debug('[loadDocuments] resposta recebida:', data.total, 'documentos');
         renderDocumentsTable(data.documents || []);
 
     } catch (error) {
