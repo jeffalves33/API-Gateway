@@ -18,7 +18,7 @@ function getJwtClearCookieOptions(req) {
   };
 }
 
-async function ensurePermissions(req, res) {
+async function ensurePermissions(req, res, next) {
   if (!req.user) {
     res.status(401).json({ success: false, message: 'Não autenticado.' });
     return false;
@@ -27,11 +27,19 @@ async function ensurePermissions(req, res) {
   // Admin = acesso total
   if (req.user.role === 'Admin') {
     req.user.permissions = ['*'];
+    if (typeof next === 'function') {
+      next();
+      return;
+    }
     return true;
   }
 
   // Cache por request
   if (Array.isArray(req.user.permissions) && req.user.permissions.length > 0) {
+    if (typeof next === 'function') {
+      next();
+      return;
+    }
     return true;
   }
 
@@ -60,6 +68,10 @@ async function ensurePermissions(req, res) {
     );
 
     req.user.permissions = result.rows.map(r => r.code);
+    if (typeof next === 'function') {
+      next();
+      return;
+    }
     return true;
   } catch (err) {
     console.error('RBAC ensurePermissions error:', err);
