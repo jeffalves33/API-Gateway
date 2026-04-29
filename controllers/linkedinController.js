@@ -5,11 +5,12 @@ const { pool } = require('../config/db');
 const { customerBelongsToAccount } = require('../middleware/tenantGuard');
 const { getValidLinkedInAccessToken, liHeaders } = require('../helpers/linkedinHelpers');
 const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
+const { oauthConfig } = require('../config/oauth');
 
-const LINKEDIN_CLIENT_ID = '77b662p87zgthq';
-const LINKEDIN_CLIENT_SECRET = 'WPL_AP1.xnVHxAwFB1tPCa0Y.D3jxLA==';
+const LINKEDIN_CLIENT_ID = oauthConfig.linkedin.clientId;
+const LINKEDIN_CLIENT_SECRET = oauthConfig.linkedin.clientSecret;
 const LINKEDIN_API_VERSION = '202508';
-const LINKEDIN_REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/linkedin/auth/callback';
+const LINKEDIN_REDIRECT_URI = oauthConfig.linkedin.redirectUri;
 
 // 1) Início do OAuth
 exports.startOAuth = (req, res) => {

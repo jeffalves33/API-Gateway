@@ -4,10 +4,11 @@ const querystring = require('querystring');
 const { pool } = require('../config/db');
 const { checkCustomerBelongsToUser, } = require('../repositories/customerRepository');
 const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
+const { oauthConfig } = require('../config/oauth');
 
-const APP_ID = '1832737137219562';//process.env.META_APP_ID;
-const APP_SECRET = 'b14bc1778c11a716e69ac80c52199798';//process.env.META_APP_SECRET;
-const REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/meta/auth/callback';
+const APP_ID = oauthConfig.meta.appId;
+const APP_SECRET = oauthConfig.meta.appSecret;
+const REDIRECT_URI = oauthConfig.meta.redirectUri;
 
 const SCOPES = [
   'public_profile',

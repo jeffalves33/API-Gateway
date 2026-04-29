@@ -1,22 +1,7 @@
 // Arquivo: middleware/rbacMiddleware.js
 // Resolve permissões do membro e bloqueia acesso por permission.
 const { pool } = require('../config/db');
-
-function getJwtClearCookieOptions(req) {
-  const origin = req.headers.origin;
-
-  const crossSiteOrigins = [
-    'https://front-end-r0ap.onrender.com'
-  ];
-
-  const isCrossSite = crossSiteOrigins.includes(origin);
-
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: isCrossSite ? 'none' : 'lax'
-  };
-}
+const { getJwtClearCookieOptions } = require('../config/security');
 
 async function ensurePermissions(req, res, next) {
   if (!req.user) {

@@ -5,18 +5,14 @@ const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { pool } = require('../config/db');
 const { clearCacheForUser } = require('../helpers/keyHelper');
 const { s3, BUCKET_NAME } = require('../config/s3Config');
+const {
+  getJwtCookieOptions,
+  getJwtClearCookieOptions
+} = require('../config/security');
+const { FRONTEND_BASE_URL } = require('../config/urls');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-
-function getJwtCookieOptions(req) {
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 3600000
-  };
-}
 
 // Função para registrar um novo usuário
 const registerUser = async (req, res) => {
@@ -64,7 +60,7 @@ const registerUser = async (req, res) => {
         [existing.id_user, token, expiresAt]
       );
 
-      const baseUrl = process.env.FRONTEND_BASE_URL || 'https://www.hokoainalytics.com.br';
+      const baseUrl = FRONTEND_BASE_URL;
       const verifyLink = `${baseUrl}/api/verify-email?token=${token}`;
 
       await mailer.sendMail({
@@ -201,7 +197,7 @@ const registerUser = async (req, res) => {
 
     await client.query('COMMIT');
 
-    const baseUrl = process.env.FRONTEND_BASE_URL || 'https://www.hokoainalytics.com.br';
+    const baseUrl = FRONTEND_BASE_URL;
     const verifyLink = `${baseUrl}/api/verify-email?token=${token}`;
 
     await mailer.sendMail({
@@ -431,7 +427,7 @@ const forgotPassword = async (req, res) => {
     );
 
     // URL do reset
-    const resetLink = `${process.env.FRONTEND_BASE_URL}/resetPassword.html?token=${token}`;
+    const resetLink = `${FRONTEND_BASE_URL}/resetPassword.html?token=${token}`;
 
     // Envio de email
     const transporter = nodemailer.createTransport({
@@ -490,12 +486,7 @@ const logoutUser = (req, res) => {
   const id_user = req.user?.id;
   if (id_user) clearCacheForUser(id_user);
 
-  const cookieOptions = getJwtCookieOptions(req);
-  res.clearCookie('jwt', {
-    httpOnly: cookieOptions.httpOnly,
-    secure: cookieOptions.secure,
-    sameSite: cookieOptions.sameSite
-  });
+  res.clearCookie('jwt', getJwtClearCookieOptions(req));
   res.status(200).json({ success: true, message: 'Logout realizado com sucesso' });
 };
 
@@ -710,12 +701,7 @@ const deleteUserAccount = async (req, res) => {
     clearCacheForUser(userId);
 
     // Limpar cookie
-    const cookieOptions = getJwtCookieOptions(req);
-    res.clearCookie('jwt', {
-      httpOnly: cookieOptions.httpOnly,
-      secure: cookieOptions.secure,
-      sameSite: cookieOptions.sameSite
-    });
+    res.clearCookie('jwt', getJwtClearCookieOptions(req));
 
     res.status(200).json({
       success: true,

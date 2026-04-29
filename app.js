@@ -25,17 +25,13 @@ const rbacRoutes = require('./routes/rbacRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const { authenticatePageAccess } = require('./middleware/authMiddleware');
 const { requirePagePermission } = require('./middleware/rbacMiddleware');
+const { getCorsAllowedOrigins } = require('./config/security');
 
 const landingDir = path.join(__dirname, 'public', 'institutional', 'out');
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://front-end-r0ap.onrender.com',
-  'https://www.hokoainalytics.com.br',
-  'https://hokoainalytics.com.br'
-];
+const allowedOrigins = getCorsAllowedOrigins();
 
 app.use(cors({
   origin: function (origin, callback) {

@@ -4,11 +4,12 @@ const { pool } = require('../config/db');
 const { customerBelongsToAccount } = require('../middleware/tenantGuard');
 const { getValidYouTubeClientCustomer } = require('../helpers/youtubeHelpers');
 const { processCustomerMetricsPlatform } = require('../usecases/processCustomerMetricsUseCase');
+const { oauthConfig } = require('../config/oauth');
 require('dotenv').config();
 
-const GOOGLE_CLIENT_ID = '950435540090-5afqh5jkq3b804ru5ej86s5q8g8gap20.apps.googleusercontent.com'
-const GOOGLE_CLIENT_SECRET = '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'
-const GOOGLE_REDIRECT_URI = 'https://www.hokoainalytics.com.br/api/youtube/auth/callback'
+const GOOGLE_CLIENT_ID = oauthConfig.google.clientId;
+const GOOGLE_CLIENT_SECRET = oauthConfig.google.clientSecret;
+const GOOGLE_REDIRECT_URI = oauthConfig.google.youtubeRedirectUri;
 
 const oauth2Client = new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,

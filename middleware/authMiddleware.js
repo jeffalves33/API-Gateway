@@ -1,22 +1,7 @@
 // Arquivo: middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-
-function getJwtClearCookieOptions(req) {
-  const origin = req.headers.origin;
-
-  const crossSiteOrigins = [
-    'https://front-end-r0ap.onrender.com'
-  ];
-
-  const isCrossSite = crossSiteOrigins.includes(origin);
-
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: isCrossSite ? 'none' : 'lax'
-  };
-}
+const { getJwtClearCookieOptions } = require('../config/security');
 
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.jwt;
